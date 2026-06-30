@@ -174,7 +174,7 @@ function remainingPercent(window: QuotaWindow | null): number {
       </header>
 
       <section class="widget-quota">
-        <article>
+        <article class="widget-quota-row">
           <div class="widget-line">
             <div>
               <span>5 小时额度</span>
@@ -193,7 +193,7 @@ function remainingPercent(window: QuotaWindow | null): number {
           <p>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无数据' }}</p>
         </article>
 
-        <article>
+        <article class="widget-quota-row">
           <div class="widget-line">
             <div>
               <span>7 天额度</span>
