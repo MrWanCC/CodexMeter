@@ -18,6 +18,7 @@ const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
 const connecting = ref(false)
 let unsubscribeQuota: (() => void) | undefined
+let refreshTimer: ReturnType<typeof setInterval> | undefined
 
 const intervalOptions = [
   { label: '手动', value: 0 },
@@ -77,13 +78,19 @@ onMounted(async () => {
   }
 
   await refreshQuota()
+  configureAutoRefresh(settings.value?.refreshIntervalMinutes ?? 0)
 })
 
 onUnmounted(() => {
   unsubscribeQuota?.()
+  clearAutoRefresh()
 })
 
 async function refreshQuota(): Promise<void> {
+  if (loading.value) {
+    return
+  }
+
   loading.value = true
   status.value = '刷新中'
   try {
@@ -98,6 +105,25 @@ async function updateInterval(value: number): Promise<void> {
   settings.value = window.codexMeter
     ? await window.codexMeter.saveRefreshInterval(value as RefreshIntervalMinutes)
     : { refreshIntervalMinutes: value as RefreshIntervalMinutes, hardwareDisplayEnabled: false }
+  configureAutoRefresh(settings.value.refreshIntervalMinutes)
+}
+
+function configureAutoRefresh(minutes: RefreshIntervalMinutes): void {
+  clearAutoRefresh()
+  if (minutes === 0 || isWidgetView) {
+    return
+  }
+
+  refreshTimer = setInterval(() => {
+    void refreshQuota()
+  }, minutes * 60 * 1000)
+}
+
+function clearAutoRefresh(): void {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = undefined
+  }
 }
 
 async function connectOAuth(forceLogin = false): Promise<void> {

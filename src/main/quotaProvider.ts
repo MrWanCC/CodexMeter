@@ -1,12 +1,12 @@
 import { getCodexOAuth } from './store.js'
-import { parseQuotaPayload, sampleQuotaSnapshot, type QuotaSnapshot } from '../shared/quota.js'
+import { parseQuotaPayload, unavailableQuotaSnapshot, type QuotaSnapshot } from '../shared/quota.js'
 
 const usageEndpoint = 'https://chatgpt.com/backend-api/wham/usage'
 
 export async function fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
   const token = getCodexOAuth()
   if (!token?.accessToken) {
-    return sampleQuotaSnapshot()
+    return unavailableQuotaSnapshot()
   }
 
   const accountId = readJwtClaim(token.accessToken, 'https://api.openai.com/auth', 'chatgpt_account_id')

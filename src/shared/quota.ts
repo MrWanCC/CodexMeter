@@ -35,7 +35,7 @@ export function parseQuotaPayload(payload: unknown, now = new Date()): QuotaSnap
         windows,
         source: 'codex'
       }
-    : unavailableSnapshot(now)
+    : unavailableQuotaSnapshot(now)
 }
 
 export function sampleQuotaSnapshot(now = new Date()): QuotaSnapshot {
@@ -58,6 +58,10 @@ export function sampleQuotaSnapshot(now = new Date()): QuotaSnapshot {
 }
 
 function unavailableSnapshot(now: Date): QuotaSnapshot {
+  return unavailableQuotaSnapshot(now)
+}
+
+export function unavailableQuotaSnapshot(now = new Date()): QuotaSnapshot {
   return {
     available: false,
     refreshedAt: now.toISOString(),

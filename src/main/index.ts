@@ -5,7 +5,7 @@ import { NoopDeviceBridge } from './deviceBridge.js'
 import { startCodexOAuth } from './oauth.js'
 import { fetchQuotaSnapshot } from './quotaProvider.js'
 import { clearCodexOAuth, getCodexOAuth, getSettings, saveSettings } from './store.js'
-import type { QuotaSnapshot } from '../shared/quota.js'
+import { unavailableQuotaSnapshot, type QuotaSnapshot } from '../shared/quota.js'
 import { isRefreshIntervalMinutes } from '../shared/settings.js'
 
 const devServerUrl = process.env.CODEXMETER_DEV_SERVER_URL
@@ -170,12 +170,7 @@ ipcMain.handle('oauth:connect', async (_event, forceLogin?: boolean) => startCod
 
 ipcMain.handle('oauth:disconnect', async () => {
   clearCodexOAuth()
-  const snapshot: QuotaSnapshot = {
-    available: false,
-    refreshedAt: new Date().toISOString(),
-    windows: [],
-    source: 'unavailable'
-  }
+  const snapshot = unavailableQuotaSnapshot()
   broadcastQuotaSnapshot(snapshot)
   return { connected: false, snapshot }
 })

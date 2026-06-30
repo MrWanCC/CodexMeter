@@ -46,6 +46,7 @@ export function getCodexOAuth(): CodexOAuthToken | undefined {
     return decryptCodexOAuth(token)
   }
 
+  store.set('codexOAuth', encryptCodexOAuth(token))
   return token
 }
 
