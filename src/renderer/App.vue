@@ -115,8 +115,8 @@ async function connectOAuth(forceLogin = false): Promise<void> {
     if (result.connected) {
       await refreshQuota()
     }
-  } catch {
-    status.value = '连接失败'
+  } catch (error) {
+    status.value = error instanceof Error && error.message.includes('timed out') ? '连接超时，可重试' : '连接失败'
   } finally {
     connecting.value = false
   }

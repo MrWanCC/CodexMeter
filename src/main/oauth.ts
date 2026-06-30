@@ -8,6 +8,7 @@ const tokenUrl = 'https://auth.openai.com/oauth/token'
 const clientId = 'app_EMoamEEZ73f0CkXaXp7hrann'
 const redirectUri = 'http://localhost:1455/auth/callback'
 const scopes = ['openid', 'email', 'profile', 'offline_access']
+const oauthCallbackTimeoutMs = 3 * 60 * 1000
 
 export interface OAuthConnectionResult {
   connected: boolean
@@ -51,6 +52,7 @@ export async function startCodexOAuth(forceLogin = false): Promise<OAuthConnecti
 
 function waitForCallback(expectedState: string): Promise<string> {
   return new Promise((resolve, reject) => {
+    let settled = false
     const server = http.createServer((request, response) => {
       const requestUrl = new URL(request.url ?? '/', redirectUri)
 
@@ -65,36 +67,54 @@ function waitForCallback(expectedState: string): Promise<string> {
       const state = requestUrl.searchParams.get('state')
 
       if (error) {
-        finish(response, server, reject, new Error(error))
+        finish(response, cleanup, reject, new Error(error))
         return
       }
 
       if (!code || state !== expectedState) {
-        finish(response, server, reject, new Error('OAuth callback is invalid.'))
+        finish(response, cleanup, reject, new Error('OAuth callback is invalid.'))
         return
       }
 
       response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
       response.end('<p>CodexMeter 已连接，可以关闭此页面。</p>')
-      server.close()
-      resolve(code)
+      cleanup(() => resolve(code))
     })
 
-    server.on('error', reject)
+    const timeout = setTimeout(() => {
+      cleanup(() => reject(new Error('OAuth authorization timed out.')))
+    }, oauthCallbackTimeoutMs)
+
+    function cleanup(callback: () => void): void {
+      if (settled) {
+        return
+      }
+
+      settled = true
+      clearTimeout(timeout)
+      if (server.listening) {
+        server.close(() => callback())
+      } else {
+        callback()
+      }
+    }
+
+    server.on('error', (error) => {
+      cleanup(() => reject(error))
+    })
     server.listen(1455, '127.0.0.1')
   })
 }
 
 function finish(
   response: http.ServerResponse,
-  server: http.Server,
+  cleanup: (callback: () => void) => void,
   reject: (reason?: unknown) => void,
   error: Error
 ): void {
   response.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' })
   response.end(error.message)
-  server.close()
-  reject(error)
+  cleanup(() => reject(error))
 }
 
 async function exchangeCodeForToken(code: string, verifier: string) {
