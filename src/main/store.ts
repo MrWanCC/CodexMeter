@@ -22,6 +22,8 @@ type StoreSchema = {
 
 const store = new Store<StoreSchema>({
   name: 'codexmeter',
+  clearInvalidConfig: true,
+  configFileMode: 0o600,
   defaults: {
     settings: defaultSettings
   }
@@ -43,7 +45,13 @@ export function getCodexOAuth(): CodexOAuthToken | undefined {
   }
 
   if (isEncryptedCodexOAuthToken(token)) {
-    return decryptCodexOAuth(token)
+    const decryptedToken = decryptCodexOAuth(token)
+    if (!decryptedToken) {
+      store.delete('codexOAuth')
+      return undefined
+    }
+
+    return decryptedToken
   }
 
   store.set('codexOAuth', encryptCodexOAuth(token))
