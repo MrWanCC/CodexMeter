@@ -374,11 +374,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
     return '暂无可用数据'
   }
 
-  if (scope === 'short') {
-    return `已用 ${usedPercent(window)}%，短周期额度可用`
-  }
-
-  return `已用 ${usedPercent(window)}%，本周期额度充足`
+  return scope === 'short' ? '短周期额度可用' : '本周期额度充足'
 }
 </script>
 
@@ -463,9 +459,8 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
           </div>
         </div>
 
-        <div class="hero-status">
+        <div class="hero-ops">
           <div class="last-refresh">
-            <Clock :size="16" :stroke-width="2" />
             <span>上次刷新：</span>
             <strong>{{ refreshTime }}</strong>
           </div>
@@ -473,9 +468,6 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
             <component :is="systemStateIcon" :size="14" :stroke-width="2" />
             {{ systemStateLabel }}
           </NTag>
-        </div>
-
-        <div class="hero-actions">
           <NButton class="refresh-button" type="primary" size="large" :loading="loading" @click="refreshQuota">
             <template #icon>
               <RefreshCw :size="18" :stroke-width="2" />
@@ -537,7 +529,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
               rail-color="rgba(15, 23, 42, 0.12)"
             />
             <div class="quota-details">
-              <span>状态：{{ quotaBadge(fiveHourWindow) }}</span>
+              <span>已用 {{ usedPercent(fiveHourWindow) }}%</span>
               <span>{{ resetLabel(fiveHourWindow) }}</span>
             </div>
             <p>{{ quotaCopy(fiveHourWindow, 'short') }}</p>
@@ -566,7 +558,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
               rail-color="rgba(15, 23, 42, 0.12)"
             />
             <div class="quota-details">
-              <span>状态：{{ quotaBadge(sevenDayWindow, true) }}</span>
+              <span>已用 {{ usedPercent(sevenDayWindow) }}%</span>
               <span>{{ resetLabel(sevenDayWindow) }}</span>
             </div>
             <p>{{ quotaCopy(sevenDayWindow, 'weekly') }}</p>

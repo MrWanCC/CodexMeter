@@ -90,8 +90,8 @@ svg {
 
 .desktop-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
   padding: 10px 24px 9px;
 }
 
@@ -141,32 +141,30 @@ svg {
   color: #22c55e;
 }
 
-.hero-status {
+.hero-ops {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 5px;
+  gap: 10px;
   white-space: nowrap;
 }
 
 .last-refresh {
   display: flex;
   align-items: center;
-  gap: 7px;
-  color: #475569;
-  font-size: 13px;
+  gap: 4px;
+  color: #64748b;
+  font-size: 12px;
 }
 
-.last-refresh svg,
 .info-list svg,
 .hardware-list svg {
   color: #64748b;
 }
 
 .last-refresh strong {
-  color: #111827;
-  font-weight: 700;
+  color: #475569;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -177,26 +175,20 @@ svg {
   font-weight: 700;
 }
 
-.hero-actions {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding-top: 0;
-}
-
 .refresh-button {
-  min-width: 136px;
-  height: 44px;
+  min-width: 126px;
+  height: 40px;
   border-radius: 12px;
-  font-size: 15px;
-  font-weight: 760;
-  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.23);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.2);
 }
 
 .more-button {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .more-button svg {
@@ -207,7 +199,7 @@ svg {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 22px;
   padding-top: 9px;
   border-top: 1px solid rgba(15, 23, 42, 0.1);
 }
@@ -220,14 +212,16 @@ svg {
   color: #111827;
   font-size: 14px;
   font-weight: 650;
+  min-height: 34px;
 }
 
 .interval-select {
-  width: 148px;
+  width: 138px;
 }
 
 .usage-section {
   padding: 13px 18px 14px;
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .section-title,
@@ -261,22 +255,29 @@ svg {
 
 .usage-card {
   padding: 14px 20px 13px;
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 8px 22px rgba(15, 23, 42, 0.04);
 }
 
 .usage-card.normal {
-  border-color: rgba(34, 197, 94, 0.22);
+  border-color: rgba(34, 197, 94, 0.13);
+}
+
+.usage-card.abundant {
+  border-color: rgba(34, 197, 94, 0.16);
 }
 
 .usage-card.warning {
-  border-color: rgba(245, 158, 11, 0.32);
+  border-color: rgba(245, 158, 11, 0.38);
   background: linear-gradient(135deg, rgba(255, 251, 235, 0.9), rgba(255, 255, 255, 0.56));
 }
 
 .usage-card.exhausted {
-  border-color: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.38);
   background: linear-gradient(135deg, rgba(254, 242, 242, 0.9), rgba(255, 255, 255, 0.56));
 }
 
