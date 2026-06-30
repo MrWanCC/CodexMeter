@@ -7,9 +7,9 @@ import { getCodexOAuth, getSettings, saveSettings } from './store.js'
 import { isRefreshIntervalMinutes } from '../shared/settings.js'
 import { sampleQuotaSnapshot } from '../shared/quota.js'
 
+const devServerUrl = process.env.CODEXMETER_DEV_SERVER_URL
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const devServerUrl = process.env.CODEXMETER_DEV_SERVER_URL
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -27,7 +27,7 @@ async function createWindow(): Promise<void> {
     backgroundColor: '#f5f7fb',
     autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/index.js'),
+      preload: path.join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false

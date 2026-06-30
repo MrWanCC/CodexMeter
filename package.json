@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "concurrently -k \"vite --host 127.0.0.1\" \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"wait-on tcp:5173 dist-electron/main/index.js && set CODEXMETER_DEV_SERVER_URL=http://127.0.0.1:5173&& electron .\"",
     "start": "npm run build && electron .",
-    "build": "vue-tsc --noEmit && tsc -p tsconfig.electron.json && vite build",
+    "build": "vue-tsc --noEmit && tsc -p tsconfig.electron.json && node scripts/write-preload-cjs.cjs && vite build",
     "test": "vitest run",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder"
