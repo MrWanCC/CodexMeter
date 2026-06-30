@@ -6,6 +6,7 @@ export interface QuotaWindow {
   used: number
   limit: number
   percentUsed: number
+  resetAt?: string
 }
 
 export interface QuotaSnapshot {
@@ -13,6 +14,7 @@ export interface QuotaSnapshot {
   refreshedAt: string
   windows: QuotaWindow[]
   source: 'sample' | 'codex' | 'unavailable'
+  planType?: string
 }
 
 export function parseQuotaPayload(payload: unknown, now = new Date()): QuotaSnapshot {
@@ -24,8 +26,8 @@ export function parseQuotaPayload(payload: unknown, now = new Date()): QuotaSnap
   const usage = isRecord(root.usage) ? root.usage : root
   const limits = Array.isArray(usage.limits) ? usage.limits : []
   const windows = [
-    ...limits.map(readQuotaWindow),
-    ...readRateLimitWindows(root).map(readQuotaWindow)
+    ...limits.map((limit) => readQuotaWindow(limit, now)),
+    ...readRateLimitWindows(root).map((limit) => readQuotaWindow(limit, now))
   ].filter((window): window is QuotaWindow => window !== null)
 
   return windows.length > 0
@@ -33,7 +35,8 @@ export function parseQuotaPayload(payload: unknown, now = new Date()): QuotaSnap
         available: true,
         refreshedAt: now.toISOString(),
         windows,
-        source: 'codex'
+        source: 'codex',
+        planType: readPlanType(root)
       }
     : unavailableQuotaSnapshot(now)
 }
@@ -70,7 +73,7 @@ export function unavailableQuotaSnapshot(now = new Date()): QuotaSnapshot {
   }
 }
 
-function readQuotaWindow(input: unknown): QuotaWindow | null {
+function readQuotaWindow(input: unknown, now: Date): QuotaWindow | null {
   if (!isRecord(input)) {
     return null
   }
@@ -88,7 +91,8 @@ function readQuotaWindow(input: unknown): QuotaWindow | null {
     label: code === '5h' ? '5 hour window' : '7 day window',
     used,
     limit,
-    percentUsed: Math.round((used / limit) * 10000) / 100
+    percentUsed: Math.round((used / limit) * 10000) / 100,
+    resetAt: readResetAt(input, now)
   }
 }
 
@@ -115,10 +119,40 @@ function readRateLimitWindow(input: unknown, fallbackCode: QuotaWindowCode): Rec
   return {
     window: code,
     used: input.used_percent,
-    limit: 100
+    limit: 100,
+    reset_at: input.reset_at ?? input.resets_at,
+    reset_after_seconds: input.reset_after_seconds ?? input.reset_after
   }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function readPlanType(root: Record<string, unknown>): string | undefined {
+  const planType = root.plan_type ?? root.planType
+  return typeof planType === 'string' && planType.trim() ? planType : undefined
+}
+
+function readResetAt(input: Record<string, unknown>, now: Date): string | undefined {
+  const direct = input.resetAt ?? input.reset_at ?? input.resets_at
+  const directNumber = Number(direct)
+  if (Number.isFinite(directNumber) && directNumber > 0) {
+    const milliseconds = directNumber > 10_000_000_000 ? directNumber : directNumber * 1000
+    return new Date(milliseconds).toISOString()
+  }
+
+  if (typeof direct === 'string') {
+    const date = new Date(direct)
+    if (!Number.isNaN(date.getTime())) {
+      return date.toISOString()
+    }
+  }
+
+  const resetAfter = Number(input.reset_after_seconds ?? input.reset_after)
+  if (Number.isFinite(resetAfter) && resetAfter > 0) {
+    return new Date(now.getTime() + resetAfter * 1000).toISOString()
+  }
+
+  return undefined
 }

@@ -25,8 +25,8 @@ describe('parseQuotaPayload', () => {
 
     expect(snapshot.available).toBe(true)
     expect(snapshot.windows).toEqual([
-      { code: '5h', label: '5 hour window', used: 42, limit: 100, percentUsed: 42 },
-      { code: '7d', label: '7 day window', used: 70, limit: 200, percentUsed: 35 }
+      { code: '5h', label: '5 hour window', used: 42, limit: 100, percentUsed: 42, resetAt: undefined },
+      { code: '7d', label: '7 day window', used: 70, limit: 200, percentUsed: 35, resetAt: undefined }
     ])
   })
 
@@ -36,21 +36,39 @@ describe('parseQuotaPayload', () => {
         rate_limit: {
           primary_window: {
             used_percent: 18.5,
-            limit_window_seconds: 18000
+            limit_window_seconds: 18000,
+            reset_at: 1_798_750_800
           },
           secondary_window: {
             used_percent: 44,
-            limit_window_seconds: 604800
+            limit_window_seconds: 604800,
+            reset_at: '2027-01-07T08:00:00.000Z'
           }
-        }
+        },
+        plan_type: 'plus'
       },
       new Date('2026-06-30T00:00:00Z')
     )
 
     expect(snapshot.available).toBe(true)
+    expect(snapshot.planType).toBe('plus')
     expect(snapshot.windows).toEqual([
-      { code: '5h', label: '5 hour window', used: 18.5, limit: 100, percentUsed: 18.5 },
-      { code: '7d', label: '7 day window', used: 44, limit: 100, percentUsed: 44 }
+      {
+        code: '5h',
+        label: '5 hour window',
+        used: 18.5,
+        limit: 100,
+        percentUsed: 18.5,
+        resetAt: '2026-12-31T21:00:00.000Z'
+      },
+      {
+        code: '7d',
+        label: '7 day window',
+        used: 44,
+        limit: 100,
+        percentUsed: 44,
+        resetAt: '2027-01-07T08:00:00.000Z'
+      }
     ])
   })
 })

@@ -52,6 +52,7 @@ const quotaSourceLabel = computed(() => {
 
   return '不可用'
 })
+const planLabel = computed(() => formatPlan(snapshot.value?.planType))
 
 onMounted(async () => {
   unsubscribeQuota = window.codexMeter?.onQuotaUpdated((nextSnapshot) => {
@@ -231,6 +232,50 @@ function quotaColor(window: QuotaWindow | null): string {
 
   return '#22b8a0'
 }
+
+function resetLabel(window: QuotaWindow | null): string {
+  if (!window?.resetAt) {
+    return window?.code === '5h' ? '重置时间未知' : '本周期'
+  }
+
+  const date = new Date(window.resetAt)
+  if (Number.isNaN(date.getTime())) {
+    return '重置时间未知'
+  }
+
+  return window.code === '5h'
+    ? `重置 ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    : `重置 ${date.toLocaleDateString([], { month: 'numeric', day: 'numeric' })}`
+}
+
+function formatPlan(planType: string | undefined): string {
+  if (!planType) {
+    return '套餐未知'
+  }
+
+  const normalized = planType.toLowerCase()
+  if (normalized.includes('plus')) {
+    return 'Plus 套餐'
+  }
+
+  if (normalized.includes('pro')) {
+    return 'Pro 套餐'
+  }
+
+  if (normalized.includes('team')) {
+    return 'Team 套餐'
+  }
+
+  if (normalized.includes('enterprise')) {
+    return 'Enterprise 套餐'
+  }
+
+  if (normalized.includes('free')) {
+    return 'Free 套餐'
+  }
+
+  return `${planType} 套餐`
+}
 </script>
 
 <template>
@@ -349,16 +394,22 @@ function quotaColor(window: QuotaWindow | null): string {
       <section class="usage-section">
         <div class="section-title">
           <h2>使用额度</h2>
-          <NTag type="success" round>▣ {{ quotaSourceLabel }}</NTag>
+          <div class="quota-meta">
+            <NTag type="info" round>{{ planLabel }}</NTag>
+            <NTag type="success" round>{{ quotaSourceLabel }}</NTag>
+          </div>
         </div>
 
         <div class="quota-cards">
           <article class="usage-card" :class="quotaTone(fiveHourWindow)">
             <div class="usage-head">
               <h3>5 小时额度窗口</h3>
-              <NTag :type="quotaTone(fiveHourWindow) === 'danger' ? 'error' : 'success'" round>
-                {{ quotaBadge(fiveHourWindow) }}
-              </NTag>
+              <div class="card-tags">
+                <NTag round>{{ resetLabel(fiveHourWindow) }}</NTag>
+                <NTag :type="quotaTone(fiveHourWindow) === 'danger' ? 'error' : 'success'" round>
+                  {{ quotaBadge(fiveHourWindow) }}
+                </NTag>
+              </div>
             </div>
             <div class="usage-number">
               <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
@@ -384,9 +435,12 @@ function quotaColor(window: QuotaWindow | null): string {
           <article class="usage-card" :class="quotaTone(sevenDayWindow)">
             <div class="usage-head">
               <h3>7 天额度窗口</h3>
-              <NTag :type="quotaTone(sevenDayWindow) === 'danger' ? 'error' : 'success'" round>
-                {{ quotaBadge(sevenDayWindow) }}
-              </NTag>
+              <div class="card-tags">
+                <NTag round>{{ resetLabel(sevenDayWindow) }}</NTag>
+                <NTag :type="quotaTone(sevenDayWindow) === 'danger' ? 'error' : 'success'" round>
+                  {{ quotaBadge(sevenDayWindow) }}
+                </NTag>
+              </div>
             </div>
             <div class="usage-number">
               <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
@@ -431,17 +485,14 @@ function quotaColor(window: QuotaWindow | null): string {
           </div>
           <div class="info-list">
             <div>
-              <span class="row-icon">♙</span>
               <span>当前账户</span>
               <strong>{{ oauthConnected ? oauthEmail ?? '已授权账号' : '未授权' }}</strong>
             </div>
             <div>
-              <span class="row-icon">⊙</span>
               <span>凭据状态</span>
               <strong>{{ oauthConnected ? '已授权' : '待授权' }}</strong>
             </div>
             <div>
-              <span class="row-icon">▣</span>
               <span>数据存储</span>
               <strong>本地加密</strong>
             </div>
@@ -455,22 +506,18 @@ function quotaColor(window: QuotaWindow | null): string {
           </div>
           <div class="info-list">
             <div>
-              <span class="row-icon">▭</span>
               <span>说明</span>
               <strong>后续把桌面端额度状态同步到外部屏幕或设备</strong>
             </div>
             <div>
-              <span class="row-icon">▦</span>
               <span>串口显示</span>
               <strong>已预留</strong>
             </div>
             <div>
-              <span class="row-icon">⌁</span>
               <span>蓝牙连接</span>
               <strong>规划中</strong>
             </div>
             <div>
-              <span class="row-icon">☁</span>
               <span>MQTT 推送</span>
               <strong>规划中</strong>
             </div>
@@ -479,11 +526,11 @@ function quotaColor(window: QuotaWindow | null): string {
       </section>
 
       <footer class="app-footer">
-        <span>▣ 本地安全运行</span>
-        <span>▣ 仅读取授权数据，不发起模型请求</span>
-        <span>▥ 数据来源：Codex OAuth API</span>
+        <span>本地安全运行</span>
+        <span>仅读取授权数据，不发起模型请求</span>
+        <span>数据来源：Codex OAuth API</span>
         <span>v1.0.0</span>
-        <span>↻ 检查更新</span>
+        <span>检查更新</span>
       </footer>
     </main>
   </NConfigProvider>

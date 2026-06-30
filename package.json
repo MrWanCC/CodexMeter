@@ -12,7 +12,8 @@
     "build": "vue-tsc --noEmit && tsc -p tsconfig.electron.json && node scripts/write-preload-cjs.cjs && vite build",
     "test": "vitest run",
     "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "dist:portable": "npm run build && electron-builder --win portable"
   },
   "dependencies": {
     "electron-store": "^10.1.0",
@@ -44,7 +45,10 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis",
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "icon": "build/icon.ico",
       "signAndEditExecutable": false
     }
