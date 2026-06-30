@@ -11,6 +11,9 @@ import { isRefreshIntervalMinutes } from '../shared/settings.js'
 const devServerUrl = process.env.CODEXMETER_DEV_SERVER_URL
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const appIconPath = devServerUrl
+  ? path.join(__dirname, '../../public/icon.png')
+  : path.join(__dirname, '../../dist/icon.png')
 
 let mainWindow: BrowserWindow | null = null
 let widgetWindow: BrowserWindow | null = null
@@ -28,6 +31,7 @@ async function createWindow(): Promise<void> {
     resizable: false,
     maximizable: false,
     title: 'CodexMeter',
+    icon: appIconPath,
     backgroundColor: '#f5f7fb',
     autoHideMenuBar: true,
     webPreferences: {
@@ -72,6 +76,7 @@ async function createWidgetWindow(): Promise<BrowserWindow> {
     skipTaskbar: true,
     alwaysOnTop: widgetAlwaysOnTop,
     title: 'CodexMeter Widget',
+    icon: appIconPath,
     backgroundColor: '#eef3fb',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.cjs'),
@@ -97,7 +102,7 @@ async function createWidgetWindow(): Promise<BrowserWindow> {
 }
 
 function createTray(): void {
-  const image = nativeImage.createEmpty()
+  const image = nativeImage.createFromPath(appIconPath).resize({ width: 16, height: 16 })
   tray = new Tray(image)
   tray.setToolTip('CodexMeter')
   tray.setContextMenu(

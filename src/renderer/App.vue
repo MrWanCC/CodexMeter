@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { NButton, NConfigProvider, NProgress, NSelect, NSwitch, NTag } from 'naive-ui'
+import appIcon from './assets/icon.png'
 import type { DisplayDevice } from '../shared/device'
 import { sampleQuotaSnapshot, type QuotaSnapshot, type QuotaWindow } from '../shared/quota'
 import type { AppSettings, RefreshIntervalMinutes } from '../shared/settings'
@@ -161,7 +162,7 @@ function remainingPercent(window: QuotaWindow | null): number {
     <main v-if="isWidgetView" class="widget-shell">
       <header class="widget-header">
         <div class="widget-brand">
-          <span class="widget-mark">↯</span>
+          <img class="widget-mark" :src="appIcon" alt="" />
           <div>
             <strong>CodexMeter</strong>
             <span>{{ refreshSummary }}</span>
@@ -218,7 +219,7 @@ function remainingPercent(window: QuotaWindow | null): number {
       <section class="hero-panel">
         <div class="hero-topline">
           <div class="brand-lockup">
-            <div class="brand-mark">↯</div>
+            <img class="brand-mark" :src="appIcon" alt="" />
             <div>
               <h1>CodexMeter</h1>
               <p>{{ refreshSummary }}</p>
