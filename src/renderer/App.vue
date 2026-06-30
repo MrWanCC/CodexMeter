@@ -198,6 +198,39 @@ function remainingPercent(window: QuotaWindow | null): number {
 
   return Math.max(0, Math.min(100, Math.round((100 - window.percentUsed) * 100) / 100))
 }
+
+function quotaTone(window: QuotaWindow | null): 'danger' | 'healthy' | 'empty' {
+  if (!window) {
+    return 'empty'
+  }
+
+  return remainingPercent(window) <= 10 ? 'danger' : 'healthy'
+}
+
+function quotaBadge(window: QuotaWindow | null): string {
+  if (!window) {
+    return '无数据'
+  }
+
+  return remainingPercent(window) <= 10 ? '已耗尽' : '正常'
+}
+
+function quotaColor(window: QuotaWindow | null): string {
+  const remaining = remainingPercent(window)
+  if (remaining === 0) {
+    return '#ff4d12'
+  }
+
+  if (remaining < 20) {
+    return '#f5b51b'
+  }
+
+  if (remaining >= 50) {
+    return '#16a34a'
+  }
+
+  return '#22b8a0'
+}
 </script>
 
 <template>
@@ -260,50 +293,51 @@ function remainingPercent(window: QuotaWindow | null): number {
       </section>
     </main>
 
-    <main v-else class="app-shell">
-      <section class="hero-panel">
-        <div class="hero-topline">
-          <div class="brand-lockup">
-            <img class="brand-mark" :src="appIcon" alt="" />
-            <div>
-              <h1>CodexMeter</h1>
-              <p>{{ refreshSummary }}</p>
+    <main v-else class="desktop-shell">
+      <section class="desktop-hero">
+        <div class="hero-brand">
+          <img class="hero-mark" :src="appIcon" alt="" />
+          <div>
+            <h1>CodexMeter</h1>
+            <p>Codex usage monitor · local secure refresh</p>
+            <div class="safe-copy">
+              <span class="shield-icon">▣</span>
+              <span>安全刷新：仅读取授权后的用量数据，不发起模型请求</span>
             </div>
           </div>
-          <NTag type="success" round>{{ status }}</NTag>
         </div>
 
-        <div class="hero-actions">
-          <div class="refresh-status">
-            <span class="status-dot"></span>
-            <div>
-              <strong>{{ loading ? '正在刷新' : '安全刷新' }}</strong>
-              <p>只读取授权后的用量数据，不发起模型请求</p>
-            </div>
+        <div class="hero-side">
+          <div class="last-refresh">
+            <span>◴</span>
+            <span>{{ refreshSummary.replace('上次刷新 ', '上次刷新：') }}</span>
           </div>
-
-          <div class="button-row">
-            <NButton type="primary" size="small" :loading="loading" @click="refreshQuota">刷新</NButton>
-            <NButton size="small" :loading="connecting" :disabled="oauthConnected" @click="connectOAuth()">
-              {{ oauthConnected ? '已连接' : '连接' }}
+          <div class="hero-buttons">
+            <NTag :type="oauthConnected ? 'success' : 'warning'" round>
+              <span class="tag-dot"></span>
+              {{ oauthConnected ? '已连接' : '未连接' }}
+            </NTag>
+            <NButton class="refresh-button" type="primary" size="large" :loading="loading" @click="refreshQuota">
+              ↻ 刷新
             </NButton>
+            <NButton class="more-button" size="large">...</NButton>
           </div>
         </div>
 
-        <div class="widget-controls">
+        <div class="hero-controls">
           <label>
             <span>固定小组件</span>
-            <NSwitch :value="widgetVisible" size="small" @update:value="updateWidgetVisible" />
+            <NSwitch :value="widgetVisible" @update:value="updateWidgetVisible" />
           </label>
           <label>
-            <span>置顶</span>
-            <NSwitch :value="alwaysOnTop" size="small" @update:value="updateAlwaysOnTop" />
+            <span>置顶显示</span>
+            <NSwitch :value="alwaysOnTop" @update:value="updateAlwaysOnTop" />
           </label>
+          <div class="divider"></div>
           <div class="interval-control">
-            <span>自动刷新</span>
+            <span>刷新策略</span>
             <NSelect
               class="interval-select"
-              size="small"
               :value="settings?.refreshIntervalMinutes ?? 0"
               :options="intervalOptions"
               @update:value="updateInterval"
@@ -312,63 +346,81 @@ function remainingPercent(window: QuotaWindow | null): number {
         </div>
       </section>
 
-      <section class="quota-panel glass-panel">
-        <div class="panel-title">
-          <NTag type="info" round>Codex</NTag>
-          <span>{{ quotaSourceLabel }}</span>
+      <section class="usage-section">
+        <div class="section-title">
+          <h2>使用额度</h2>
+          <NTag type="success" round>▣ {{ quotaSourceLabel }}</NTag>
         </div>
 
-        <div class="quota-rows">
-          <article class="quota-row">
-            <div class="quota-line">
-              <strong>5 小时额度窗口</strong>
-              <div class="quota-value">
-                <span>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</span>
-                <small>短周期</small>
-              </div>
+        <div class="quota-cards">
+          <article class="usage-card" :class="quotaTone(fiveHourWindow)">
+            <div class="usage-head">
+              <h3>5 小时额度窗口</h3>
+              <NTag :type="quotaTone(fiveHourWindow) === 'danger' ? 'error' : 'success'" round>
+                {{ quotaBadge(fiveHourWindow) }}
+              </NTag>
+            </div>
+            <div class="usage-number">
+              <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
+              <span>剩余</span>
             </div>
             <NProgress
               type="line"
               :percentage="remainingPercent(fiveHourWindow)"
               :show-indicator="false"
-              :height="7"
-              color="#22c55e"
+              :height="8"
+              :color="quotaColor(fiveHourWindow)"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>{{ fiveHourWindow ? `API 剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无可用数据' }}</p>
+            <p>
+              {{
+                fiveHourWindow
+                  ? `已用 ${fiveHourWindow.percentUsed}%，${remainingPercent(fiveHourWindow) <= 10 ? '短周期额度暂不可用' : '短周期额度可用'}`
+                  : '暂无可用数据'
+              }}
+            </p>
           </article>
 
-          <article class="quota-row">
-            <div class="quota-line">
-              <strong>7 天额度窗口</strong>
-              <div class="quota-value">
-                <span>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</span>
-                <small>周周期</small>
-              </div>
+          <article class="usage-card" :class="quotaTone(sevenDayWindow)">
+            <div class="usage-head">
+              <h3>7 天额度窗口</h3>
+              <NTag :type="quotaTone(sevenDayWindow) === 'danger' ? 'error' : 'success'" round>
+                {{ quotaBadge(sevenDayWindow) }}
+              </NTag>
+            </div>
+            <div class="usage-number">
+              <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
+              <span>剩余</span>
             </div>
             <NProgress
               type="line"
               :percentage="remainingPercent(sevenDayWindow)"
               :show-indicator="false"
-              :height="7"
-              color="#22c55e"
+              :height="8"
+              :color="quotaColor(sevenDayWindow)"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>{{ sevenDayWindow ? `API 剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${sevenDayWindow.used}%` : '暂无可用数据' }}</p>
+            <p>
+              {{
+                sevenDayWindow
+                  ? `已用 ${sevenDayWindow.percentUsed}%，本周期额度${remainingPercent(sevenDayWindow) <= 10 ? '偏低' : '充足'}`
+                  : '暂无可用数据'
+              }}
+            </p>
           </article>
         </div>
       </section>
 
-      <section class="settings-grid">
-        <div class="glass-panel provider-panel">
-          <div class="section-heading">
+      <section class="lower-grid">
+        <div class="info-card">
+          <div class="card-heading">
             <h2>Codex OAuth</h2>
             <div class="heading-actions">
               <NTag :type="oauthConnected ? 'success' : 'warning'" round>
+                <span class="tag-dot"></span>
                 {{ oauthConnected ? '已连接' : '未连接' }}
               </NTag>
               <NButton
-                size="tiny"
                 :type="oauthConnected ? 'default' : 'primary'"
                 :loading="connecting"
                 @click="oauthConnected ? disconnectOAuth() : connectOAuth()"
@@ -377,39 +429,62 @@ function remainingPercent(window: QuotaWindow | null): number {
               </NButton>
             </div>
           </div>
-          <p class="panel-copy">
-            {{ oauthConnected ? `当前账号：${oauthEmail ?? '已授权账号'}` : '授权后自动读取额度，不会发送 prompt 或触发模型请求。' }}
-          </p>
-          <div class="status-list">
-            <div class="status-row">
-              <span>凭据</span>
+          <div class="info-list">
+            <div>
+              <span class="row-icon">♙</span>
+              <span>当前账户</span>
+              <strong>{{ oauthConnected ? oauthEmail ?? '已授权账号' : '未授权' }}</strong>
+            </div>
+            <div>
+              <span class="row-icon">⊙</span>
+              <span>凭据状态</span>
               <strong>{{ oauthConnected ? '已授权' : '待授权' }}</strong>
             </div>
-            <div class="status-row">
-              <span>存储</span>
+            <div>
+              <span class="row-icon">▣</span>
+              <span>数据存储</span>
               <strong>本地加密</strong>
             </div>
           </div>
         </div>
 
-        <div class="glass-panel provider-panel">
-          <div class="section-heading">
+        <div class="info-card">
+          <div class="card-heading">
             <h2>硬件显示</h2>
             <NTag :type="devices.length ? 'success' : 'default'" round>{{ displayMode }}</NTag>
           </div>
-          <p class="panel-copy">后续把桌面端额度状态同步到外部屏幕或设备。</p>
-          <div class="status-list">
-            <div class="status-row">
-              <span>串口</span>
+          <div class="info-list">
+            <div>
+              <span class="row-icon">▭</span>
+              <span>说明</span>
+              <strong>后续把桌面端额度状态同步到外部屏幕或设备</strong>
+            </div>
+            <div>
+              <span class="row-icon">▦</span>
+              <span>串口显示</span>
               <strong>已预留</strong>
             </div>
-            <div class="status-row">
-              <span>蓝牙 / MQTT</span>
-              <strong>下一步</strong>
+            <div>
+              <span class="row-icon">⌁</span>
+              <span>蓝牙连接</span>
+              <strong>规划中</strong>
+            </div>
+            <div>
+              <span class="row-icon">☁</span>
+              <span>MQTT 推送</span>
+              <strong>规划中</strong>
             </div>
           </div>
         </div>
       </section>
+
+      <footer class="app-footer">
+        <span>▣ 本地安全运行</span>
+        <span>▣ 仅读取授权数据，不发起模型请求</span>
+        <span>▥ 数据来源：Codex OAuth API</span>
+        <span>v1.0.0</span>
+        <span>↻ 检查更新</span>
+      </footer>
     </main>
   </NConfigProvider>
 </template>
