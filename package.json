@@ -2,6 +2,7 @@
   "name": "codexmeter",
   "version": "0.1.0",
   "description": "Windows desktop quota monitor with future hardware display support.",
+  "author": "CodexMeter contributors",
   "type": "module",
   "main": "dist-electron/main/index.js",
   "private": true,
@@ -43,7 +44,8 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "signAndEditExecutable": false
     }
   }
 }
