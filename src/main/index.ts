@@ -18,7 +18,7 @@ const deviceBridge = new NoopDeviceBridge()
 async function createWindow(): Promise<void> {
   mainWindow = new BrowserWindow({
     width: 740,
-    height: 620,
+    height: 680,
     resizable: false,
     maximizable: false,
     title: 'CodexMeter',

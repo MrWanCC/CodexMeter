@@ -28,9 +28,9 @@ body {
 .app-shell {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   height: 100%;
-  padding: 16px;
+  padding: 14px 16px;
   overflow: hidden;
 }
 
@@ -46,7 +46,7 @@ body {
 }
 
 .hero-panel {
-  padding: 13px;
+  padding: 12px;
 }
 
 .hero-topline,
@@ -96,7 +96,7 @@ body {
 }
 
 .hero-actions {
-  margin-top: 13px;
+  margin-top: 10px;
 }
 
 .refresh-status {
@@ -124,8 +124,8 @@ body {
 }
 
 .widget-controls {
-  margin-top: 12px;
-  padding-top: 11px;
+  margin-top: 9px;
+  padding-top: 9px;
   border-top: 1px solid rgba(15, 23, 42, 0.09);
   justify-content: flex-start;
   flex-wrap: wrap;
@@ -145,11 +145,11 @@ body {
 }
 
 .quota-panel {
-  padding: 11px;
+  padding: 10px;
 }
 
 .panel-title {
-  margin-bottom: 11px;
+  margin-bottom: 8px;
 }
 
 .panel-title > span {
@@ -164,25 +164,25 @@ body {
 .quota-rows {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .quota-row {
-  padding: 10px 12px;
+  padding: 9px 12px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.42);
   border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .device-row {
-  padding: 9px 0;
+  padding: 7px 0;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   color: rgba(15, 23, 42, 0.62);
 }
 
 .quota-line {
   align-items: flex-start;
-  margin-bottom: 7px;
+  margin-bottom: 6px;
 }
 
 .quota-line strong {
@@ -205,7 +205,7 @@ body {
 }
 
 .quota-row p {
-  margin: 7px 0 0;
+  margin: 6px 0 0;
   color: rgba(15, 23, 42, 0.58);
   font-size: 12px;
 }
@@ -217,8 +217,9 @@ body {
 
 .provider-panel {
   flex: 1;
-  padding: 12px;
+  padding: 11px;
   min-width: 0;
+  max-height: 150px;
 }
 
 .section-heading h2 {
@@ -228,12 +229,12 @@ body {
 
 .brief-list {
   display: grid;
-  gap: 7px;
-  margin-top: 11px;
+  gap: 6px;
+  margin-top: 9px;
 }
 
 .brief-list span {
-  padding: 7px 10px;
+  padding: 6px 10px;
   border-radius: 12px;
   color: rgba(15, 23, 42, 0.68);
   background: rgba(255, 255, 255, 0.38);
