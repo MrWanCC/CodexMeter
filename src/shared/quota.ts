@@ -23,9 +23,10 @@ export function parseQuotaPayload(payload: unknown, now = new Date()): QuotaSnap
   const root = payload as Record<string, unknown>
   const usage = isRecord(root.usage) ? root.usage : root
   const limits = Array.isArray(usage.limits) ? usage.limits : []
-  const windows = limits
-    .map(readQuotaWindow)
-    .filter((window): window is QuotaWindow => window !== null)
+  const windows = [
+    ...limits.map(readQuotaWindow),
+    ...readRateLimitWindows(root).map(readQuotaWindow)
+  ].filter((window): window is QuotaWindow => window !== null)
 
   return windows.length > 0
     ? {
@@ -84,6 +85,33 @@ function readQuotaWindow(input: unknown): QuotaWindow | null {
     used,
     limit,
     percentUsed: Math.round((used / limit) * 10000) / 100
+  }
+}
+
+function readRateLimitWindows(root: Record<string, unknown>): unknown[] {
+  const rateLimit = root.rate_limit
+  if (!isRecord(rateLimit)) {
+    return []
+  }
+
+  return [
+    readRateLimitWindow(rateLimit.primary_window, '5h'),
+    readRateLimitWindow(rateLimit.secondary_window, '7d')
+  ].filter((window): window is Record<string, unknown> => window !== null)
+}
+
+function readRateLimitWindow(input: unknown, fallbackCode: QuotaWindowCode): Record<string, unknown> | null {
+  if (!isRecord(input)) {
+    return null
+  }
+
+  const seconds = Number(input.limit_window_seconds)
+  const code = Math.abs(seconds - 18000) <= 60 ? '5h' : Math.abs(seconds - 604800) <= 3600 ? '7d' : fallbackCode
+
+  return {
+    window: code,
+    used: input.used_percent,
+    limit: 100
   }
 }
 

@@ -33,6 +33,21 @@ const refreshSummary = computed(() => {
 
   return `上次刷新 ${new Date(snapshot.value.refreshedAt).toLocaleTimeString()}`
 })
+const quotaSourceLabel = computed(() => {
+  if (!snapshot.value) {
+    return '未刷新'
+  }
+
+  if (snapshot.value.source === 'codex') {
+    return 'OAuth API'
+  }
+
+  if (snapshot.value.source === 'sample') {
+    return '样例数据'
+  }
+
+  return '不可用'
+})
 
 onMounted(async () => {
   if (window.codexMeter) {
@@ -145,7 +160,7 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
       <section class="quota-panel glass-panel">
         <div class="panel-title">
           <NTag type="info" round>Codex</NTag>
-          <span>可用</span>
+          <span>{{ quotaSourceLabel }}</span>
         </div>
 
         <div class="quota-rows">

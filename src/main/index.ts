@@ -3,9 +3,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { NoopDeviceBridge } from './deviceBridge.js'
 import { startCodexOAuth } from './oauth.js'
+import { fetchQuotaSnapshot } from './quotaProvider.js'
 import { getCodexOAuth, getSettings, saveSettings } from './store.js'
 import { isRefreshIntervalMinutes } from '../shared/settings.js'
-import { sampleQuotaSnapshot } from '../shared/quota.js'
 
 const devServerUrl = process.env.CODEXMETER_DEV_SERVER_URL
 const __filename = fileURLToPath(import.meta.url)
@@ -69,7 +69,7 @@ function createTray(): void {
 }
 
 ipcMain.handle('quota:refresh', async () => {
-  const snapshot = sampleQuotaSnapshot()
+  const snapshot = await fetchQuotaSnapshot()
   await deviceBridge.sendSnapshot(snapshot)
   return snapshot
 })
