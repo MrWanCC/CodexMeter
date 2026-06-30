@@ -43,7 +43,7 @@ const quotaSourceLabel = computed(() => {
   }
 
   if (snapshot.value.source === 'codex') {
-    return 'OAuth API 口径'
+    return 'Codex OAuth'
   }
 
   if (snapshot.value.source === 'sample') {
@@ -75,7 +75,7 @@ onMounted(async () => {
     widgetVisible.value = widgetState.visible
     alwaysOnTop.value = widgetState.alwaysOnTop
   } else {
-    settings.value = { refreshIntervalMinutes: 0, hardwareDisplayEnabled: false }
+    settings.value = { refreshIntervalMinutes: 5, hardwareDisplayEnabled: false }
   }
 
   await refreshQuota()
@@ -405,7 +405,7 @@ function formatPlan(planType: string | undefined): string {
             <div class="usage-head">
               <h3>5 小时额度窗口</h3>
               <div class="card-tags">
-                <NTag round>{{ resetLabel(fiveHourWindow) }}</NTag>
+                <NTag class="reset-tag" round>{{ resetLabel(fiveHourWindow) }}</NTag>
                 <NTag :type="quotaTone(fiveHourWindow) === 'danger' ? 'error' : 'success'" round>
                   {{ quotaBadge(fiveHourWindow) }}
                 </NTag>
@@ -436,7 +436,7 @@ function formatPlan(planType: string | undefined): string {
             <div class="usage-head">
               <h3>7 天额度窗口</h3>
               <div class="card-tags">
-                <NTag round>{{ resetLabel(sevenDayWindow) }}</NTag>
+                <NTag class="reset-tag" round>{{ resetLabel(sevenDayWindow) }}</NTag>
                 <NTag :type="quotaTone(sevenDayWindow) === 'danger' ? 'error' : 'success'" round>
                   {{ quotaBadge(sevenDayWindow) }}
                 </NTag>
@@ -475,6 +475,7 @@ function formatPlan(planType: string | undefined): string {
                 {{ oauthConnected ? '已连接' : '未连接' }}
               </NTag>
               <NButton
+                class="oauth-action"
                 :type="oauthConnected ? 'default' : 'primary'"
                 :loading="connecting"
                 @click="oauthConnected ? disconnectOAuth() : connectOAuth()"
@@ -528,7 +529,7 @@ function formatPlan(planType: string | undefined): string {
       <footer class="app-footer">
         <span>本地安全运行</span>
         <span>仅读取授权数据，不发起模型请求</span>
-        <span>数据来源：Codex OAuth API</span>
+        <span>数据来源：Codex OAuth</span>
         <span>v1.0.0</span>
         <span>检查更新</span>
       </footer>

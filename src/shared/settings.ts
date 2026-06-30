@@ -6,11 +6,10 @@ export interface AppSettings {
 }
 
 export const defaultSettings: AppSettings = {
-  refreshIntervalMinutes: 0,
+  refreshIntervalMinutes: 5,
   hardwareDisplayEnabled: false
 }
 
 export function isRefreshIntervalMinutes(value: number): value is RefreshIntervalMinutes {
   return value === 0 || value === 1 || value === 3 || value === 5
 }
-
