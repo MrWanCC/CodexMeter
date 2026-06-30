@@ -100,7 +100,7 @@ async function updateInterval(value: number): Promise<void> {
     : { refreshIntervalMinutes: value as RefreshIntervalMinutes, hardwareDisplayEnabled: false }
 }
 
-async function connectOAuth(): Promise<void> {
+async function connectOAuth(forceLogin = false): Promise<void> {
   if (!window.codexMeter || connecting.value) {
     return
   }
@@ -108,7 +108,7 @@ async function connectOAuth(): Promise<void> {
   connecting.value = true
   status.value = '等待授权'
   try {
-    const result = await window.codexMeter.connectOAuth()
+    const result = await window.codexMeter.connectOAuth(forceLogin)
     oauthConnected.value = result.connected
     oauthEmail.value = result.email
     status.value = result.connected ? '已连接' : '连接失败'
@@ -241,7 +241,7 @@ function remainingPercent(window: QuotaWindow | null): number {
 
           <div class="button-row">
             <NButton type="primary" size="small" :loading="loading" @click="refreshQuota">刷新</NButton>
-            <NButton size="small" :loading="connecting" :disabled="oauthConnected" @click="connectOAuth">
+            <NButton size="small" :loading="connecting" :disabled="oauthConnected" @click="connectOAuth()">
               {{ oauthConnected ? '已连接' : '连接' }}
             </NButton>
           </div>
@@ -338,14 +338,13 @@ function remainingPercent(window: QuotaWindow | null): number {
             </div>
           </div>
           <NButton
-            v-if="!oauthConnected"
             class="panel-action"
             size="tiny"
-            type="primary"
+            :type="oauthConnected ? 'default' : 'primary'"
             :loading="connecting"
-            @click="connectOAuth"
+            @click="connectOAuth(oauthConnected)"
           >
-            连接 Codex
+            {{ oauthConnected ? '切换账号' : '连接 Codex' }}
           </NButton>
         </div>
 

@@ -162,7 +162,7 @@ ipcMain.handle('oauth:status', () => {
   }
 })
 
-ipcMain.handle('oauth:connect', async () => startCodexOAuth())
+ipcMain.handle('oauth:connect', async (_event, forceLogin?: boolean) => startCodexOAuth(Boolean(forceLogin)))
 
 ipcMain.handle('widget:state', () => ({
   visible: Boolean(widgetWindow && !widgetWindow.isDestroyed() && widgetWindow.isVisible()),

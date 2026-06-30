@@ -15,7 +15,7 @@ export interface OAuthConnectionResult {
   error?: string
 }
 
-export async function startCodexOAuth(): Promise<OAuthConnectionResult> {
+export async function startCodexOAuth(forceLogin = false): Promise<OAuthConnectionResult> {
   const state = randomBase64Url(24)
   const verifier = randomBase64Url(32)
   const challenge = base64Url(crypto.createHash('sha256').update(verifier).digest())
@@ -29,6 +29,9 @@ export async function startCodexOAuth(): Promise<OAuthConnectionResult> {
   url.searchParams.set('state', state)
   url.searchParams.set('code_challenge', challenge)
   url.searchParams.set('code_challenge_method', 'S256')
+  if (forceLogin) {
+    url.searchParams.set('prompt', 'login')
+  }
 
   await shell.openExternal(url.toString())
   const code = await callbackPromise

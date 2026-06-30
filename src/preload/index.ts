@@ -11,7 +11,8 @@ const api = {
     ipcRenderer.invoke('settings:saveRefreshInterval', minutes) as Promise<AppSettings>,
   listDevices: () => ipcRenderer.invoke('devices:list') as Promise<DisplayDevice[]>,
   getOAuthStatus: () => ipcRenderer.invoke('oauth:status') as Promise<{ connected: boolean; email?: string }>,
-  connectOAuth: () => ipcRenderer.invoke('oauth:connect') as Promise<{ connected: boolean; email?: string; error?: string }>,
+  connectOAuth: (forceLogin = false) =>
+    ipcRenderer.invoke('oauth:connect', forceLogin) as Promise<{ connected: boolean; email?: string; error?: string }>,
   getWidgetState: () =>
     ipcRenderer.invoke('widget:state') as Promise<{ visible: boolean; alwaysOnTop: boolean }>,
   setWidgetVisible: (visible: boolean, alwaysOnTop: boolean) =>
