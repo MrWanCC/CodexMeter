@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { NButton, NConfigProvider, NProgress, NSelect, NSwitch, NTag } from 'naive-ui'
+import { NButton, NConfigProvider, NProgress, NSelect, NSwitch, NTag, type GlobalThemeOverrides } from 'naive-ui'
 import {
   AlertCircle,
   Bluetooth,
@@ -40,6 +40,17 @@ const intervalOptions = [
   { label: '5 分钟', value: 5 },
   { label: '10 分钟', value: 10 }
 ]
+const themeOverrides: GlobalThemeOverrides = {
+  common: {
+    primaryColor: '#2563eb',
+    primaryColorHover: '#1d4ed8',
+    primaryColorPressed: '#1e40af',
+    primaryColorSuppl: '#3b82f6'
+  },
+  Button: {
+    borderRadiusLarge: '12px'
+  }
+}
 
 const fiveHourWindow = computed(() => findWindow('5h'))
 const sevenDayWindow = computed(() => findWindow('7d'))
@@ -238,21 +249,25 @@ function usedPercent(window: QuotaWindow | null): number {
   return window ? Math.round(window.percentUsed * 100) / 100 : 0
 }
 
-function quotaState(window: QuotaWindow | null): 'empty' | 'danger' | 'warning' | 'normal' {
+function quotaState(window: QuotaWindow | null): 'empty' | 'exhausted' | 'warning' | 'normal' | 'abundant' {
   if (!window) {
     return 'empty'
   }
 
   const remaining = remainingPercent(window)
-  if (remaining <= 30) {
-    return 'danger'
+  if (remaining <= 0) {
+    return 'exhausted'
   }
 
-  if (remaining < 60) {
+  if (remaining <= 30) {
     return 'warning'
   }
 
-  return 'normal'
+  if (remaining <= 70) {
+    return 'normal'
+  }
+
+  return 'abundant'
 }
 
 function quotaBadge(window: QuotaWindow | null, weekly = false): string {
@@ -261,20 +276,20 @@ function quotaBadge(window: QuotaWindow | null, weekly = false): string {
     return '无数据'
   }
 
-  if (state === 'danger') {
-    return '危险'
+  if (state === 'exhausted') {
+    return '已耗尽'
   }
 
   if (state === 'warning') {
     return '紧张'
   }
 
-  return weekly ? '充足' : '正常'
+  return state === 'abundant' ? '充足' : '正常'
 }
 
 function quotaColor(window: QuotaWindow | null): string {
   const state = quotaState(window)
-  if (state === 'danger') {
+  if (state === 'exhausted') {
     return '#ef4444'
   }
 
@@ -282,7 +297,7 @@ function quotaColor(window: QuotaWindow | null): string {
     return '#f59e0b'
   }
 
-  return '#22c55e'
+  return state === 'abundant' ? '#16a34a' : '#22c55e'
 }
 
 function quotaTagType(window: QuotaWindow | null): 'default' | 'error' | 'warning' | 'success' {
@@ -291,7 +306,7 @@ function quotaTagType(window: QuotaWindow | null): 'default' | 'error' | 'warnin
     return 'default'
   }
 
-  if (state === 'danger') {
+  if (state === 'exhausted') {
     return 'error'
   }
 
@@ -304,7 +319,7 @@ function quotaTagType(window: QuotaWindow | null): 'default' | 'error' | 'warnin
 
 function quotaIcon(window: QuotaWindow | null, weekly = false) {
   const state = quotaState(window)
-  if (state === 'danger' || state === 'warning') {
+  if (state === 'exhausted' || state === 'warning') {
     return AlertCircle
   }
 
@@ -332,15 +347,19 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
   }
 
   if (scope === 'short') {
-    return `已用 ${usedPercent(window)}%，短周期额度可用`
+    return `已用 ${usedPercent(window)}%，当前额度状态${quotaBadge(window)}`
   }
 
-  return `已用 ${usedPercent(window)}%，本周期额度充足`
+  return `已用 ${usedPercent(window)}%，本周期额度状态${quotaBadge(window, true)}`
+}
+
+function quotaAvailability(scope: 'short' | 'weekly'): string {
+  return scope === 'short' ? '短周期额度可用' : '本周期额度充足'
 }
 </script>
 
 <template>
-  <NConfigProvider>
+  <NConfigProvider :theme-overrides="themeOverrides">
     <main v-if="isWidgetView" class="widget-shell">
       <header class="widget-header">
         <div class="widget-brand">
@@ -487,7 +506,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
               rail-color="rgba(15, 23, 42, 0.12)"
             />
             <div class="quota-details">
-              <span>已用 {{ usedPercent(fiveHourWindow) }}%</span>
+              <span>{{ quotaAvailability('short') }}</span>
               <span>{{ resetLabel(fiveHourWindow) }}</span>
             </div>
             <p>{{ quotaCopy(fiveHourWindow, 'short') }}</p>
@@ -516,7 +535,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
               rail-color="rgba(15, 23, 42, 0.12)"
             />
             <div class="quota-details">
-              <span>已用 {{ usedPercent(sevenDayWindow) }}%</span>
+              <span>{{ quotaAvailability('weekly') }}</span>
               <span>{{ resetLabel(sevenDayWindow) }}</span>
             </div>
             <p>{{ quotaCopy(sevenDayWindow, 'weekly') }}</p>
@@ -546,8 +565,13 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
             </div>
             <div>
               <KeyRound :size="17" :stroke-width="2" />
-              <span>凭据状态</span>
-              <strong>{{ oauthConnected ? '已授权' : '待授权' }}</strong>
+              <span>授权方式</span>
+              <strong>Codex OAuth</strong>
+            </div>
+            <div>
+              <ShieldCheck :size="17" :stroke-width="2" />
+              <span>请求权限</span>
+              <strong>只读用量数据</strong>
             </div>
             <div>
               <Database :size="17" :stroke-width="2" />

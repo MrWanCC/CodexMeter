@@ -29,11 +29,11 @@ svg {
 
 .desktop-shell {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) 34px;
-  gap: 10px;
+  grid-template-rows: auto auto minmax(0, 1fr) 38px;
+  gap: 9px;
   width: 100%;
   height: 100vh;
-  padding: 14px 18px 0;
+  padding: 12px 18px 0;
   overflow: hidden;
 }
 
@@ -54,20 +54,20 @@ svg {
 .desktop-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 14px;
-  padding: 14px 24px 12px;
+  gap: 10px;
+  padding: 12px 24px 10px;
 }
 
 .hero-main {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
   min-width: 0;
 }
 
 .hero-mark {
-  width: 66px;
-  height: 66px;
+  width: 60px;
+  height: 60px;
   flex: 0 0 auto;
   border-radius: 21px;
   object-fit: cover;
@@ -79,14 +79,14 @@ svg {
 .hero-main h1 {
   margin: 0;
   color: #111827;
-  font-size: 29px;
-  font-weight: 780;
+  font-size: 28px;
+  font-weight: 700;
   letter-spacing: 0;
   line-height: 1.05;
 }
 
 .hero-main p {
-  margin: 6px 0 10px;
+  margin: 5px 0 8px;
   color: #52627d;
   font-size: 14px;
 }
@@ -108,8 +108,8 @@ svg {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  gap: 12px;
-  padding-top: 8px;
+  gap: 9px;
+  padding-top: 6px;
   white-space: nowrap;
 }
 
@@ -143,13 +143,13 @@ svg {
 .hero-actions {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   padding-top: 1px;
 }
 
 .refresh-button {
-  min-width: 142px;
-  height: 50px;
+  min-width: 136px;
+  height: 46px;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 760;
@@ -157,8 +157,8 @@ svg {
 }
 
 .more-button {
-  width: 50px;
-  height: 50px;
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
 }
 
@@ -170,8 +170,8 @@ svg {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding-top: 11px;
+  gap: 22px;
+  padding-top: 10px;
   border-top: 1px solid rgba(15, 23, 42, 0.1);
 }
 
@@ -190,7 +190,7 @@ svg {
 }
 
 .usage-section {
-  padding: 14px 18px 16px;
+  padding: 13px 18px 15px;
 }
 
 .section-title,
@@ -213,7 +213,7 @@ svg {
   margin: 0;
   color: #111827;
   font-size: 20px;
-  font-weight: 760;
+  font-weight: 700;
 }
 
 .quota-cards {
@@ -223,7 +223,7 @@ svg {
 }
 
 .usage-card {
-  padding: 16px 20px 15px;
+  padding: 15px 20px 14px;
   border: 1px solid rgba(34, 197, 94, 0.2);
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.52);
@@ -238,7 +238,7 @@ svg {
   background: linear-gradient(135deg, rgba(255, 251, 235, 0.9), rgba(255, 255, 255, 0.56));
 }
 
-.usage-card.danger {
+.usage-card.exhausted {
   border-color: rgba(239, 68, 68, 0.28);
   background: linear-gradient(135deg, rgba(254, 242, 242, 0.9), rgba(255, 255, 255, 0.56));
 }
@@ -263,8 +263,8 @@ svg {
 .card-title h3 {
   margin: 0;
   color: #111827;
-  font-size: 18px;
-  font-weight: 760;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .quota-icon {
@@ -281,8 +281,13 @@ svg {
   color: #f59e0b;
 }
 
-.usage-card.danger .quota-icon,
-.usage-card.danger .usage-number strong {
+.usage-card.abundant .quota-icon,
+.usage-card.abundant .usage-number strong {
+  color: #15803d;
+}
+
+.usage-card.exhausted .quota-icon,
+.usage-card.exhausted .usage-number strong {
   color: #ef4444;
 }
 
@@ -295,15 +300,15 @@ svg {
 
 .usage-number strong {
   color: #64748b;
-  font-size: 38px;
-  font-weight: 820;
+  font-size: 36px;
+  font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
 .usage-number span {
   color: #475569;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .quota-details {
@@ -317,7 +322,7 @@ svg {
 }
 
 .usage-card p {
-  margin: 8px 0 0;
+  margin: 7px 0 0;
   color: #667085;
   font-size: 13px;
 }
@@ -332,7 +337,7 @@ svg {
 .info-card {
   min-height: 0;
   overflow: hidden;
-  padding: 12px 22px 13px;
+  padding: 12px 22px 12px;
 }
 
 .card-heading {
@@ -349,7 +354,7 @@ svg {
 .oauth-action {
   min-width: 94px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .info-list,
@@ -363,7 +368,7 @@ svg {
 
 .info-list > div,
 .hardware-list > div {
-  min-height: 30px;
+  min-height: 28px;
   gap: 11px;
   padding: 0 14px;
   border-top: 1px solid rgba(15, 23, 42, 0.075);
@@ -387,10 +392,10 @@ svg {
 
 .app-footer {
   margin: 0 -18px;
-  padding: 0 22px;
+  padding: 0 24px;
   border-top: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.52);
-  color: #53627c;
+  background: rgba(255, 255, 255, 0.42);
+  color: #64748b;
   font-size: 12px;
 }
 
