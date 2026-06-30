@@ -460,23 +460,28 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
         </div>
 
         <div class="hero-ops">
-          <div class="last-refresh">
-            <span>上次刷新：</span>
-            <strong>{{ refreshTime }}</strong>
+          <div class="hero-meta-row">
+            <div class="last-refresh">
+              <Clock :size="16" :stroke-width="2" />
+              <span>上次刷新：</span>
+              <strong>{{ refreshTime }}</strong>
+            </div>
+            <NTag :type="systemState === 'error' ? 'error' : systemState === 'connected' ? 'success' : 'warning'" round>
+              <component :is="systemStateIcon" :size="14" :stroke-width="2" />
+              {{ systemStateLabel }}
+            </NTag>
           </div>
-          <NTag :type="systemState === 'error' ? 'error' : systemState === 'connected' ? 'success' : 'warning'" round>
-            <component :is="systemStateIcon" :size="14" :stroke-width="2" />
-            {{ systemStateLabel }}
-          </NTag>
-          <NButton class="refresh-button" type="primary" size="large" :loading="loading" @click="refreshQuota">
-            <template #icon>
-              <RefreshCw :size="18" :stroke-width="2" />
-            </template>
-            刷新数据
-          </NButton>
-          <NButton class="more-button" size="large">
-            <MoreHorizontal :size="20" :stroke-width="2" />
-          </NButton>
+          <div class="hero-action-row">
+            <NButton class="refresh-button" type="primary" size="large" :loading="loading" @click="refreshQuota">
+              <template #icon>
+                <RefreshCw :size="22" :stroke-width="2" />
+              </template>
+              刷新
+            </NButton>
+            <NButton class="more-button" size="large">
+              <MoreHorizontal :size="22" :stroke-width="2" />
+            </NButton>
+          </div>
         </div>
 
         <div class="control-bar">
@@ -503,6 +508,10 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
       <section class="usage-section">
         <div class="section-title">
           <h2>使用额度</h2>
+          <NTag class="source-tag" type="success" round>
+            <ShieldCheck :size="14" :stroke-width="2" />
+            OAuth 授权数据
+          </NTag>
         </div>
 
         <div class="quota-cards">
@@ -512,13 +521,15 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
                 <component :is="quotaIcon(fiveHourWindow)" class="quota-icon" :size="20" :stroke-width="2" />
                 <h3>5 小时额度窗口</h3>
               </div>
+            </div>
+            <div class="usage-value-row">
+              <div class="usage-number">
+                <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
+                <span>剩余</span>
+              </div>
               <NTag :type="quotaTagType(fiveHourWindow)" round>
                 {{ quotaBadge(fiveHourWindow) }}
               </NTag>
-            </div>
-            <div class="usage-number">
-              <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
-              <span>剩余</span>
             </div>
             <NProgress
               type="line"
@@ -541,13 +552,15 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
                 <component :is="quotaIcon(sevenDayWindow, true)" class="quota-icon" :size="20" :stroke-width="2" />
                 <h3>7 天额度窗口</h3>
               </div>
+            </div>
+            <div class="usage-value-row">
+              <div class="usage-number">
+                <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
+                <span>剩余</span>
+              </div>
               <NTag :type="quotaTagType(sevenDayWindow)" round>
                 {{ quotaBadge(sevenDayWindow, true) }}
               </NTag>
-            </div>
-            <div class="usage-number">
-              <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
-              <span>剩余</span>
             </div>
             <NProgress
               type="line"
