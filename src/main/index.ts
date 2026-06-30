@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, Tray } from 'el
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { NoopDeviceBridge } from './deviceBridge.js'
-import { startCodexOAuth } from './oauth.js'
+import { cancelCodexOAuth, startCodexOAuth } from './oauth.js'
 import { fetchQuotaSnapshot } from './quotaProvider.js'
 import { clearCodexOAuth, getCodexOAuth, getSettings, saveSettings } from './store.js'
 import { unavailableQuotaSnapshot, type QuotaSnapshot } from '../shared/quota.js'
@@ -167,6 +167,7 @@ ipcMain.handle('oauth:status', () => {
 })
 
 ipcMain.handle('oauth:connect', async (_event, forceLogin?: boolean) => startCodexOAuth(Boolean(forceLogin)))
+ipcMain.handle('oauth:cancel', () => cancelCodexOAuth())
 
 ipcMain.handle('oauth:disconnect', async () => {
   clearCodexOAuth()

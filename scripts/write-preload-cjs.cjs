@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('codexMeter', {
   listDevices: () => ipcRenderer.invoke('devices:list'),
   getOAuthStatus: () => ipcRenderer.invoke('oauth:status'),
   connectOAuth: (forceLogin = false) => ipcRenderer.invoke('oauth:connect', forceLogin),
+  cancelOAuth: () => ipcRenderer.invoke('oauth:cancel'),
   disconnectOAuth: () => ipcRenderer.invoke('oauth:disconnect'),
   getWidgetState: () => ipcRenderer.invoke('widget:state'),
   setWidgetVisible: (visible, alwaysOnTop) => ipcRenderer.invoke('widget:setVisible', visible, alwaysOnTop),

@@ -13,6 +13,7 @@ const api = {
   getOAuthStatus: () => ipcRenderer.invoke('oauth:status') as Promise<{ connected: boolean; email?: string }>,
   connectOAuth: (forceLogin = false) =>
     ipcRenderer.invoke('oauth:connect', forceLogin) as Promise<{ connected: boolean; email?: string; error?: string }>,
+  cancelOAuth: () => ipcRenderer.invoke('oauth:cancel') as Promise<{ connected: boolean; error?: string }>,
   disconnectOAuth: () =>
     ipcRenderer.invoke('oauth:disconnect') as Promise<{ connected: boolean; snapshot: QuotaSnapshot }>,
   getWidgetState: () =>

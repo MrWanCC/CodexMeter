@@ -8,7 +8,14 @@ const tokenUrl = 'https://auth.openai.com/oauth/token'
 const clientId = 'app_EMoamEEZ73f0CkXaXp7hrann'
 const redirectUri = 'http://localhost:1455/auth/callback'
 const scopes = ['openid', 'email', 'profile', 'offline_access']
-const oauthCallbackTimeoutMs = 3 * 60 * 1000
+const oauthCallbackTimeoutMs = 60 * 1000
+
+type CallbackWaiter = {
+  promise: Promise<string>
+  cancel: () => void
+}
+
+let activeCallbackWaiter: CallbackWaiter | undefined
 
 export interface OAuthConnectionResult {
   connected: boolean
@@ -17,10 +24,12 @@ export interface OAuthConnectionResult {
 }
 
 export async function startCodexOAuth(forceLogin = false): Promise<OAuthConnectionResult> {
+  cancelCodexOAuth()
   const state = randomBase64Url(24)
   const verifier = randomBase64Url(32)
   const challenge = base64Url(crypto.createHash('sha256').update(verifier).digest())
-  const callbackPromise = waitForCallback(state)
+  const callbackWaiter = waitForCallback(state)
+  activeCallbackWaiter = callbackWaiter
 
   const url = new URL(authorizationUrl)
   url.searchParams.set('response_type', 'code')
@@ -35,23 +44,36 @@ export async function startCodexOAuth(forceLogin = false): Promise<OAuthConnecti
   }
 
   await shell.openExternal(url.toString())
-  const code = await callbackPromise
-  const token = await exchangeCodeForToken(code, verifier)
-  const email = readJwtClaim(token.id_token, 'https://api.openai.com/profile', 'email')
+  try {
+    const code = await callbackWaiter.promise
+    const token = await exchangeCodeForToken(code, verifier)
+    const email = readJwtClaim(token.id_token, 'https://api.openai.com/profile', 'email')
 
-  saveCodexOAuth({
-    accessToken: token.access_token,
-    refreshToken: token.refresh_token,
-    idToken: token.id_token,
-    expiresAt: new Date(Date.now() + token.expires_in * 1000).toISOString(),
-    email
-  })
+    saveCodexOAuth({
+      accessToken: token.access_token,
+      refreshToken: token.refresh_token,
+      idToken: token.id_token,
+      expiresAt: new Date(Date.now() + token.expires_in * 1000).toISOString(),
+      email
+    })
 
-  return { connected: true, email }
+    return { connected: true, email }
+  } finally {
+    if (activeCallbackWaiter === callbackWaiter) {
+      activeCallbackWaiter = undefined
+    }
+  }
 }
 
-function waitForCallback(expectedState: string): Promise<string> {
-  return new Promise((resolve, reject) => {
+export function cancelCodexOAuth(): OAuthConnectionResult {
+  activeCallbackWaiter?.cancel()
+  activeCallbackWaiter = undefined
+  return { connected: false, error: 'cancelled' }
+}
+
+function waitForCallback(expectedState: string): CallbackWaiter {
+  let cancel = () => {}
+  const promise = new Promise<string>((resolve, reject) => {
     let settled = false
     const server = http.createServer((request, response) => {
       const requestUrl = new URL(request.url ?? '/', redirectUri)
@@ -85,6 +107,10 @@ function waitForCallback(expectedState: string): Promise<string> {
       cleanup(() => reject(new Error('OAuth authorization timed out.')))
     }, oauthCallbackTimeoutMs)
 
+    cancel = () => {
+      cleanup(() => reject(new Error('OAuth authorization cancelled.')))
+    }
+
     function cleanup(callback: () => void): void {
       if (settled) {
         return
@@ -104,6 +130,8 @@ function waitForCallback(expectedState: string): Promise<string> {
     })
     server.listen(1455, '127.0.0.1')
   })
+
+  return { promise, cancel }
 }
 
 function finish(

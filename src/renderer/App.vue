@@ -143,10 +143,24 @@ async function connectOAuth(forceLogin = false): Promise<void> {
       await refreshQuota()
     }
   } catch (error) {
-    status.value = error instanceof Error && error.message.includes('timed out') ? '连接超时，可重试' : '连接失败'
+    if (error instanceof Error && error.message.includes('cancelled')) {
+      status.value = '已取消连接'
+    } else {
+      status.value = error instanceof Error && error.message.includes('timed out') ? '连接超时，可重试' : '连接失败'
+    }
   } finally {
     connecting.value = false
   }
+}
+
+async function cancelOAuth(): Promise<void> {
+  if (!window.codexMeter || !connecting.value) {
+    return
+  }
+
+  await window.codexMeter.cancelOAuth()
+  connecting.value = false
+  status.value = '已取消连接'
 }
 
 async function disconnectOAuth(): Promise<void> {
@@ -477,10 +491,10 @@ function formatPlan(planType: string | undefined): string {
               <NButton
                 class="oauth-action"
                 :type="oauthConnected ? 'default' : 'primary'"
-                :loading="connecting"
-                @click="oauthConnected ? disconnectOAuth() : connectOAuth()"
+                :secondary="connecting"
+                @click="connecting ? cancelOAuth() : oauthConnected ? disconnectOAuth() : connectOAuth()"
               >
-                {{ oauthConnected ? '断开连接' : '连接 Codex' }}
+                {{ connecting ? '取消连接' : oauthConnected ? '断开连接' : '连接 Codex' }}
               </NButton>
             </div>
           </div>
