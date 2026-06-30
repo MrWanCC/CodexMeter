@@ -38,7 +38,7 @@ export function parseQuotaPayload(payload: unknown, now = new Date()): QuotaSnap
 }
 
 export function sampleQuotaSnapshot(now = new Date()): QuotaSnapshot {
-  return parseQuotaPayload(
+  const snapshot = parseQuotaPayload(
     {
       usage: {
         limits: [
@@ -49,6 +49,11 @@ export function sampleQuotaSnapshot(now = new Date()): QuotaSnapshot {
     },
     now
   )
+
+  return {
+    ...snapshot,
+    source: snapshot.available ? 'sample' : snapshot.source
+  }
 }
 
 function unavailableSnapshot(now: Date): QuotaSnapshot {
@@ -85,4 +90,3 @@ function readQuotaWindow(input: unknown): QuotaWindow | null {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
-

@@ -6,8 +6,11 @@ body {
   margin: 0;
   min-width: 860px;
   min-height: 560px;
-  background: #f5f7fb;
-  color: #172033;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(59, 130, 246, 0.16), transparent 26%),
+    radial-gradient(circle at 82% 18%, rgba(20, 184, 166, 0.13), transparent 24%),
+    linear-gradient(135deg, #eef3f9 0%, #f8fafc 44%, #edf2f7 100%);
+  color: #121826;
   font-family:
     Inter,
     "Segoe UI",
@@ -18,46 +21,128 @@ body {
 }
 
 .app-shell {
-  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
 }
 
-.topbar,
-.control-row,
+.hero-panel,
+.control-panel,
 .device-panel {
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 80px rgba(30, 41, 59, 0.13);
+  backdrop-filter: blur(18px);
+}
+
+.hero-panel {
+  padding: 24px;
+}
+
+.hero-topline,
+.brand-lockup,
+.lower-grid,
+.device-heading,
+.device-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
 }
 
-.topbar h1 {
+.brand-lockup {
+  justify-content: flex-start;
+}
+
+.brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 800;
+  background: linear-gradient(145deg, #1d4ed8, #06b6d4);
+}
+
+.hero-topline h1 {
   margin: 0;
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0;
 }
 
-.topbar p,
+.hero-topline p,
 .muted {
+  margin: 4px 0 0;
   color: #657085;
 }
 
-.quota-grid {
+.meter-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  margin: 30px 0 24px;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
 }
 
-.quota-card {
+.meter-card {
+  min-height: 176px;
+  padding: 20px;
   border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
-.percent {
-  margin: 10px 0 14px;
-  font-size: 52px;
+.primary-meter {
+  display: grid;
+  grid-template-columns: 1fr 128px;
+  column-gap: 22px;
+  align-items: center;
+}
+
+.meter-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.meter-header span {
+  color: #657085;
+  font-size: 14px;
+}
+
+.meter-header strong {
+  font-size: 48px;
   font-weight: 700;
   line-height: 1;
+}
+
+.meter-detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  color: #657085;
+  font-size: 13px;
+}
+
+.lower-grid {
+  align-items: stretch;
+}
+
+.control-panel,
+.device-panel {
+  flex: 1;
+  min-height: 176px;
+  padding: 22px;
+}
+
+.control-panel h2,
+.device-panel h2 {
+  margin: 0;
+  font-size: 18px;
 }
 
 .interval-control {
@@ -71,20 +156,16 @@ body {
   width: 150px;
 }
 
-.device-panel {
-  margin-top: 24px;
-  padding: 22px;
-  background: #ffffff;
-  border: 1px solid #e3e8f0;
-  border-radius: 8px;
+.device-row {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  color: #657085;
 }
 
-.device-panel h2 {
-  margin: 0 0 6px;
-  font-size: 18px;
+.device-row:last-child {
+  border-bottom: 0;
 }
 
-.device-panel p {
-  margin: 0;
+.device-row strong {
+  color: #121826;
 }
-
