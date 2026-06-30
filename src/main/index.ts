@@ -1,0 +1,98 @@
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, Tray } from 'electron'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { NoopDeviceBridge } from './deviceBridge.js'
+import { getSettings, saveSettings } from './store.js'
+import { isRefreshIntervalMinutes } from '../shared/settings.js'
+import { sampleQuotaSnapshot } from '../shared/quota.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const devServerUrl = process.env.CODEXMETER_DEV_SERVER_URL
+
+let mainWindow: BrowserWindow | null = null
+let tray: Tray | null = null
+let isQuitting = false
+const deviceBridge = new NoopDeviceBridge()
+
+async function createWindow(): Promise<void> {
+  mainWindow = new BrowserWindow({
+    width: 980,
+    height: 680,
+    minWidth: 860,
+    minHeight: 560,
+    title: 'CodexMeter',
+    backgroundColor: '#f5f7fb',
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  })
+
+  if (devServerUrl) {
+    await mainWindow.loadURL(devServerUrl)
+  } else {
+    await mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'))
+  }
+
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault()
+      mainWindow?.hide()
+    }
+  })
+}
+
+function createTray(): void {
+  const image = nativeImage.createEmpty()
+  tray = new Tray(image)
+  tray.setToolTip('CodexMeter')
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { label: 'Open CodexMeter', click: () => mainWindow?.show() },
+      {
+        label: 'Quit',
+        click: () => {
+          isQuitting = true
+          app.quit()
+        }
+      }
+    ])
+  )
+  tray.on('double-click', () => mainWindow?.show())
+}
+
+ipcMain.handle('quota:refresh', async () => {
+  const snapshot = sampleQuotaSnapshot()
+  await deviceBridge.sendSnapshot(snapshot)
+  return snapshot
+})
+
+ipcMain.handle('settings:get', () => getSettings())
+
+ipcMain.handle('settings:saveRefreshInterval', (_event, minutes: number) => {
+  if (!isRefreshIntervalMinutes(minutes)) {
+    throw new Error(`Unsupported refresh interval: ${minutes}`)
+  }
+
+  return saveSettings({
+    ...getSettings(),
+    refreshIntervalMinutes: minutes
+  })
+})
+
+ipcMain.handle('devices:list', () => deviceBridge.listDevices())
+
+app.whenReady().then(async () => {
+  await createWindow()
+  createTray()
+})
+
+app.on('activate', () => {
+  if (mainWindow === null) {
+    void createWindow()
+  } else {
+    mainWindow.show()
+  }
+})

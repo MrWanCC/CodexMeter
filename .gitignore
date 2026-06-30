@@ -1,0 +1,13 @@
+node_modules/
+dist/
+dist-electron/
+release/
+.vite/
+.dotnet/
+.dotnet-install.ps1
+*.log
+*.local
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
