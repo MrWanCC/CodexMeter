@@ -101,6 +101,14 @@ async function connectOAuth(): Promise<void> {
 function findWindow(code: '5h' | '7d'): QuotaWindow | null {
   return snapshot.value?.windows.find((window) => window.code === code) ?? null
 }
+
+function remainingPercent(window: QuotaWindow | null): number {
+  if (!window) {
+    return 0
+  }
+
+  return Math.max(0, Math.min(100, Math.round((100 - window.percentUsed) * 100) / 100))
+}
 </script>
 
 <template>
@@ -168,38 +176,38 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
             <div class="quota-line">
               <strong>5 小时额度窗口</strong>
               <div class="quota-value">
-                <span>{{ fiveHourWindow ? `${fiveHourWindow.percentUsed}%` : '—' }}</span>
+                <span>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '—' }}</span>
                 <small>短周期</small>
               </div>
             </div>
             <NProgress
               type="line"
-              :percentage="fiveHourWindow?.percentUsed ?? 0"
+              :percentage="remainingPercent(fiveHourWindow)"
               :show-indicator="false"
               :height="7"
               color="#22c55e"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>{{ fiveHourWindow ? `已用 ${fiveHourWindow.used} · 上限 ${fiveHourWindow.limit}` : '暂无可用数据' }}</p>
+            <p>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无可用数据' }}</p>
           </article>
 
           <article class="quota-row">
             <div class="quota-line">
               <strong>7 天额度窗口</strong>
               <div class="quota-value">
-                <span>{{ sevenDayWindow ? `${sevenDayWindow.percentUsed}%` : '—' }}</span>
+                <span>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '—' }}</span>
                 <small>周周期</small>
               </div>
             </div>
             <NProgress
               type="line"
-              :percentage="sevenDayWindow?.percentUsed ?? 0"
+              :percentage="remainingPercent(sevenDayWindow)"
               :show-indicator="false"
               :height="7"
               color="#22c55e"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>{{ sevenDayWindow ? `已用 ${sevenDayWindow.used} · 上限 ${sevenDayWindow.limit}` : '暂无可用数据' }}</p>
+            <p>{{ sevenDayWindow ? `剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${sevenDayWindow.used}%` : '暂无可用数据' }}</p>
           </article>
         </div>
       </section>
