@@ -222,11 +222,11 @@ body {
 }
 
 .panel-copy {
-  min-height: 36px;
-  margin: 8px 0 10px;
+  min-height: 32px;
+  margin: 7px 0 8px;
   color: rgba(15, 23, 42, 0.58);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .status-list {
@@ -235,7 +235,7 @@ body {
 }
 
 .status-row {
-  padding: 7px 10px;
+  padding: 6px 10px;
   border-radius: 12px;
   color: rgba(15, 23, 42, 0.68);
   background: rgba(255, 255, 255, 0.38);
