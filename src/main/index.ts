@@ -61,10 +61,10 @@ async function createWidgetWindow(): Promise<BrowserWindow> {
   const { workArea } = screen.getPrimaryDisplay()
   widgetWindow = new BrowserWindow({
     width: 320,
-    height: 210,
+    height: 218,
     useContentSize: true,
     x: workArea.x + workArea.width - 340,
-    y: workArea.y + workArea.height - 240,
+    y: workArea.y + workArea.height - 248,
     resizable: false,
     maximizable: false,
     minimizable: false,
