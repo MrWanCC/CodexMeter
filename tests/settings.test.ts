@@ -6,11 +6,11 @@ describe('isRefreshIntervalMinutes', () => {
     expect(defaultSettings.refreshIntervalMinutes).toBe(5)
   })
 
-  it.each([0, 1, 3, 5])('accepts %s minutes', (minutes) => {
+  it.each([0, 5, 10])('accepts %s minutes', (minutes) => {
     expect(isRefreshIntervalMinutes(minutes)).toBe(true)
   })
 
-  it.each([2, 4, 10])('rejects %s minutes', (minutes) => {
+  it.each([1, 2, 3, 4])('rejects %s minutes', (minutes) => {
     expect(isRefreshIntervalMinutes(minutes)).toBe(false)
   })
 })

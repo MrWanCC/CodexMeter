@@ -1,4 +1,4 @@
-export type RefreshIntervalMinutes = 0 | 1 | 3 | 5
+export type RefreshIntervalMinutes = 0 | 5 | 10
 
 export interface AppSettings {
   refreshIntervalMinutes: RefreshIntervalMinutes
@@ -11,5 +11,5 @@ export const defaultSettings: AppSettings = {
 }
 
 export function isRefreshIntervalMinutes(value: number): value is RefreshIntervalMinutes {
-  return value === 0 || value === 1 || value === 3 || value === 5
+  return value === 0 || value === 5 || value === 10
 }

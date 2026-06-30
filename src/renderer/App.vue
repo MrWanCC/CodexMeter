@@ -21,21 +21,26 @@ let unsubscribeQuota: (() => void) | undefined
 let refreshTimer: ReturnType<typeof setInterval> | undefined
 
 const intervalOptions = [
-  { label: '手动', value: 0 },
-  { label: '1 分钟', value: 1 },
-  { label: '3 分钟', value: 3 },
-  { label: '5 分钟', value: 5 }
+  { label: '手动刷新', value: 0 },
+  { label: '5 分钟', value: 5 },
+  { label: '10 分钟', value: 10 }
 ]
 
 const fiveHourWindow = computed(() => findWindow('5h'))
 const sevenDayWindow = computed(() => findWindow('7d'))
-const displayMode = computed(() => (devices.value.length > 0 ? '已连接' : '待机'))
+const refreshTime = computed(() => {
+  if (!snapshot.value) {
+    return '--:--:--'
+  }
+
+  return new Date(snapshot.value.refreshedAt).toLocaleTimeString()
+})
 const refreshSummary = computed(() => {
   if (!snapshot.value) {
     return '尚未刷新'
   }
 
-  return `上次刷新 ${new Date(snapshot.value.refreshedAt).toLocaleTimeString()}`
+  return `上次刷新 ${refreshTime.value}`
 })
 const quotaSourceLabel = computed(() => {
   if (!snapshot.value) {
@@ -214,52 +219,94 @@ function remainingPercent(window: QuotaWindow | null): number {
   return Math.max(0, Math.min(100, Math.round((100 - window.percentUsed) * 100) / 100))
 }
 
-function quotaTone(window: QuotaWindow | null): 'danger' | 'healthy' | 'empty' {
+function usedPercent(window: QuotaWindow | null): number {
+  return window ? Math.round(window.percentUsed * 100) / 100 : 0
+}
+
+function quotaState(window: QuotaWindow | null): 'empty' | 'exhausted' | 'low' | 'normal' | 'abundant' {
   if (!window) {
     return 'empty'
   }
 
-  return remainingPercent(window) <= 10 ? 'danger' : 'healthy'
+  const remaining = remainingPercent(window)
+  if (remaining === 0) {
+    return 'exhausted'
+  }
+
+  if (remaining <= 30) {
+    return 'low'
+  }
+
+  if (remaining <= 80) {
+    return 'normal'
+  }
+
+  return 'abundant'
 }
 
 function quotaBadge(window: QuotaWindow | null): string {
-  if (!window) {
+  const state = quotaState(window)
+  if (state === 'empty') {
     return '无数据'
   }
 
-  return remainingPercent(window) <= 10 ? '已耗尽' : '正常'
+  if (state === 'exhausted') {
+    return '已耗尽'
+  }
+
+  if (state === 'low') {
+    return '可用'
+  }
+
+  if (state === 'normal') {
+    return '正常'
+  }
+
+  return '充足'
 }
 
 function quotaColor(window: QuotaWindow | null): string {
-  const remaining = remainingPercent(window)
-  if (remaining === 0) {
-    return '#ff4d12'
+  const state = quotaState(window)
+  if (state === 'exhausted') {
+    return '#ef4444'
   }
 
-  if (remaining < 20) {
-    return '#f5b51b'
+  if (state === 'low') {
+    return '#f97316'
   }
 
-  if (remaining >= 50) {
-    return '#16a34a'
+  if (state === 'abundant') {
+    return '#15803d'
   }
 
-  return '#22b8a0'
+  return '#16a34a'
 }
 
 function resetLabel(window: QuotaWindow | null): string {
   if (!window?.resetAt) {
-    return window?.code === '5h' ? '重置时间未知' : '本周期'
+    return window?.code === '5h' ? '下次重置未知' : '下次重置未知'
   }
 
   const date = new Date(window.resetAt)
   if (Number.isNaN(date.getTime())) {
-    return '重置时间未知'
+    return '下次重置未知'
   }
 
   return window.code === '5h'
-    ? `重置 ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    : `重置 ${date.toLocaleDateString([], { month: 'numeric', day: 'numeric' })}`
+    ? `下次重置 ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    : `下次重置 ${date.toLocaleDateString([], { month: '2-digit', day: '2-digit' })}`
+}
+
+function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): string {
+  if (!window) {
+    return '暂无可用数据'
+  }
+
+  if (scope === 'short') {
+    return `已用 ${usedPercent(window)}%，短周期额度可用`
+  }
+
+  return `已用 ${usedPercent(window)}%，本周期额度充足`
 }
 
 function formatPlan(planType: string | undefined): string {
@@ -325,10 +372,10 @@ function formatPlan(planType: string | undefined): string {
             :percentage="remainingPercent(fiveHourWindow)"
             :show-indicator="false"
             :height="5"
-            color="#22c55e"
+            :color="quotaColor(fiveHourWindow)"
             rail-color="rgba(15, 23, 42, 0.12)"
           />
-          <p>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无数据' }}</p>
+          <p>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${usedPercent(fiveHourWindow)}%` : '暂无数据' }}</p>
         </article>
 
         <article class="widget-quota-row">
@@ -344,46 +391,50 @@ function formatPlan(planType: string | undefined): string {
             :percentage="remainingPercent(sevenDayWindow)"
             :show-indicator="false"
             :height="5"
-            color="#22c55e"
+            :color="quotaColor(sevenDayWindow)"
             rail-color="rgba(15, 23, 42, 0.12)"
           />
-          <p>{{ sevenDayWindow ? `剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${sevenDayWindow.used}%` : '暂无数据' }}</p>
+          <p>{{ sevenDayWindow ? `剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${usedPercent(sevenDayWindow)}%` : '暂无数据' }}</p>
         </article>
       </section>
     </main>
 
     <main v-else class="desktop-shell">
       <section class="desktop-hero">
-        <div class="hero-brand">
+        <div class="hero-main">
           <img class="hero-mark" :src="appIcon" alt="" />
           <div>
             <h1>CodexMeter</h1>
             <p>Codex usage monitor · local secure refresh</p>
             <div class="safe-copy">
-              <span class="shield-icon">▣</span>
+              <span class="shield-dot"></span>
               <span>安全刷新：仅读取授权后的用量数据，不发起模型请求</span>
             </div>
           </div>
         </div>
 
-        <div class="hero-side">
+        <div class="hero-status">
           <div class="last-refresh">
-            <span>◴</span>
-            <span>{{ refreshSummary.replace('上次刷新 ', '上次刷新：') }}</span>
+            <span class="clock-dot"></span>
+            <span>上次刷新：</span>
+            <strong>{{ refreshTime }}</strong>
           </div>
-          <div class="hero-buttons">
-            <NTag :type="oauthConnected ? 'success' : 'warning'" round>
-              <span class="tag-dot"></span>
-              {{ oauthConnected ? '已连接' : '未连接' }}
-            </NTag>
-            <NButton class="refresh-button" type="primary" size="large" :loading="loading" @click="refreshQuota">
-              ↻ 刷新
-            </NButton>
-            <NButton class="more-button" size="large">...</NButton>
-          </div>
+          <NTag :type="oauthConnected ? 'success' : 'warning'" round>
+            <span class="tag-dot"></span>
+            {{ oauthConnected ? '已连接' : '未连接' }}
+          </NTag>
         </div>
 
-        <div class="hero-controls">
+        <div class="hero-actions">
+          <NButton class="refresh-button" type="primary" size="large" :loading="loading" @click="refreshQuota">
+            <span class="button-icon refresh-icon"></span>
+            刷新数据
+          </NButton>
+          <NButton class="more-button" size="large">...</NButton>
+        </div>
+
+        <div class="control-bar">
+          <span class="control-title">窗口行为</span>
           <label>
             <span>固定小组件</span>
             <NSwitch :value="widgetVisible" @update:value="updateWidgetVisible" />
@@ -392,16 +443,19 @@ function formatPlan(planType: string | undefined): string {
             <span>置顶显示</span>
             <NSwitch :value="alwaysOnTop" @update:value="updateAlwaysOnTop" />
           </label>
-          <div class="divider"></div>
           <div class="interval-control">
             <span>刷新策略</span>
             <NSelect
               class="interval-select"
-              :value="settings?.refreshIntervalMinutes ?? 0"
+              :value="settings?.refreshIntervalMinutes ?? 5"
               :options="intervalOptions"
               @update:value="updateInterval"
             />
           </div>
+          <button class="settings-button" type="button">
+            <span class="settings-icon"></span>
+            设置
+          </button>
         </div>
       </section>
 
@@ -415,12 +469,15 @@ function formatPlan(planType: string | undefined): string {
         </div>
 
         <div class="quota-cards">
-          <article class="usage-card" :class="quotaTone(fiveHourWindow)">
+          <article class="usage-card" :class="quotaState(fiveHourWindow)">
             <div class="usage-head">
-              <h3>5 小时额度窗口</h3>
+              <div class="card-title">
+                <span class="quota-icon short"></span>
+                <h3>5 小时额度窗口</h3>
+              </div>
               <div class="card-tags">
                 <NTag class="reset-tag" round>{{ resetLabel(fiveHourWindow) }}</NTag>
-                <NTag :type="quotaTone(fiveHourWindow) === 'danger' ? 'error' : 'success'" round>
+                <NTag :type="quotaState(fiveHourWindow) === 'exhausted' ? 'error' : quotaState(fiveHourWindow) === 'low' ? 'warning' : 'success'" round>
                   {{ quotaBadge(fiveHourWindow) }}
                 </NTag>
               </div>
@@ -433,25 +490,22 @@ function formatPlan(planType: string | undefined): string {
               type="line"
               :percentage="remainingPercent(fiveHourWindow)"
               :show-indicator="false"
-              :height="8"
+              :height="9"
               :color="quotaColor(fiveHourWindow)"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>
-              {{
-                fiveHourWindow
-                  ? `已用 ${fiveHourWindow.percentUsed}%，${remainingPercent(fiveHourWindow) <= 10 ? '短周期额度暂不可用' : '短周期额度可用'}`
-                  : '暂无可用数据'
-              }}
-            </p>
+            <p>{{ quotaCopy(fiveHourWindow, 'short') }}</p>
           </article>
 
-          <article class="usage-card" :class="quotaTone(sevenDayWindow)">
+          <article class="usage-card" :class="quotaState(sevenDayWindow)">
             <div class="usage-head">
-              <h3>7 天额度窗口</h3>
+              <div class="card-title">
+                <span class="quota-icon weekly"></span>
+                <h3>7 天额度窗口</h3>
+              </div>
               <div class="card-tags">
                 <NTag class="reset-tag" round>{{ resetLabel(sevenDayWindow) }}</NTag>
-                <NTag :type="quotaTone(sevenDayWindow) === 'danger' ? 'error' : 'success'" round>
+                <NTag :type="quotaState(sevenDayWindow) === 'exhausted' ? 'error' : quotaState(sevenDayWindow) === 'low' ? 'warning' : 'success'" round>
                   {{ quotaBadge(sevenDayWindow) }}
                 </NTag>
               </div>
@@ -464,17 +518,11 @@ function formatPlan(planType: string | undefined): string {
               type="line"
               :percentage="remainingPercent(sevenDayWindow)"
               :show-indicator="false"
-              :height="8"
+              :height="9"
               :color="quotaColor(sevenDayWindow)"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>
-              {{
-                sevenDayWindow
-                  ? `已用 ${sevenDayWindow.percentUsed}%，本周期额度${remainingPercent(sevenDayWindow) <= 10 ? '偏低' : '充足'}`
-                  : '暂无可用数据'
-              }}
-            </p>
+            <p>{{ quotaCopy(sevenDayWindow, 'weekly') }}</p>
           </article>
         </div>
       </section>
@@ -485,7 +533,6 @@ function formatPlan(planType: string | undefined): string {
             <h2>Codex OAuth</h2>
             <div class="heading-actions">
               <NTag :type="oauthConnected ? 'success' : 'warning'" round>
-                <span class="tag-dot"></span>
                 {{ oauthConnected ? '已连接' : '未连接' }}
               </NTag>
               <NButton
@@ -498,16 +545,20 @@ function formatPlan(planType: string | undefined): string {
               </NButton>
             </div>
           </div>
-          <div class="info-list">
+
+          <div class="info-list soft">
             <div>
+              <span class="list-icon account-icon"></span>
               <span>当前账户</span>
               <strong>{{ oauthConnected ? oauthEmail ?? '已授权账号' : '未授权' }}</strong>
             </div>
             <div>
+              <span class="list-icon key-icon"></span>
               <span>凭据状态</span>
               <strong>{{ oauthConnected ? '已授权' : '待授权' }}</strong>
             </div>
             <div>
+              <span class="list-icon lock-icon"></span>
               <span>数据存储</span>
               <strong>本地加密</strong>
             </div>
@@ -516,24 +567,32 @@ function formatPlan(planType: string | undefined): string {
 
         <div class="info-card">
           <div class="card-heading">
-            <h2>硬件显示</h2>
-            <NTag :type="devices.length ? 'success' : 'default'" round>{{ displayMode }}</NTag>
-          </div>
-          <div class="info-list">
             <div>
-              <span>说明</span>
-              <strong>后续把桌面端额度状态同步到外部屏幕或设备</strong>
+              <h2>硬件显示</h2>
+              <p>后续支持将桌面额度状态同步到外部屏幕或设备</p>
             </div>
+            <NTag :type="devices.length ? 'success' : 'default'" round>{{ devices.length ? '已连接' : '待机' }}</NTag>
+          </div>
+
+          <div class="hardware-list">
             <div>
+              <span class="list-icon serial-icon"></span>
               <span>串口显示</span>
               <strong>已预留</strong>
             </div>
             <div>
+              <span class="list-icon bluetooth-icon"></span>
               <span>蓝牙连接</span>
               <strong>规划中</strong>
             </div>
             <div>
+              <span class="list-icon cloud-icon"></span>
               <span>MQTT 推送</span>
+              <strong>规划中</strong>
+            </div>
+            <div>
+              <span class="list-icon screen-icon"></span>
+              <span>外部小屏</span>
               <strong>规划中</strong>
             </div>
           </div>
@@ -541,11 +600,11 @@ function formatPlan(planType: string | undefined): string {
       </section>
 
       <footer class="app-footer">
-        <span>本地安全运行</span>
-        <span>仅读取授权数据，不发起模型请求</span>
-        <span>数据来源：Codex OAuth</span>
-        <span>v1.0.0</span>
-        <span>检查更新</span>
+        <div>本地安全运行 · 仅读取授权数据 · 数据来源：Codex OAuth</div>
+        <div>
+          <span>版本：v1.0.0</span>
+          <button type="button">检查更新</button>
+        </div>
       </footer>
     </main>
   </NConfigProvider>
