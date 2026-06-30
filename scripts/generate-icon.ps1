@@ -20,7 +20,7 @@ function New-IconBitmap {
 
   $scale = $Size / 1024.0
   $roundRect = New-Object System.Drawing.RectangleF 0, 0, $Size, $Size
-  $radius = 244 * $scale
+  $radius = 236 * $scale
   $path = New-Object System.Drawing.Drawing2D.GraphicsPath
   $diameter = $radius * 2
   $path.AddArc($roundRect.X, $roundRect.Y, $diameter, $diameter, 180, 90)
@@ -29,26 +29,26 @@ function New-IconBitmap {
   $path.AddArc($roundRect.X, $roundRect.Bottom - $diameter, $diameter, $diameter, 90, 90)
   $path.CloseFigure()
 
-  $bg = New-Object System.Drawing.Drawing2D.LinearGradientBrush $roundRect, ([System.Drawing.Color]::FromArgb(29, 78, 216)), ([System.Drawing.Color]::FromArgb(125, 211, 252)), 135
+  $bg = New-Object System.Drawing.Drawing2D.LinearGradientBrush $roundRect, ([System.Drawing.Color]::FromArgb(15, 63, 184)), ([System.Drawing.Color]::FromArgb(111, 212, 255)), 135
   $graphics.FillPath($bg, $path)
 
-  $arcPen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(245, 252, 255)), (92 * $scale)
+  $arcPen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(245, 252, 255)), (108 * $scale)
   $arcPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
   $arcPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-  $graphics.DrawArc($arcPen, 226 * $scale, 168 * $scale, 588 * $scale, 588 * $scale, 138, 250)
+  $graphics.DrawArc($arcPen, 238 * $scale, 240 * $scale, 548 * $scale, 548 * $scale, 134, 268)
 
   $needlePen = New-Object System.Drawing.Pen ([System.Drawing.Color]::White), (76 * $scale)
   $needlePen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
   $needlePen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-  $graphics.DrawLine($needlePen, 523 * $scale, 515 * $scale, 658 * $scale, 342 * $scale)
+  $graphics.DrawLine($needlePen, 512 * $scale, 514 * $scale, 646 * $scale, 372 * $scale)
 
   $centerBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(236, 254, 255))
-  $graphics.FillEllipse($centerBrush, (523 - 72) * $scale, (515 - 72) * $scale, 144 * $scale, 144 * $scale)
+  $graphics.FillEllipse($centerBrush, (512 - 66) * $scale, (514 - 66) * $scale, 132 * $scale, 132 * $scale)
 
   $greenBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(34, 197, 94))
-  $greenPen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(217, 249, 157)), (30 * $scale)
-  $graphics.FillEllipse($greenBrush, (744 - 78) * $scale, (644 - 78) * $scale, 156 * $scale, 156 * $scale)
-  $graphics.DrawEllipse($greenPen, (744 - 78) * $scale, (644 - 78) * $scale, 156 * $scale, 156 * $scale)
+  $greenPen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(217, 249, 157)), (28 * $scale)
+  $graphics.FillEllipse($greenBrush, (712 - 82) * $scale, (646 - 82) * $scale, 164 * $scale, 164 * $scale)
+  $graphics.DrawEllipse($greenPen, (712 - 82) * $scale, (646 - 82) * $scale, 164 * $scale, 164 * $scale)
 
   $graphics.Dispose()
   $path.Dispose()

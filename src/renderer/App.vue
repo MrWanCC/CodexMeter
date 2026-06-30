@@ -170,7 +170,9 @@ function remainingPercent(window: QuotaWindow | null): number {
         </div>
         <div class="widget-tools">
           <span class="widget-source">{{ quotaSourceLabel }}</span>
-          <NButton quaternary circle size="tiny" :loading="loading" @click="refreshQuota">↻</NButton>
+          <button class="widget-refresh" :class="{ 'is-loading': loading }" type="button" @click="refreshQuota">
+            ↻
+          </button>
         </div>
       </header>
 
@@ -336,14 +338,14 @@ function remainingPercent(window: QuotaWindow | null): number {
             </div>
           </div>
           <NButton
+            v-if="!oauthConnected"
             class="panel-action"
             size="tiny"
             type="primary"
             :loading="connecting"
-            :disabled="oauthConnected"
             @click="connectOAuth"
           >
-            {{ oauthConnected ? '已连接' : '连接 Codex' }}
+            连接 Codex
           </NButton>
         </div>
 
