@@ -2,54 +2,60 @@
 import { computed, onMounted, ref } from 'vue'
 import { NButton, NConfigProvider, NProgress, NSelect, NSwitch, NTag } from 'naive-ui'
 import type { DisplayDevice } from '../shared/device'
-import type { QuotaSnapshot, QuotaWindow } from '../shared/quota'
+import { sampleQuotaSnapshot, type QuotaSnapshot, type QuotaWindow } from '../shared/quota'
 import type { AppSettings, RefreshIntervalMinutes } from '../shared/settings'
 
 const snapshot = ref<QuotaSnapshot | null>(null)
 const settings = ref<AppSettings | null>(null)
 const devices = ref<DisplayDevice[]>([])
 const loading = ref(false)
-const status = ref('Ready')
+const status = ref('就绪')
 const widgetVisible = ref(true)
 const alwaysOnTop = ref(false)
 
 const intervalOptions = [
-  { label: 'Manual', value: 0 },
-  { label: '1 minute', value: 1 },
-  { label: '3 minutes', value: 3 },
-  { label: '5 minutes', value: 5 }
+  { label: '手动', value: 0 },
+  { label: '1 分钟', value: 1 },
+  { label: '3 分钟', value: 3 },
+  { label: '5 分钟', value: 5 }
 ]
 
 const fiveHourWindow = computed(() => findWindow('5h'))
 const sevenDayWindow = computed(() => findWindow('7d'))
-const displayMode = computed(() => (devices.value.length > 0 ? 'Linked' : 'Standby'))
+const displayMode = computed(() => (devices.value.length > 0 ? '已连接' : '待机'))
 const refreshSummary = computed(() => {
   if (!snapshot.value) {
-    return 'Not updated yet'
+    return '尚未刷新'
   }
 
-  return `Last updated ${new Date(snapshot.value.refreshedAt).toLocaleTimeString()}`
+  return `上次刷新 ${new Date(snapshot.value.refreshedAt).toLocaleTimeString()}`
 })
 
 onMounted(async () => {
-  settings.value = await window.codexMeter.getSettings()
-  devices.value = await window.codexMeter.listDevices()
+  if (window.codexMeter) {
+    settings.value = await window.codexMeter.getSettings()
+    devices.value = await window.codexMeter.listDevices()
+  } else {
+    settings.value = { refreshIntervalMinutes: 0, hardwareDisplayEnabled: false }
+  }
   await refreshQuota()
 })
 
 async function refreshQuota(): Promise<void> {
   loading.value = true
-  status.value = 'Refreshing'
+  status.value = '刷新中'
   try {
-    snapshot.value = await window.codexMeter.refreshQuota()
-    status.value = `Updated ${new Date(snapshot.value.refreshedAt).toLocaleTimeString()}`
+    snapshot.value = window.codexMeter ? await window.codexMeter.refreshQuota() : sampleQuotaSnapshot()
+    status.value = `已刷新 ${new Date(snapshot.value.refreshedAt).toLocaleTimeString()}`
   } finally {
     loading.value = false
   }
 }
 
 async function updateInterval(value: number): Promise<void> {
-  settings.value = await window.codexMeter.saveRefreshInterval(value as RefreshIntervalMinutes)
+  settings.value = window.codexMeter
+    ? await window.codexMeter.saveRefreshInterval(value as RefreshIntervalMinutes)
+    : { refreshIntervalMinutes: value as RefreshIntervalMinutes, hardwareDisplayEnabled: false }
 }
 
 function findWindow(code: '5h' | '7d'): QuotaWindow | null {
@@ -76,28 +82,28 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
           <div class="refresh-status">
             <span class="status-dot"></span>
             <div>
-              <strong>{{ loading ? 'Refreshing' : 'Safe refresh' }}</strong>
-              <p>Reads usage data only, no model request</p>
+              <strong>{{ loading ? '正在刷新' : '安全刷新' }}</strong>
+              <p>只读取授权后的用量数据，不发起模型请求</p>
             </div>
           </div>
 
           <div class="button-row">
-            <NButton type="primary" size="small" :loading="loading" @click="refreshQuota">Refresh</NButton>
-            <NButton size="small" disabled>Connect</NButton>
+            <NButton type="primary" size="small" :loading="loading" @click="refreshQuota">刷新</NButton>
+            <NButton size="small" disabled>连接</NButton>
           </div>
         </div>
 
         <div class="widget-controls">
           <label>
-            <span>Pin widget</span>
+            <span>固定小组件</span>
             <NSwitch v-model:value="widgetVisible" size="small" />
           </label>
           <label>
-            <span>Always on top</span>
+            <span>置顶</span>
             <NSwitch v-model:value="alwaysOnTop" size="small" />
           </label>
           <div class="interval-control">
-            <span>Refresh</span>
+            <span>自动刷新</span>
             <NSelect
               class="interval-select"
               size="small"
@@ -112,16 +118,16 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
       <section class="quota-panel glass-panel">
         <div class="panel-title">
           <NTag type="info" round>Codex</NTag>
-          <span>Available</span>
+          <span>可用</span>
         </div>
 
         <div class="quota-rows">
           <article class="quota-row">
             <div class="quota-line">
-              <strong>5 hour window</strong>
+              <strong>5 小时额度窗口</strong>
               <div class="quota-value">
                 <span>{{ fiveHourWindow ? `${fiveHourWindow.percentUsed}%` : '—' }}</span>
-                <small>resets soon</small>
+                <small>短周期</small>
               </div>
             </div>
             <NProgress
@@ -132,15 +138,15 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
               color="#22c55e"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>{{ fiveHourWindow ? `${fiveHourWindow.used} used · ${fiveHourWindow.limit} limit` : 'Unavailable' }}</p>
+            <p>{{ fiveHourWindow ? `已用 ${fiveHourWindow.used} · 上限 ${fiveHourWindow.limit}` : '暂无可用数据' }}</p>
           </article>
 
           <article class="quota-row">
             <div class="quota-line">
-              <strong>7 day window</strong>
+              <strong>7 天额度窗口</strong>
               <div class="quota-value">
                 <span>{{ sevenDayWindow ? `${sevenDayWindow.percentUsed}%` : '—' }}</span>
-                <small>weekly</small>
+                <small>周周期</small>
               </div>
             </div>
             <NProgress
@@ -151,7 +157,7 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
               color="#22c55e"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>{{ sevenDayWindow ? `${sevenDayWindow.used} used · ${sevenDayWindow.limit} limit` : 'Unavailable' }}</p>
+            <p>{{ sevenDayWindow ? `已用 ${sevenDayWindow.used} · 上限 ${sevenDayWindow.limit}` : '暂无可用数据' }}</p>
           </article>
         </div>
       </section>
@@ -160,32 +166,32 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
         <div class="glass-panel provider-panel">
           <div class="section-heading">
             <h2>Codex OAuth</h2>
-            <NTag type="warning" round>Not connected</NTag>
+            <NTag type="warning" round>未连接</NTag>
           </div>
-          <p class="muted">OAuth and token storage are reserved for the next implementation step.</p>
+          <p class="muted">下一步接入 OAuth 授权和本地 token 存储。</p>
           <div class="brief-list">
-            <span>Safe refresh</span>
-            <span>Local token storage</span>
-            <span>No prompt requests</span>
+            <span>安全刷新</span>
+            <span>本地凭据存储</span>
+            <span>不发送 prompt</span>
           </div>
         </div>
 
         <div class="glass-panel provider-panel">
           <div class="section-heading">
-            <h2>Display output</h2>
+            <h2>硬件显示</h2>
             <NTag :type="devices.length ? 'success' : 'default'" round>{{ displayMode }}</NTag>
           </div>
           <div class="device-row">
-            <span>Serial</span>
-            <strong>Ready</strong>
+            <span>串口</span>
+            <strong>已预留</strong>
           </div>
           <div class="device-row">
-            <span>Bluetooth</span>
-            <strong>Next</strong>
+            <span>蓝牙</span>
+            <strong>下一步</strong>
           </div>
           <div class="device-row">
             <span>MQTT</span>
-            <strong>Next</strong>
+            <strong>下一步</strong>
           </div>
         </div>
       </section>

@@ -17,18 +17,21 @@ const deviceBridge = new NoopDeviceBridge()
 
 async function createWindow(): Promise<void> {
   mainWindow = new BrowserWindow({
-    width: 760,
-    height: 760,
-    minWidth: 720,
-    minHeight: 660,
+    width: 740,
+    height: 620,
+    resizable: false,
+    maximizable: false,
     title: 'CodexMeter',
     backgroundColor: '#f5f7fb',
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: false
     }
   })
+  Menu.setApplicationMenu(null)
 
   if (devServerUrl) {
     await mainWindow.loadURL(devServerUrl)
@@ -50,9 +53,9 @@ function createTray(): void {
   tray.setToolTip('CodexMeter')
   tray.setContextMenu(
     Menu.buildFromTemplate([
-      { label: 'Open CodexMeter', click: () => mainWindow?.show() },
+      { label: '打开 CodexMeter', click: () => mainWindow?.show() },
       {
-        label: 'Quit',
+        label: '退出',
         click: () => {
           isQuitting = true
           app.quit()
