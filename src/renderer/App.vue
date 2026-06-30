@@ -325,7 +325,7 @@ function quotaColor(window: QuotaWindow | null): string {
     return '#f59e0b'
   }
 
-  return state === 'abundant' ? '#16a34a' : '#22c55e'
+  return 'linear-gradient(90deg, #22c55e, #16a34a)'
 }
 
 function quotaTagType(window: QuotaWindow | null): 'default' | 'error' | 'warning' | 'success' {
@@ -356,17 +356,17 @@ function quotaIcon(window: QuotaWindow | null, weekly = false) {
 
 function resetLabel(window: QuotaWindow | null): string {
   if (!window?.resetAt) {
-    return '下次重置：未知'
+    return '重置 未知'
   }
 
   const date = new Date(window.resetAt)
   if (Number.isNaN(date.getTime())) {
-    return '下次重置：未知'
+    return '重置 未知'
   }
 
   return window.code === '5h'
-    ? `下次重置：${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    : `下次重置：${date.toLocaleDateString([], { month: '2-digit', day: '2-digit' })}`
+    ? `重置 ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    : `重置 ${date.toLocaleDateString([], { month: '2-digit', day: '2-digit' })}`
 }
 
 function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): string {
@@ -509,7 +509,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
           <article class="usage-card" :class="fiveHourState">
             <div class="usage-head">
               <div class="card-title">
-                <component :is="quotaIcon(fiveHourWindow)" class="quota-icon" :size="22" :stroke-width="2" />
+                <component :is="quotaIcon(fiveHourWindow)" class="quota-icon" :size="20" :stroke-width="2" />
                 <h3>5 小时额度窗口</h3>
               </div>
               <NTag :type="quotaTagType(fiveHourWindow)" round>
@@ -524,9 +524,9 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
               type="line"
               :percentage="remainingPercent(fiveHourWindow)"
               :show-indicator="false"
-              :height="10"
+              :height="8"
               :color="quotaColor(fiveHourWindow)"
-              rail-color="rgba(15, 23, 42, 0.12)"
+              rail-color="#e5e7eb"
             />
             <div class="quota-details">
               <span>已用 {{ usedPercent(fiveHourWindow) }}%</span>
@@ -538,7 +538,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
           <article class="usage-card" :class="sevenDayState">
             <div class="usage-head">
               <div class="card-title">
-                <component :is="quotaIcon(sevenDayWindow, true)" class="quota-icon" :size="22" :stroke-width="2" />
+                <component :is="quotaIcon(sevenDayWindow, true)" class="quota-icon" :size="20" :stroke-width="2" />
                 <h3>7 天额度窗口</h3>
               </div>
               <NTag :type="quotaTagType(sevenDayWindow)" round>
@@ -553,9 +553,9 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
               type="line"
               :percentage="remainingPercent(sevenDayWindow)"
               :show-indicator="false"
-              :height="10"
+              :height="8"
               :color="quotaColor(sevenDayWindow)"
-              rail-color="rgba(15, 23, 42, 0.12)"
+              rail-color="#e5e7eb"
             />
             <div class="quota-details">
               <span>已用 {{ usedPercent(sevenDayWindow) }}%</span>

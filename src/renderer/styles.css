@@ -286,7 +286,7 @@ svg {
 }
 
 .usage-head {
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -294,14 +294,14 @@ svg {
 .card-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
 .card-title h3 {
   margin: 0;
-  color: #111827;
-  font-size: 17px;
+  color: #0f172a;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -332,21 +332,24 @@ svg {
 .usage-number {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 0;
   margin-bottom: 10px;
 }
 
 .usage-number strong {
   color: #64748b;
-  font-size: 36px;
+  font-size: 38px;
   font-weight: 800;
   line-height: 1;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 
 .usage-number span {
-  color: #475569;
+  margin-left: 8px;
+  color: #64748b;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .quota-details {
@@ -355,14 +358,39 @@ svg {
   justify-content: space-between;
   gap: 12px;
   margin-top: 9px;
-  color: #52627d;
+  color: #64748b;
   font-size: 13px;
 }
 
 .usage-card p {
-  margin: 6px 0 0;
-  color: #667085;
+  margin: 8px 0 0;
+  color: #64748b;
   font-size: 13px;
+}
+
+.usage-card .usage-head > .n-tag {
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.usage-card.normal .usage-head > .n-tag,
+.usage-card.abundant .usage-head > .n-tag {
+  color: #16a34a !important;
+  background: #ecfdf5 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.usage-card .n-progress-graph-line-rail,
+.usage-card .n-progress-graph-line-fill {
+  border-radius: 999px;
+}
+
+.usage-card.normal .n-progress-graph-line-fill,
+.usage-card.abundant .n-progress-graph-line-fill {
+  background: linear-gradient(90deg, #22c55e, #16a34a) !important;
 }
 
 .lower-grid {
