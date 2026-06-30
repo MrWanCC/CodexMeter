@@ -220,6 +220,13 @@ body {
   font-size: 16px;
 }
 
+.heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .panel-copy {
   min-height: 32px;
   margin: 7px 0 8px;

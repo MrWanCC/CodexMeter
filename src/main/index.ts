@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { NoopDeviceBridge } from './deviceBridge.js'
 import { startCodexOAuth } from './oauth.js'
 import { fetchQuotaSnapshot } from './quotaProvider.js'
-import { getCodexOAuth, getSettings, saveSettings } from './store.js'
+import { clearCodexOAuth, getCodexOAuth, getSettings, saveSettings } from './store.js'
 import type { QuotaSnapshot } from '../shared/quota.js'
 import { isRefreshIntervalMinutes } from '../shared/settings.js'
 
@@ -122,11 +122,15 @@ function createTray(): void {
 
 async function refreshQuotaAndBroadcast(): Promise<QuotaSnapshot> {
   const snapshot = await fetchQuotaSnapshot()
-  latestSnapshot = snapshot
   await deviceBridge.sendSnapshot(snapshot)
+  broadcastQuotaSnapshot(snapshot)
+  return snapshot
+}
+
+function broadcastQuotaSnapshot(snapshot: QuotaSnapshot): void {
+  latestSnapshot = snapshot
   mainWindow?.webContents.send('quota:updated', snapshot)
   widgetWindow?.webContents.send('quota:updated', snapshot)
-  return snapshot
 }
 
 ipcMain.handle('quota:refresh', async () => refreshQuotaAndBroadcast())
@@ -163,6 +167,18 @@ ipcMain.handle('oauth:status', () => {
 })
 
 ipcMain.handle('oauth:connect', async (_event, forceLogin?: boolean) => startCodexOAuth(Boolean(forceLogin)))
+
+ipcMain.handle('oauth:disconnect', async () => {
+  clearCodexOAuth()
+  const snapshot: QuotaSnapshot = {
+    available: false,
+    refreshedAt: new Date().toISOString(),
+    windows: [],
+    source: 'unavailable'
+  }
+  broadcastQuotaSnapshot(snapshot)
+  return { connected: false, snapshot }
+})
 
 ipcMain.handle('widget:state', () => ({
   visible: Boolean(widgetWindow && !widgetWindow.isDestroyed() && widgetWindow.isVisible()),

@@ -13,6 +13,8 @@ const api = {
   getOAuthStatus: () => ipcRenderer.invoke('oauth:status') as Promise<{ connected: boolean; email?: string }>,
   connectOAuth: (forceLogin = false) =>
     ipcRenderer.invoke('oauth:connect', forceLogin) as Promise<{ connected: boolean; email?: string; error?: string }>,
+  disconnectOAuth: () =>
+    ipcRenderer.invoke('oauth:disconnect') as Promise<{ connected: boolean; snapshot: QuotaSnapshot }>,
   getWidgetState: () =>
     ipcRenderer.invoke('widget:state') as Promise<{ visible: boolean; alwaysOnTop: boolean }>,
   setWidgetVisible: (visible: boolean, alwaysOnTop: boolean) =>

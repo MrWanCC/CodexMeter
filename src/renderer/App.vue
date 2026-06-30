@@ -122,6 +122,23 @@ async function connectOAuth(forceLogin = false): Promise<void> {
   }
 }
 
+async function disconnectOAuth(): Promise<void> {
+  if (!window.codexMeter || connecting.value) {
+    return
+  }
+
+  connecting.value = true
+  try {
+    const result = await window.codexMeter.disconnectOAuth()
+    oauthConnected.value = result.connected
+    oauthEmail.value = undefined
+    snapshot.value = result.snapshot
+    status.value = '已断开'
+  } finally {
+    connecting.value = false
+  }
+}
+
 async function updateWidgetVisible(value: boolean): Promise<void> {
   widgetVisible.value = value
   if (!window.codexMeter) {
@@ -320,9 +337,19 @@ function remainingPercent(window: QuotaWindow | null): number {
         <div class="glass-panel provider-panel">
           <div class="section-heading">
             <h2>Codex OAuth</h2>
-            <NTag :type="oauthConnected ? 'success' : 'warning'" round>
-              {{ oauthConnected ? '已连接' : '未连接' }}
-            </NTag>
+            <div class="heading-actions">
+              <NTag :type="oauthConnected ? 'success' : 'warning'" round>
+                {{ oauthConnected ? '已连接' : '未连接' }}
+              </NTag>
+              <NButton
+                size="tiny"
+                :type="oauthConnected ? 'default' : 'primary'"
+                :loading="connecting"
+                @click="oauthConnected ? disconnectOAuth() : connectOAuth()"
+              >
+                {{ oauthConnected ? '断开连接' : '连接 Codex' }}
+              </NButton>
+            </div>
           </div>
           <p class="panel-copy">
             {{ oauthConnected ? `当前账号：${oauthEmail ?? '已授权账号'}` : '授权后自动读取额度，不会发送 prompt 或触发模型请求。' }}
@@ -337,15 +364,6 @@ function remainingPercent(window: QuotaWindow | null): number {
               <strong>本地加密</strong>
             </div>
           </div>
-          <NButton
-            class="panel-action"
-            size="tiny"
-            :type="oauthConnected ? 'default' : 'primary'"
-            :loading="connecting"
-            @click="connectOAuth(oauthConnected)"
-          >
-            {{ oauthConnected ? '切换账号' : '连接 Codex' }}
-          </NButton>
         </div>
 
         <div class="glass-panel provider-panel">
