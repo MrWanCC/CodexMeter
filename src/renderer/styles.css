@@ -207,13 +207,14 @@ body {
 .settings-grid {
   align-items: stretch;
   min-height: 0;
+  flex: 1;
 }
 
 .provider-panel {
   flex: 1;
   padding: 11px;
   min-width: 0;
-  max-height: 150px;
+  min-height: 158px;
 }
 
 .section-heading h2 {

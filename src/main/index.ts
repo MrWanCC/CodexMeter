@@ -18,7 +18,7 @@ const deviceBridge = new NoopDeviceBridge()
 async function createWindow(): Promise<void> {
   mainWindow = new BrowserWindow({
     width: 740,
-    height: 680,
+    height: 720,
     useContentSize: true,
     resizable: false,
     maximizable: false,
