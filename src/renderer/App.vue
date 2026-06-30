@@ -12,6 +12,9 @@ const loading = ref(false)
 const status = ref('就绪')
 const widgetVisible = ref(true)
 const alwaysOnTop = ref(false)
+const oauthConnected = ref(false)
+const oauthEmail = ref<string | undefined>()
+const connecting = ref(false)
 
 const intervalOptions = [
   { label: '手动', value: 0 },
@@ -35,6 +38,9 @@ onMounted(async () => {
   if (window.codexMeter) {
     settings.value = await window.codexMeter.getSettings()
     devices.value = await window.codexMeter.listDevices()
+    const oauth = await window.codexMeter.getOAuthStatus()
+    oauthConnected.value = oauth.connected
+    oauthEmail.value = oauth.email
   } else {
     settings.value = { refreshIntervalMinutes: 0, hardwareDisplayEnabled: false }
   }
@@ -56,6 +62,25 @@ async function updateInterval(value: number): Promise<void> {
   settings.value = window.codexMeter
     ? await window.codexMeter.saveRefreshInterval(value as RefreshIntervalMinutes)
     : { refreshIntervalMinutes: value as RefreshIntervalMinutes, hardwareDisplayEnabled: false }
+}
+
+async function connectOAuth(): Promise<void> {
+  if (!window.codexMeter || connecting.value) {
+    return
+  }
+
+  connecting.value = true
+  status.value = '等待授权'
+  try {
+    const result = await window.codexMeter.connectOAuth()
+    oauthConnected.value = result.connected
+    oauthEmail.value = result.email
+    status.value = result.connected ? '已连接' : '连接失败'
+  } catch {
+    status.value = '连接失败'
+  } finally {
+    connecting.value = false
+  }
 }
 
 function findWindow(code: '5h' | '7d'): QuotaWindow | null {
@@ -89,7 +114,9 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
 
           <div class="button-row">
             <NButton type="primary" size="small" :loading="loading" @click="refreshQuota">刷新</NButton>
-            <NButton size="small" disabled>连接</NButton>
+            <NButton size="small" :loading="connecting" :disabled="oauthConnected" @click="connectOAuth">
+              {{ oauthConnected ? '已连接' : '连接' }}
+            </NButton>
           </div>
         </div>
 
@@ -166,19 +193,33 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
         <div class="glass-panel provider-panel">
           <div class="section-heading">
             <h2>Codex OAuth</h2>
-            <NTag type="warning" round>未连接</NTag>
+            <NTag :type="oauthConnected ? 'success' : 'warning'" round>
+              {{ oauthConnected ? '已连接' : '未连接' }}
+            </NTag>
           </div>
-          <p class="panel-copy">授权后自动读取额度，不会发送 prompt 或触发模型请求。</p>
+          <p class="panel-copy">
+            {{ oauthConnected ? `当前账号：${oauthEmail ?? '已授权账号'}` : '授权后自动读取额度，不会发送 prompt 或触发模型请求。' }}
+          </p>
           <div class="status-list">
             <div class="status-row">
               <span>凭据</span>
-              <strong>待授权</strong>
+              <strong>{{ oauthConnected ? '已授权' : '待授权' }}</strong>
             </div>
             <div class="status-row">
               <span>存储</span>
               <strong>本地加密</strong>
             </div>
           </div>
+          <NButton
+            class="panel-action"
+            size="tiny"
+            type="primary"
+            :loading="connecting"
+            :disabled="oauthConnected"
+            @click="connectOAuth"
+          >
+            {{ oauthConnected ? '已连接' : '连接 Codex' }}
+          </NButton>
         </div>
 
         <div class="glass-panel provider-panel">

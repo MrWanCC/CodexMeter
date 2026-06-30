@@ -211,6 +211,7 @@ body {
 }
 
 .provider-panel {
+  position: relative;
   flex: 1;
   padding: 11px;
   min-width: 0;
@@ -255,4 +256,10 @@ body {
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.panel-action {
+  position: absolute;
+  right: 11px;
+  bottom: 11px;
 }

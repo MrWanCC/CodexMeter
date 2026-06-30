@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain, Menu, nativeImage, Tray } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { NoopDeviceBridge } from './deviceBridge.js'
-import { getSettings, saveSettings } from './store.js'
+import { startCodexOAuth } from './oauth.js'
+import { getCodexOAuth, getSettings, saveSettings } from './store.js'
 import { isRefreshIntervalMinutes } from '../shared/settings.js'
 import { sampleQuotaSnapshot } from '../shared/quota.js'
 
@@ -18,7 +19,7 @@ const deviceBridge = new NoopDeviceBridge()
 async function createWindow(): Promise<void> {
   mainWindow = new BrowserWindow({
     width: 740,
-    height: 720,
+    height: 680,
     useContentSize: true,
     resizable: false,
     maximizable: false,
@@ -87,6 +88,16 @@ ipcMain.handle('settings:saveRefreshInterval', (_event, minutes: number) => {
 })
 
 ipcMain.handle('devices:list', () => deviceBridge.listDevices())
+
+ipcMain.handle('oauth:status', () => {
+  const token = getCodexOAuth()
+  return {
+    connected: Boolean(token?.accessToken),
+    email: token?.email
+  }
+})
+
+ipcMain.handle('oauth:connect', async () => startCodexOAuth())
 
 app.whenReady().then(async () => {
   await createWindow()
