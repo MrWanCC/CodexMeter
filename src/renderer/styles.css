@@ -173,7 +173,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
   width: 150px;
   height: 52px;
   border-radius: 10px;
@@ -190,24 +190,30 @@ body {
   flex: 0 0 auto;
 }
 
+.button-icon {
+  width: 20px;
+  height: 20px;
+}
+
 .refresh-icon {
   width: 18px;
   height: 18px;
-  border: 2px solid currentColor;
-  border-left-color: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.98);
+  border-right-color: transparent;
   border-radius: 50%;
 }
 
 .refresh-icon::after {
   content: "";
   position: absolute;
-  right: -1px;
-  top: 1px;
-  width: 6px;
-  height: 6px;
-  border-top: 2px solid currentColor;
-  border-right: 2px solid currentColor;
-  transform: rotate(16deg);
+  right: -2px;
+  top: 2px;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid rgba(255, 255, 255, 0.98);
+  transform: rotate(18deg);
 }
 
 .more-button {
@@ -505,35 +511,45 @@ body {
 }
 
 .list-icon {
-  width: 18px;
-  height: 18px;
-  color: #344054;
+  width: 16px;
+  height: 16px;
+  color: #52627d;
 }
 
 .account-icon {
-  border: 2px solid currentColor;
-  border-top: 0;
-  border-radius: 10px 10px 6px 6px;
+  border: 0;
 }
 
 .account-icon::before {
   content: "";
   position: absolute;
   left: 5px;
-  top: 0;
-  width: 6px;
-  height: 6px;
+  top: 1px;
+  width: 5px;
+  height: 5px;
   border: 2px solid currentColor;
   border-radius: 50%;
+}
+
+.account-icon::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 10px;
+  width: 10px;
+  height: 5px;
+  border: 2px solid currentColor;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
 }
 
 .key-icon::before {
   content: "";
   position: absolute;
   left: 1px;
-  top: 3px;
-  width: 8px;
-  height: 8px;
+  top: 4px;
+  width: 6px;
+  height: 6px;
   border: 2px solid currentColor;
   border-radius: 50%;
 }
@@ -541,35 +557,35 @@ body {
 .key-icon::after {
   content: "";
   position: absolute;
-  left: 9px;
+  left: 8px;
   top: 8px;
-  width: 9px;
+  width: 8px;
   height: 2px;
   border-radius: 999px;
   background: currentColor;
-  box-shadow: 5px 3px 0 -0.5px currentColor;
+  box-shadow: 4px 3px 0 -0.5px currentColor;
 }
 
 .lock-icon {
   border: 2px solid currentColor;
-  border-radius: 4px;
-  transform: translateY(4px);
+  border-radius: 3px;
+  transform: translateY(3px);
 }
 
 .lock-icon::before {
   content: "";
   position: absolute;
   left: 3px;
-  top: -9px;
-  width: 8px;
-  height: 8px;
+  top: -8px;
+  width: 7px;
+  height: 7px;
   border: 2px solid currentColor;
   border-bottom: 0;
   border-radius: 8px 8px 0 0;
 }
 
 .serial-icon {
-  border: 2px solid currentColor;
+  border: 1.8px solid currentColor;
   border-radius: 4px;
 }
 
@@ -577,8 +593,8 @@ body {
   content: "";
   position: absolute;
   left: 3px;
-  top: 6px;
-  width: 10px;
+  top: 4px;
+  width: 8px;
   height: 2px;
   background: currentColor;
   box-shadow: 0 4px 0 currentColor;
@@ -588,17 +604,17 @@ body {
 .bluetooth-icon::after {
   content: "";
   position: absolute;
-  left: 8px;
+  left: 6px;
   top: 1px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-top: 2px solid currentColor;
   border-right: 2px solid currentColor;
   transform: rotate(45deg);
 }
 
 .bluetooth-icon::after {
-  top: 8px;
+  top: 7px;
   transform: rotate(135deg);
 }
 
@@ -607,8 +623,8 @@ body {
   position: absolute;
   left: 1px;
   top: 8px;
-  width: 16px;
-  height: 8px;
+  width: 14px;
+  height: 7px;
   border: 2px solid currentColor;
   border-top: 0;
   border-radius: 0 0 10px 10px;
@@ -619,22 +635,22 @@ body {
   position: absolute;
   left: 4px;
   top: 3px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border: 2px solid currentColor;
   border-bottom: 0;
   border-radius: 10px 10px 0 0;
 }
 
 .screen-icon {
-  border: 2px solid currentColor;
+  border: 1.8px solid currentColor;
   border-radius: 3px;
 }
 
 .screen-icon::after {
   content: "";
   position: absolute;
-  left: 5px;
+  left: 4px;
   bottom: -5px;
   width: 8px;
   height: 2px;
