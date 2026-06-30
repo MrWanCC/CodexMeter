@@ -1,20 +1,22 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { NButton, NConfigProvider, NProgress, NSelect, NSwitch, NTag } from 'naive-ui'
 import type { DisplayDevice } from '../shared/device'
 import { sampleQuotaSnapshot, type QuotaSnapshot, type QuotaWindow } from '../shared/quota'
 import type { AppSettings, RefreshIntervalMinutes } from '../shared/settings'
 
+const isWidgetView = new URLSearchParams(window.location.search).get('view') === 'widget'
 const snapshot = ref<QuotaSnapshot | null>(null)
 const settings = ref<AppSettings | null>(null)
 const devices = ref<DisplayDevice[]>([])
 const loading = ref(false)
 const status = ref('就绪')
-const widgetVisible = ref(true)
+const widgetVisible = ref(false)
 const alwaysOnTop = ref(false)
 const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
 const connecting = ref(false)
+let unsubscribeQuota: (() => void) | undefined
 
 const intervalOptions = [
   { label: '手动', value: 0 },
@@ -50,16 +52,34 @@ const quotaSourceLabel = computed(() => {
 })
 
 onMounted(async () => {
+  unsubscribeQuota = window.codexMeter?.onQuotaUpdated((nextSnapshot) => {
+    snapshot.value = nextSnapshot
+    status.value = `已刷新 ${new Date(nextSnapshot.refreshedAt).toLocaleTimeString()}`
+  })
+
+  if (isWidgetView) {
+    snapshot.value = window.codexMeter ? await window.codexMeter.getLatestQuota() : sampleQuotaSnapshot()
+    return
+  }
+
   if (window.codexMeter) {
     settings.value = await window.codexMeter.getSettings()
     devices.value = await window.codexMeter.listDevices()
     const oauth = await window.codexMeter.getOAuthStatus()
     oauthConnected.value = oauth.connected
     oauthEmail.value = oauth.email
+    const widgetState = await window.codexMeter.getWidgetState()
+    widgetVisible.value = widgetState.visible
+    alwaysOnTop.value = widgetState.alwaysOnTop
   } else {
     settings.value = { refreshIntervalMinutes: 0, hardwareDisplayEnabled: false }
   }
+
   await refreshQuota()
+})
+
+onUnmounted(() => {
+  unsubscribeQuota?.()
 })
 
 async function refreshQuota(): Promise<void> {
@@ -91,11 +111,36 @@ async function connectOAuth(): Promise<void> {
     oauthConnected.value = result.connected
     oauthEmail.value = result.email
     status.value = result.connected ? '已连接' : '连接失败'
+    if (result.connected) {
+      await refreshQuota()
+    }
   } catch {
     status.value = '连接失败'
   } finally {
     connecting.value = false
   }
+}
+
+async function updateWidgetVisible(value: boolean): Promise<void> {
+  widgetVisible.value = value
+  if (!window.codexMeter) {
+    return
+  }
+
+  const state = await window.codexMeter.setWidgetVisible(value, alwaysOnTop.value)
+  widgetVisible.value = state.visible
+  alwaysOnTop.value = state.alwaysOnTop
+}
+
+async function updateAlwaysOnTop(value: boolean): Promise<void> {
+  alwaysOnTop.value = value
+  if (!window.codexMeter) {
+    return
+  }
+
+  const state = await window.codexMeter.setWidgetAlwaysOnTop(value)
+  widgetVisible.value = state.visible
+  alwaysOnTop.value = state.alwaysOnTop
 }
 
 function findWindow(code: '5h' | '7d'): QuotaWindow | null {
@@ -113,11 +158,57 @@ function remainingPercent(window: QuotaWindow | null): number {
 
 <template>
   <NConfigProvider>
-    <main class="app-shell">
+    <main v-if="isWidgetView" class="widget-shell">
+      <header class="widget-header">
+        <div>
+          <strong>CodexMeter</strong>
+          <span>{{ quotaSourceLabel }}</span>
+        </div>
+        <NButton quaternary circle size="tiny" :loading="loading" @click="refreshQuota">刷</NButton>
+      </header>
+
+      <section class="widget-quota">
+        <article>
+          <div class="widget-line">
+            <span>5 小时</span>
+            <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
+          </div>
+          <NProgress
+            type="line"
+            :percentage="remainingPercent(fiveHourWindow)"
+            :show-indicator="false"
+            :height="6"
+            color="#22c55e"
+            rail-color="rgba(15, 23, 42, 0.12)"
+          />
+          <p>{{ fiveHourWindow ? `API 剩余 ${remainingPercent(fiveHourWindow)}%` : '暂无数据' }}</p>
+        </article>
+
+        <article>
+          <div class="widget-line">
+            <span>7 天</span>
+            <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
+          </div>
+          <NProgress
+            type="line"
+            :percentage="remainingPercent(sevenDayWindow)"
+            :show-indicator="false"
+            :height="6"
+            color="#22c55e"
+            rail-color="rgba(15, 23, 42, 0.12)"
+          />
+          <p>{{ sevenDayWindow ? `API 剩余 ${remainingPercent(sevenDayWindow)}%` : '暂无数据' }}</p>
+        </article>
+      </section>
+
+      <footer class="widget-footer">{{ refreshSummary }}</footer>
+    </main>
+
+    <main v-else class="app-shell">
       <section class="hero-panel">
         <div class="hero-topline">
           <div class="brand-lockup">
-            <div class="brand-mark">⌁</div>
+            <div class="brand-mark">↯</div>
             <div>
               <h1>CodexMeter</h1>
               <p>{{ refreshSummary }}</p>
@@ -146,11 +237,11 @@ function remainingPercent(window: QuotaWindow | null): number {
         <div class="widget-controls">
           <label>
             <span>固定小组件</span>
-            <NSwitch v-model:value="widgetVisible" size="small" />
+            <NSwitch :value="widgetVisible" size="small" @update:value="updateWidgetVisible" />
           </label>
           <label>
             <span>置顶</span>
-            <NSwitch v-model:value="alwaysOnTop" size="small" />
+            <NSwitch :value="alwaysOnTop" size="small" @update:value="updateAlwaysOnTop" />
           </label>
           <div class="interval-control">
             <span>自动刷新</span>
@@ -176,7 +267,7 @@ function remainingPercent(window: QuotaWindow | null): number {
             <div class="quota-line">
               <strong>5 小时额度窗口</strong>
               <div class="quota-value">
-                <span>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '—' }}</span>
+                <span>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</span>
                 <small>短周期</small>
               </div>
             </div>
@@ -195,7 +286,7 @@ function remainingPercent(window: QuotaWindow | null): number {
             <div class="quota-line">
               <strong>7 天额度窗口</strong>
               <div class="quota-value">
-                <span>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '—' }}</span>
+                <span>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</span>
                 <small>周周期</small>
               </div>
             </div>

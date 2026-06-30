@@ -263,3 +263,75 @@ body {
   right: 11px;
   bottom: 11px;
 }
+
+.widget-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(37, 99, 235, 0.18), transparent 35%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(239, 246, 255, 0.72));
+  color: #121826;
+  -webkit-app-region: drag;
+}
+
+.widget-header,
+.widget-line,
+.widget-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.widget-header strong {
+  display: block;
+  font-size: 15px;
+}
+
+.widget-header span,
+.widget-footer,
+.widget-quota p {
+  color: rgba(15, 23, 42, 0.58);
+  font-size: 11px;
+}
+
+.widget-header button {
+  -webkit-app-region: no-drag;
+}
+
+.widget-quota {
+  display: grid;
+  gap: 8px;
+}
+
+.widget-quota article {
+  padding: 9px 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.widget-line {
+  margin-bottom: 5px;
+}
+
+.widget-line span {
+  color: rgba(15, 23, 42, 0.72);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.widget-line strong {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.widget-quota p {
+  margin: 5px 0 0;
+}
