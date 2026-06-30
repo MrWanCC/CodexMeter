@@ -186,11 +186,11 @@ function remainingPercent(window: QuotaWindow | null): number {
             type="line"
             :percentage="remainingPercent(fiveHourWindow)"
             :show-indicator="false"
-            :height="6"
+            :height="5"
             color="#22c55e"
             rail-color="rgba(15, 23, 42, 0.12)"
           />
-          <p>{{ fiveHourWindow ? `API 剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无数据' }}</p>
+          <p>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无数据' }}</p>
         </article>
 
         <article>
@@ -205,11 +205,11 @@ function remainingPercent(window: QuotaWindow | null): number {
             type="line"
             :percentage="remainingPercent(sevenDayWindow)"
             :show-indicator="false"
-            :height="6"
+            :height="5"
             color="#22c55e"
             rail-color="rgba(15, 23, 42, 0.12)"
           />
-          <p>{{ sevenDayWindow ? `API 剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${sevenDayWindow.used}%` : '暂无数据' }}</p>
+          <p>{{ sevenDayWindow ? `剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${sevenDayWindow.used}%` : '暂无数据' }}</p>
         </article>
       </section>
     </main>
