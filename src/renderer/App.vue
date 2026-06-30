@@ -1,15 +1,30 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { NButton, NConfigProvider, NProgress, NSelect, NSwitch, NTag } from 'naive-ui'
+import {
+  AlertCircle,
+  Bluetooth,
+  Calendar,
+  Clock,
+  Cpu,
+  Database,
+  KeyRound,
+  Monitor,
+  MoreHorizontal,
+  Plug,
+  Radio,
+  RefreshCw,
+  ShieldCheck,
+  User,
+  Wifi
+} from 'lucide-vue-next'
 import appIcon from './assets/icon.png'
-import type { DisplayDevice } from '../shared/device'
 import { sampleQuotaSnapshot, type QuotaSnapshot, type QuotaWindow } from '../shared/quota'
 import type { AppSettings, RefreshIntervalMinutes } from '../shared/settings'
 
 const isWidgetView = new URLSearchParams(window.location.search).get('view') === 'widget'
 const snapshot = ref<QuotaSnapshot | null>(null)
 const settings = ref<AppSettings | null>(null)
-const devices = ref<DisplayDevice[]>([])
 const loading = ref(false)
 const status = ref('就绪')
 const widgetVisible = ref(false)
@@ -28,6 +43,21 @@ const intervalOptions = [
 
 const fiveHourWindow = computed(() => findWindow('5h'))
 const sevenDayWindow = computed(() => findWindow('7d'))
+const systemState = computed<'connected' | 'disconnected' | 'error'>(() => {
+  if (snapshot.value && !snapshot.value.available && oauthConnected.value) {
+    return 'error'
+  }
+
+  return oauthConnected.value ? 'connected' : 'disconnected'
+})
+const systemStateLabel = computed(() => {
+  if (systemState.value === 'error') {
+    return '异常'
+  }
+
+  return systemState.value === 'connected' ? '已连接' : '未连接'
+})
+const systemStateIcon = computed(() => (systemState.value === 'connected' ? Wifi : Plug))
 const refreshTime = computed(() => {
   if (!snapshot.value) {
     return '--:--:--'
@@ -42,22 +72,8 @@ const refreshSummary = computed(() => {
 
   return `上次刷新 ${refreshTime.value}`
 })
-const quotaSourceLabel = computed(() => {
-  if (!snapshot.value) {
-    return '未刷新'
-  }
-
-  if (snapshot.value.source === 'codex') {
-    return 'Codex OAuth'
-  }
-
-  if (snapshot.value.source === 'sample') {
-    return '样例数据'
-  }
-
-  return '不可用'
-})
-const planLabel = computed(() => formatPlan(snapshot.value?.planType))
+const fiveHourState = computed(() => quotaState(fiveHourWindow.value))
+const sevenDayState = computed(() => quotaState(sevenDayWindow.value))
 
 onMounted(async () => {
   unsubscribeQuota = window.codexMeter?.onQuotaUpdated((nextSnapshot) => {
@@ -72,7 +88,6 @@ onMounted(async () => {
 
   if (window.codexMeter) {
     settings.value = await window.codexMeter.getSettings()
-    devices.value = await window.codexMeter.listDevices()
     const oauth = await window.codexMeter.getOAuthStatus()
     oauthConnected.value = oauth.connected
     oauthEmail.value = oauth.email
@@ -84,7 +99,7 @@ onMounted(async () => {
   }
 
   await refreshQuota()
-  configureAutoRefresh(settings.value?.refreshIntervalMinutes ?? 0)
+  configureAutoRefresh(settings.value?.refreshIntervalMinutes ?? 5)
 })
 
 onUnmounted(() => {
@@ -223,78 +238,92 @@ function usedPercent(window: QuotaWindow | null): number {
   return window ? Math.round(window.percentUsed * 100) / 100 : 0
 }
 
-function quotaState(window: QuotaWindow | null): 'empty' | 'exhausted' | 'low' | 'normal' | 'abundant' {
+function quotaState(window: QuotaWindow | null): 'empty' | 'danger' | 'warning' | 'normal' {
   if (!window) {
     return 'empty'
   }
 
   const remaining = remainingPercent(window)
-  if (remaining === 0) {
-    return 'exhausted'
-  }
-
   if (remaining <= 30) {
-    return 'low'
+    return 'danger'
   }
 
-  if (remaining <= 80) {
-    return 'normal'
+  if (remaining < 60) {
+    return 'warning'
   }
 
-  return 'abundant'
+  return 'normal'
 }
 
-function quotaBadge(window: QuotaWindow | null): string {
+function quotaBadge(window: QuotaWindow | null, weekly = false): string {
   const state = quotaState(window)
   if (state === 'empty') {
     return '无数据'
   }
 
-  if (state === 'exhausted') {
-    return '已耗尽'
+  if (state === 'danger') {
+    return '危险'
   }
 
-  if (state === 'low') {
-    return '可用'
+  if (state === 'warning') {
+    return '紧张'
   }
 
-  if (state === 'normal') {
-    return '正常'
-  }
-
-  return '充足'
+  return weekly ? '充足' : '正常'
 }
 
 function quotaColor(window: QuotaWindow | null): string {
   const state = quotaState(window)
-  if (state === 'exhausted') {
+  if (state === 'danger') {
     return '#ef4444'
   }
 
-  if (state === 'low') {
-    return '#f97316'
+  if (state === 'warning') {
+    return '#f59e0b'
   }
 
-  if (state === 'abundant') {
-    return '#15803d'
+  return '#22c55e'
+}
+
+function quotaTagType(window: QuotaWindow | null): 'default' | 'error' | 'warning' | 'success' {
+  const state = quotaState(window)
+  if (state === 'empty') {
+    return 'default'
   }
 
-  return '#16a34a'
+  if (state === 'danger') {
+    return 'error'
+  }
+
+  if (state === 'warning') {
+    return 'warning'
+  }
+
+  return 'success'
+}
+
+function quotaIcon(window: QuotaWindow | null, weekly = false) {
+  const state = quotaState(window)
+  if (state === 'danger' || state === 'warning') {
+    return AlertCircle
+  }
+
+  return weekly ? Calendar : Clock
 }
 
 function resetLabel(window: QuotaWindow | null): string {
   if (!window?.resetAt) {
-    return window?.code === '5h' ? '下次重置未知' : '下次重置未知'
+    return '下次重置：未知'
   }
 
   const date = new Date(window.resetAt)
   if (Number.isNaN(date.getTime())) {
-    return '下次重置未知'
+    return '下次重置：未知'
   }
 
   return window.code === '5h'
-    ? `下次重置 ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    : `下次重置 ${date.toLocaleDateString([], { month: '2-digit', day: '2-digit' })}`
+    ? `下次重置：${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    : `下次重置：${date.toLocaleDateString([], { month: '2-digit', day: '2-digit' })}`
 }
 
 function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): string {
@@ -307,35 +336,6 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
   }
 
   return `已用 ${usedPercent(window)}%，本周期额度充足`
-}
-
-function formatPlan(planType: string | undefined): string {
-  if (!planType) {
-    return '套餐未知'
-  }
-
-  const normalized = planType.toLowerCase()
-  if (normalized.includes('plus')) {
-    return 'Plus 套餐'
-  }
-
-  if (normalized.includes('pro')) {
-    return 'Pro 套餐'
-  }
-
-  if (normalized.includes('team')) {
-    return 'Team 套餐'
-  }
-
-  if (normalized.includes('enterprise')) {
-    return 'Enterprise 套餐'
-  }
-
-  if (normalized.includes('free')) {
-    return 'Free 套餐'
-  }
-
-  return `${planType} 套餐`
 }
 </script>
 
@@ -351,9 +351,9 @@ function formatPlan(planType: string | undefined): string {
           </div>
         </div>
         <div class="widget-tools">
-          <span class="widget-source">{{ quotaSourceLabel }}</span>
+          <span class="widget-source">Codex OAuth</span>
           <button class="widget-refresh" :class="{ 'is-loading': loading }" type="button" @click="refreshQuota">
-            ↻
+            <RefreshCw :size="13" :stroke-width="2" />
           </button>
         </div>
       </header>
@@ -407,7 +407,7 @@ function formatPlan(planType: string | undefined): string {
             <h1>CodexMeter</h1>
             <p>Codex usage monitor · local secure refresh</p>
             <div class="safe-copy">
-              <span class="shield-dot"></span>
+              <ShieldCheck :size="15" :stroke-width="2" />
               <span>安全刷新：仅读取授权后的用量数据，不发起模型请求</span>
             </div>
           </div>
@@ -415,26 +415,29 @@ function formatPlan(planType: string | undefined): string {
 
         <div class="hero-status">
           <div class="last-refresh">
-            <span class="clock-dot"></span>
+            <Clock :size="16" :stroke-width="2" />
             <span>上次刷新：</span>
             <strong>{{ refreshTime }}</strong>
           </div>
-          <NTag :type="oauthConnected ? 'success' : 'warning'" round>
-            <span class="tag-dot"></span>
-            {{ oauthConnected ? '已连接' : '未连接' }}
+          <NTag :type="systemState === 'error' ? 'error' : systemState === 'connected' ? 'success' : 'warning'" round>
+            <component :is="systemStateIcon" :size="14" :stroke-width="2" />
+            {{ systemStateLabel }}
           </NTag>
         </div>
 
         <div class="hero-actions">
           <NButton class="refresh-button" type="primary" size="large" :loading="loading" @click="refreshQuota">
-            <span class="button-icon refresh-icon"></span>
+            <template #icon>
+              <RefreshCw :size="18" :stroke-width="2" />
+            </template>
             刷新数据
           </NButton>
-          <NButton class="more-button" size="large">...</NButton>
+          <NButton class="more-button" size="large">
+            <MoreHorizontal :size="20" :stroke-width="2" />
+          </NButton>
         </div>
 
         <div class="control-bar">
-          <span class="control-title">窗口行为</span>
           <label>
             <span>固定小组件</span>
             <NSwitch :value="widgetVisible" @update:value="updateWidgetVisible" />
@@ -452,35 +455,24 @@ function formatPlan(planType: string | undefined): string {
               @update:value="updateInterval"
             />
           </div>
-          <button class="settings-button" type="button">
-            <span class="settings-icon"></span>
-            设置
-          </button>
         </div>
       </section>
 
       <section class="usage-section">
         <div class="section-title">
           <h2>使用额度</h2>
-          <div class="quota-meta">
-            <NTag type="info" round>{{ planLabel }}</NTag>
-            <NTag type="success" round>{{ quotaSourceLabel }}</NTag>
-          </div>
         </div>
 
         <div class="quota-cards">
-          <article class="usage-card" :class="quotaState(fiveHourWindow)">
+          <article class="usage-card" :class="fiveHourState">
             <div class="usage-head">
               <div class="card-title">
-                <span class="quota-icon short"></span>
+                <component :is="quotaIcon(fiveHourWindow)" class="quota-icon" :size="22" :stroke-width="2" />
                 <h3>5 小时额度窗口</h3>
               </div>
-              <div class="card-tags">
-                <NTag class="reset-tag" round>{{ resetLabel(fiveHourWindow) }}</NTag>
-                <NTag :type="quotaState(fiveHourWindow) === 'exhausted' ? 'error' : quotaState(fiveHourWindow) === 'low' ? 'warning' : 'success'" round>
-                  {{ quotaBadge(fiveHourWindow) }}
-                </NTag>
-              </div>
+              <NTag :type="quotaTagType(fiveHourWindow)" round>
+                {{ quotaBadge(fiveHourWindow) }}
+              </NTag>
             </div>
             <div class="usage-number">
               <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
@@ -490,25 +482,26 @@ function formatPlan(planType: string | undefined): string {
               type="line"
               :percentage="remainingPercent(fiveHourWindow)"
               :show-indicator="false"
-              :height="9"
+              :height="10"
               :color="quotaColor(fiveHourWindow)"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
+            <div class="quota-details">
+              <span>已用 {{ usedPercent(fiveHourWindow) }}%</span>
+              <span>{{ resetLabel(fiveHourWindow) }}</span>
+            </div>
             <p>{{ quotaCopy(fiveHourWindow, 'short') }}</p>
           </article>
 
-          <article class="usage-card" :class="quotaState(sevenDayWindow)">
+          <article class="usage-card" :class="sevenDayState">
             <div class="usage-head">
               <div class="card-title">
-                <span class="quota-icon weekly"></span>
+                <component :is="quotaIcon(sevenDayWindow, true)" class="quota-icon" :size="22" :stroke-width="2" />
                 <h3>7 天额度窗口</h3>
               </div>
-              <div class="card-tags">
-                <NTag class="reset-tag" round>{{ resetLabel(sevenDayWindow) }}</NTag>
-                <NTag :type="quotaState(sevenDayWindow) === 'exhausted' ? 'error' : quotaState(sevenDayWindow) === 'low' ? 'warning' : 'success'" round>
-                  {{ quotaBadge(sevenDayWindow) }}
-                </NTag>
-              </div>
+              <NTag :type="quotaTagType(sevenDayWindow)" round>
+                {{ quotaBadge(sevenDayWindow, true) }}
+              </NTag>
             </div>
             <div class="usage-number">
               <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
@@ -518,10 +511,14 @@ function formatPlan(planType: string | undefined): string {
               type="line"
               :percentage="remainingPercent(sevenDayWindow)"
               :show-indicator="false"
-              :height="9"
+              :height="10"
               :color="quotaColor(sevenDayWindow)"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
+            <div class="quota-details">
+              <span>已用 {{ usedPercent(sevenDayWindow) }}%</span>
+              <span>{{ resetLabel(sevenDayWindow) }}</span>
+            </div>
             <p>{{ quotaCopy(sevenDayWindow, 'weekly') }}</p>
           </article>
         </div>
@@ -531,67 +528,61 @@ function formatPlan(planType: string | undefined): string {
         <div class="info-card">
           <div class="card-heading">
             <h2>Codex OAuth</h2>
-            <div class="heading-actions">
-              <NTag :type="oauthConnected ? 'success' : 'warning'" round>
-                {{ oauthConnected ? '已连接' : '未连接' }}
-              </NTag>
-              <NButton
-                class="oauth-action"
-                :type="oauthConnected ? 'default' : 'primary'"
-                :secondary="connecting"
-                @click="connecting ? cancelOAuth() : oauthConnected ? disconnectOAuth() : connectOAuth()"
-              >
-                {{ connecting ? '取消连接' : oauthConnected ? '断开连接' : '连接 Codex' }}
-              </NButton>
-            </div>
+            <NButton
+              class="oauth-action"
+              :type="oauthConnected ? 'default' : 'primary'"
+              :secondary="connecting"
+              @click="connecting ? cancelOAuth() : oauthConnected ? disconnectOAuth() : connectOAuth()"
+            >
+              {{ connecting ? '取消连接' : oauthConnected ? '断开连接' : '连接 Codex' }}
+            </NButton>
           </div>
 
           <div class="info-list soft">
             <div>
-              <span class="list-icon account-icon"></span>
+              <User :size="17" :stroke-width="2" />
               <span>当前账户</span>
               <strong>{{ oauthConnected ? oauthEmail ?? '已授权账号' : '未授权' }}</strong>
             </div>
             <div>
-              <span class="list-icon key-icon"></span>
+              <KeyRound :size="17" :stroke-width="2" />
               <span>凭据状态</span>
               <strong>{{ oauthConnected ? '已授权' : '待授权' }}</strong>
             </div>
             <div>
-              <span class="list-icon lock-icon"></span>
+              <Database :size="17" :stroke-width="2" />
               <span>数据存储</span>
               <strong>本地加密</strong>
             </div>
           </div>
         </div>
 
-        <div class="info-card">
+        <div class="info-card hardware-card">
           <div class="card-heading">
             <div>
               <h2>硬件显示</h2>
-              <p>后续支持将桌面额度状态同步到外部屏幕或设备</p>
+              <p>后续支持将额度状态同步至外部设备</p>
             </div>
-            <NTag :type="devices.length ? 'success' : 'default'" round>{{ devices.length ? '已连接' : '待机' }}</NTag>
           </div>
 
           <div class="hardware-list">
             <div>
-              <span class="list-icon serial-icon"></span>
+              <Cpu :size="17" :stroke-width="2" />
               <span>串口显示</span>
               <strong>已预留</strong>
             </div>
             <div>
-              <span class="list-icon bluetooth-icon"></span>
+              <Bluetooth :size="17" :stroke-width="2" />
               <span>蓝牙连接</span>
               <strong>规划中</strong>
             </div>
             <div>
-              <span class="list-icon cloud-icon"></span>
+              <Radio :size="17" :stroke-width="2" />
               <span>MQTT 推送</span>
               <strong>规划中</strong>
             </div>
             <div>
-              <span class="list-icon screen-icon"></span>
+              <Monitor :size="17" :stroke-width="2" />
               <span>外部小屏</span>
               <strong>规划中</strong>
             </div>
