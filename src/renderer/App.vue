@@ -39,7 +39,7 @@ const quotaSourceLabel = computed(() => {
   }
 
   if (snapshot.value.source === 'codex') {
-    return 'OAuth API'
+    return 'OAuth API 口径'
   }
 
   if (snapshot.value.source === 'sample') {
@@ -188,7 +188,7 @@ function remainingPercent(window: QuotaWindow | null): number {
               color="#22c55e"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无可用数据' }}</p>
+            <p>{{ fiveHourWindow ? `API 剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无可用数据' }}</p>
           </article>
 
           <article class="quota-row">
@@ -207,7 +207,7 @@ function remainingPercent(window: QuotaWindow | null): number {
               color="#22c55e"
               rail-color="rgba(15, 23, 42, 0.12)"
             />
-            <p>{{ sevenDayWindow ? `剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${sevenDayWindow.used}%` : '暂无可用数据' }}</p>
+            <p>{{ sevenDayWindow ? `API 剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${sevenDayWindow.used}%` : '暂无可用数据' }}</p>
           </article>
         </div>
       </section>
