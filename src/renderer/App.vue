@@ -160,17 +160,26 @@ function remainingPercent(window: QuotaWindow | null): number {
   <NConfigProvider>
     <main v-if="isWidgetView" class="widget-shell">
       <header class="widget-header">
-        <div>
-          <strong>CodexMeter</strong>
-          <span>{{ quotaSourceLabel }}</span>
+        <div class="widget-brand">
+          <span class="widget-mark">↯</span>
+          <div>
+            <strong>CodexMeter</strong>
+            <span>{{ refreshSummary }}</span>
+          </div>
         </div>
-        <NButton quaternary circle size="tiny" :loading="loading" @click="refreshQuota">刷</NButton>
+        <div class="widget-tools">
+          <span class="widget-source">{{ quotaSourceLabel }}</span>
+          <NButton quaternary circle size="tiny" :loading="loading" @click="refreshQuota">↻</NButton>
+        </div>
       </header>
 
       <section class="widget-quota">
         <article>
           <div class="widget-line">
-            <span>5 小时</span>
+            <div>
+              <span>5 小时额度</span>
+              <small>短周期</small>
+            </div>
             <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
           </div>
           <NProgress
@@ -181,12 +190,15 @@ function remainingPercent(window: QuotaWindow | null): number {
             color="#22c55e"
             rail-color="rgba(15, 23, 42, 0.12)"
           />
-          <p>{{ fiveHourWindow ? `API 剩余 ${remainingPercent(fiveHourWindow)}%` : '暂无数据' }}</p>
+          <p>{{ fiveHourWindow ? `API 剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${fiveHourWindow.used}%` : '暂无数据' }}</p>
         </article>
 
         <article>
           <div class="widget-line">
-            <span>7 天</span>
+            <div>
+              <span>7 天额度</span>
+              <small>周周期</small>
+            </div>
             <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
           </div>
           <NProgress
@@ -197,11 +209,9 @@ function remainingPercent(window: QuotaWindow | null): number {
             color="#22c55e"
             rail-color="rgba(15, 23, 42, 0.12)"
           />
-          <p>{{ sevenDayWindow ? `API 剩余 ${remainingPercent(sevenDayWindow)}%` : '暂无数据' }}</p>
+          <p>{{ sevenDayWindow ? `API 剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${sevenDayWindow.used}%` : '暂无数据' }}</p>
         </article>
       </section>
-
-      <footer class="widget-footer">{{ refreshSummary }}</footer>
     </main>
 
     <main v-else class="app-shell">
