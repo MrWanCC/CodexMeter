@@ -168,11 +168,16 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
             <h2>Codex OAuth</h2>
             <NTag type="warning" round>未连接</NTag>
           </div>
-          <p class="muted">下一步接入 OAuth 授权和本地 token 存储。</p>
-          <div class="brief-list">
-            <span>安全刷新</span>
-            <span>本地凭据存储</span>
-            <span>不发送 prompt</span>
+          <p class="panel-copy">授权后自动读取额度，不会发送 prompt 或触发模型请求。</p>
+          <div class="status-list">
+            <div class="status-row">
+              <span>凭据</span>
+              <strong>待授权</strong>
+            </div>
+            <div class="status-row">
+              <span>存储</span>
+              <strong>本地加密</strong>
+            </div>
           </div>
         </div>
 
@@ -181,17 +186,16 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
             <h2>硬件显示</h2>
             <NTag :type="devices.length ? 'success' : 'default'" round>{{ displayMode }}</NTag>
           </div>
-          <div class="device-row">
-            <span>串口</span>
-            <strong>已预留</strong>
-          </div>
-          <div class="device-row">
-            <span>蓝牙</span>
-            <strong>下一步</strong>
-          </div>
-          <div class="device-row">
-            <span>MQTT</span>
-            <strong>下一步</strong>
+          <p class="panel-copy">后续把桌面端额度状态同步到外部屏幕或设备。</p>
+          <div class="status-list">
+            <div class="status-row">
+              <span>串口</span>
+              <strong>已预留</strong>
+            </div>
+            <div class="status-row">
+              <span>蓝牙 / MQTT</span>
+              <strong>下一步</strong>
+            </div>
           </div>
         </div>
       </section>

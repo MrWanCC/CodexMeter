@@ -57,7 +57,7 @@ body {
 .section-heading,
 .panel-title,
 .quota-line,
-.device-row,
+.status-row,
 .button-row {
   display: flex;
   align-items: center;
@@ -174,12 +174,6 @@ body {
   border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-.device-row {
-  padding: 7px 0;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  color: rgba(15, 23, 42, 0.62);
-}
-
 .quota-line {
   align-items: flex-start;
   margin-bottom: 6px;
@@ -227,24 +221,37 @@ body {
   font-size: 16px;
 }
 
-.brief-list {
-  display: grid;
-  gap: 6px;
-  margin-top: 9px;
+.panel-copy {
+  min-height: 36px;
+  margin: 8px 0 10px;
+  color: rgba(15, 23, 42, 0.58);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
-.brief-list span {
-  padding: 6px 10px;
+.status-list {
+  display: grid;
+  gap: 7px;
+}
+
+.status-row {
+  padding: 7px 10px;
   border-radius: 12px;
   color: rgba(15, 23, 42, 0.68);
   background: rgba(255, 255, 255, 0.38);
   border: 1px solid rgba(15, 23, 42, 0.07);
 }
 
-.device-row:last-child {
-  border-bottom: 0;
+.status-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.device-row strong {
+.status-row strong {
   color: #121826;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
 }
