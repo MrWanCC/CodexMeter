@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { NButton, NConfigProvider, NProgress, NSelect, NSpace, NTag } from 'naive-ui'
+import { NButton, NConfigProvider, NProgress, NSelect, NSwitch, NTag } from 'naive-ui'
 import type { DisplayDevice } from '../shared/device'
 import type { QuotaSnapshot, QuotaWindow } from '../shared/quota'
 import type { AppSettings, RefreshIntervalMinutes } from '../shared/settings'
@@ -10,6 +10,8 @@ const settings = ref<AppSettings | null>(null)
 const devices = ref<DisplayDevice[]>([])
 const loading = ref(false)
 const status = ref('Ready')
+const widgetVisible = ref(true)
+const alwaysOnTop = ref(false)
 
 const intervalOptions = [
   { label: 'Manual', value: 0 },
@@ -21,6 +23,13 @@ const intervalOptions = [
 const fiveHourWindow = computed(() => findWindow('5h'))
 const sevenDayWindow = computed(() => findWindow('7d'))
 const displayMode = computed(() => (devices.value.length > 0 ? 'Linked' : 'Standby'))
+const refreshSummary = computed(() => {
+  if (!snapshot.value) {
+    return 'Not updated yet'
+  }
+
+  return `Last updated ${new Date(snapshot.value.refreshedAt).toLocaleTimeString()}`
+})
 
 onMounted(async () => {
   settings.value = await window.codexMeter.getSettings()
@@ -54,81 +63,117 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
       <section class="hero-panel">
         <div class="hero-topline">
           <div class="brand-lockup">
-            <div class="brand-mark">C</div>
+            <div class="brand-mark">⌁</div>
             <div>
               <h1>CodexMeter</h1>
-              <p>Codex quota</p>
+              <p>{{ refreshSummary }}</p>
             </div>
           </div>
-          <NTag type="info" round>{{ status }}</NTag>
+          <NTag type="success" round>{{ status }}</NTag>
         </div>
 
-        <div class="meter-grid">
-          <article class="meter-card primary-meter">
-            <div class="meter-header">
-              <span>5 hour window</span>
-              <strong>{{ fiveHourWindow ? `${fiveHourWindow.percentUsed}%` : '--' }}</strong>
+        <div class="hero-actions">
+          <div class="refresh-status">
+            <span class="status-dot"></span>
+            <div>
+              <strong>{{ loading ? 'Refreshing' : 'Safe refresh' }}</strong>
+              <p>Reads usage data only, no model request</p>
             </div>
-            <NProgress
-              type="dashboard"
-              :percentage="fiveHourWindow?.percentUsed ?? 0"
-              :show-indicator="false"
-              :stroke-width="11"
-              color="#2563eb"
-              rail-color="rgba(37, 99, 235, 0.14)"
-            />
-            <div class="meter-detail">
-              <span>{{ fiveHourWindow ? `${fiveHourWindow.used} used` : 'Unavailable' }}</span>
-              <span>{{ fiveHourWindow ? `${fiveHourWindow.limit} limit` : '' }}</span>
-            </div>
-          </article>
-
-          <article class="meter-card">
-            <div class="meter-header">
-              <span>7 day window</span>
-              <strong>{{ sevenDayWindow ? `${sevenDayWindow.percentUsed}%` : '--' }}</strong>
-            </div>
-            <NProgress
-              type="line"
-              :percentage="sevenDayWindow?.percentUsed ?? 0"
-              :show-indicator="false"
-              :height="12"
-              color="#0891b2"
-              rail-color="rgba(8, 145, 178, 0.14)"
-            />
-            <div class="meter-detail">
-              <span>{{ sevenDayWindow ? `${sevenDayWindow.used} used` : 'Unavailable' }}</span>
-              <span>{{ sevenDayWindow ? `${sevenDayWindow.limit} limit` : '' }}</span>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="lower-grid">
-        <div class="control-panel">
-          <div>
-            <h2>Session</h2>
-            <p class="muted">{{ snapshot?.source === 'sample' ? 'Sample' : snapshot?.source ?? 'Loading' }}</p>
           </div>
-          <NSpace>
-            <NButton type="primary" :loading="loading" @click="refreshQuota">Refresh</NButton>
-            <NButton disabled>Connect</NButton>
-          </NSpace>
+
+          <div class="button-row">
+            <NButton type="primary" size="small" :loading="loading" @click="refreshQuota">Refresh</NButton>
+            <NButton size="small" disabled>Connect</NButton>
+          </div>
+        </div>
+
+        <div class="widget-controls">
+          <label>
+            <span>Pin widget</span>
+            <NSwitch v-model:value="widgetVisible" size="small" />
+          </label>
+          <label>
+            <span>Always on top</span>
+            <NSwitch v-model:value="alwaysOnTop" size="small" />
+          </label>
           <div class="interval-control">
-            <span>Auto refresh</span>
+            <span>Refresh</span>
             <NSelect
               class="interval-select"
+              size="small"
               :value="settings?.refreshIntervalMinutes ?? 0"
               :options="intervalOptions"
               @update:value="updateInterval"
             />
           </div>
         </div>
+      </section>
 
-        <div class="device-panel">
-          <div class="device-heading">
+      <section class="quota-panel glass-panel">
+        <div class="panel-title">
+          <NTag type="info" round>Codex</NTag>
+          <span>Available</span>
+        </div>
+
+        <div class="quota-rows">
+          <article class="quota-row">
+            <div class="quota-line">
+              <strong>5 hour window</strong>
+              <div class="quota-value">
+                <span>{{ fiveHourWindow ? `${fiveHourWindow.percentUsed}%` : '—' }}</span>
+                <small>resets soon</small>
+              </div>
+            </div>
+            <NProgress
+              type="line"
+              :percentage="fiveHourWindow?.percentUsed ?? 0"
+              :show-indicator="false"
+              :height="7"
+              color="#22c55e"
+              rail-color="rgba(15, 23, 42, 0.12)"
+            />
+            <p>{{ fiveHourWindow ? `${fiveHourWindow.used} used · ${fiveHourWindow.limit} limit` : 'Unavailable' }}</p>
+          </article>
+
+          <article class="quota-row">
+            <div class="quota-line">
+              <strong>7 day window</strong>
+              <div class="quota-value">
+                <span>{{ sevenDayWindow ? `${sevenDayWindow.percentUsed}%` : '—' }}</span>
+                <small>weekly</small>
+              </div>
+            </div>
+            <NProgress
+              type="line"
+              :percentage="sevenDayWindow?.percentUsed ?? 0"
+              :show-indicator="false"
+              :height="7"
+              color="#22c55e"
+              rail-color="rgba(15, 23, 42, 0.12)"
+            />
+            <p>{{ sevenDayWindow ? `${sevenDayWindow.used} used · ${sevenDayWindow.limit} limit` : 'Unavailable' }}</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="settings-grid">
+        <div class="glass-panel provider-panel">
+          <div class="section-heading">
+            <h2>Codex OAuth</h2>
+            <NTag type="warning" round>Not connected</NTag>
+          </div>
+          <p class="muted">OAuth and token storage are reserved for the next implementation step.</p>
+          <div class="brief-list">
+            <span>Safe refresh</span>
+            <span>Local token storage</span>
+            <span>No prompt requests</span>
+          </div>
+        </div>
+
+        <div class="glass-panel provider-panel">
+          <div class="section-heading">
             <h2>Display output</h2>
-            <NTag :type="devices.length ? 'success' : 'default'">{{ displayMode }}</NTag>
+            <NTag :type="devices.length ? 'success' : 'default'" round>{{ displayMode }}</NTag>
           </div>
           <div class="device-row">
             <span>Serial</span>
@@ -136,11 +181,11 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
           </div>
           <div class="device-row">
             <span>Bluetooth</span>
-            <strong>Queued</strong>
+            <strong>Next</strong>
           </div>
           <div class="device-row">
             <span>MQTT</span>
-            <strong>Queued</strong>
+            <strong>Next</strong>
           </div>
         </div>
       </section>
