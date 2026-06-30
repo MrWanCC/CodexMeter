@@ -8,6 +8,7 @@ import {
   Clock,
   Cpu,
   Database,
+  CheckCircle2,
   KeyRound,
   Monitor,
   MoreHorizontal,
@@ -32,8 +33,12 @@ const alwaysOnTop = ref(false)
 const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
 const connecting = ref(false)
+const noticeVisible = ref(false)
+const noticeText = ref('')
 let unsubscribeQuota: (() => void) | undefined
 let refreshTimer: ReturnType<typeof setInterval> | undefined
+let noticeTimer: ReturnType<typeof setTimeout> | undefined
+let removeCopyListener: (() => void) | undefined
 
 const intervalOptions = [
   { label: '手动刷新', value: 0 },
@@ -87,6 +92,10 @@ const fiveHourState = computed(() => quotaState(fiveHourWindow.value))
 const sevenDayState = computed(() => quotaState(sevenDayWindow.value))
 
 onMounted(async () => {
+  const handleCopy = () => showNotice('已复制到剪贴板')
+  document.addEventListener('copy', handleCopy)
+  removeCopyListener = () => document.removeEventListener('copy', handleCopy)
+
   unsubscribeQuota = window.codexMeter?.onQuotaUpdated((nextSnapshot) => {
     snapshot.value = nextSnapshot
     status.value = `已刷新 ${new Date(nextSnapshot.refreshedAt).toLocaleTimeString()}`
@@ -115,7 +124,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
   unsubscribeQuota?.()
+  removeCopyListener?.()
   clearAutoRefresh()
+  clearNotice()
 })
 
 async function refreshQuota(): Promise<void> {
@@ -130,6 +141,23 @@ async function refreshQuota(): Promise<void> {
     status.value = `已刷新 ${new Date(snapshot.value.refreshedAt).toLocaleTimeString()}`
   } finally {
     loading.value = false
+  }
+}
+
+function showNotice(text: string): void {
+  clearNotice()
+  noticeText.value = text
+  noticeVisible.value = true
+  noticeTimer = setTimeout(() => {
+    noticeVisible.value = false
+    noticeTimer = undefined
+  }, 2000)
+}
+
+function clearNotice(): void {
+  if (noticeTimer) {
+    clearTimeout(noticeTimer)
+    noticeTimer = undefined
   }
 }
 
@@ -347,19 +375,22 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
   }
 
   if (scope === 'short') {
-    return `已用 ${usedPercent(window)}%，当前额度状态${quotaBadge(window)}`
+    return `已用 ${usedPercent(window)}%，短周期额度可用`
   }
 
-  return `已用 ${usedPercent(window)}%，本周期额度状态${quotaBadge(window, true)}`
-}
-
-function quotaAvailability(scope: 'short' | 'weekly'): string {
-  return scope === 'short' ? '短周期额度可用' : '本周期额度充足'
+  return `已用 ${usedPercent(window)}%，本周期额度充足`
 }
 </script>
 
 <template>
   <NConfigProvider :theme-overrides="themeOverrides">
+    <Transition name="notice">
+      <div v-if="noticeVisible" class="app-notice">
+        <CheckCircle2 :size="16" :stroke-width="2" />
+        <span>{{ noticeText }}</span>
+      </div>
+    </Transition>
+
     <main v-if="isWidgetView" class="widget-shell">
       <header class="widget-header">
         <div class="widget-brand">
@@ -506,7 +537,7 @@ function quotaAvailability(scope: 'short' | 'weekly'): string {
               rail-color="rgba(15, 23, 42, 0.12)"
             />
             <div class="quota-details">
-              <span>{{ quotaAvailability('short') }}</span>
+              <span>状态：{{ quotaBadge(fiveHourWindow) }}</span>
               <span>{{ resetLabel(fiveHourWindow) }}</span>
             </div>
             <p>{{ quotaCopy(fiveHourWindow, 'short') }}</p>
@@ -535,7 +566,7 @@ function quotaAvailability(scope: 'short' | 'weekly'): string {
               rail-color="rgba(15, 23, 42, 0.12)"
             />
             <div class="quota-details">
-              <span>{{ quotaAvailability('weekly') }}</span>
+              <span>状态：{{ quotaBadge(sevenDayWindow, true) }}</span>
               <span>{{ resetLabel(sevenDayWindow) }}</span>
             </div>
             <p>{{ quotaCopy(sevenDayWindow, 'weekly') }}</p>
@@ -598,24 +629,24 @@ function quotaAvailability(scope: 'short' | 'weekly'): string {
             <div>
               <Bluetooth :size="17" :stroke-width="2" />
               <span>蓝牙连接</span>
-              <strong>规划中</strong>
+              <strong class="muted-state">待扩展</strong>
             </div>
             <div>
               <Radio :size="17" :stroke-width="2" />
               <span>MQTT 推送</span>
-              <strong>规划中</strong>
+              <strong class="muted-state">待扩展</strong>
             </div>
             <div>
               <Monitor :size="17" :stroke-width="2" />
               <span>外部小屏</span>
-              <strong>规划中</strong>
+              <strong class="muted-state">待扩展</strong>
             </div>
           </div>
         </div>
       </section>
 
       <footer class="app-footer">
-        <div>本地安全运行 · 仅读取授权数据 · 数据来源：Codex OAuth</div>
+        <div>本地安全运行 · 仅读取授权数据 · Codex OAuth</div>
         <div>
           <span>版本：v1.0.0</span>
           <button type="button">检查更新</button>

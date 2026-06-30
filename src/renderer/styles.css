@@ -29,12 +29,49 @@ svg {
 
 .desktop-shell {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) 38px;
-  gap: 9px;
+  grid-template-rows: auto auto minmax(0, 1fr) 40px;
+  gap: 8px;
   width: 100%;
   height: 100vh;
-  padding: 12px 18px 0;
+  padding: 11px 18px 0;
   overflow: hidden;
+}
+
+.app-notice {
+  position: fixed;
+  z-index: 20;
+  top: 76px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-radius: 999px;
+  color: #15803d;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(16px);
+}
+
+.app-notice svg {
+  color: #22c55e;
+}
+
+.notice-enter-active,
+.notice-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.notice-enter-from,
+.notice-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 
 .desktop-hero,
@@ -54,20 +91,20 @@ svg {
 .desktop-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 10px;
-  padding: 12px 24px 10px;
+  gap: 8px;
+  padding: 10px 24px 9px;
 }
 
 .hero-main {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   min-width: 0;
 }
 
 .hero-mark {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   flex: 0 0 auto;
   border-radius: 21px;
   object-fit: cover;
@@ -86,7 +123,7 @@ svg {
 }
 
 .hero-main p {
-  margin: 5px 0 8px;
+  margin: 4px 0 6px;
   color: #52627d;
   font-size: 14px;
 }
@@ -108,8 +145,8 @@ svg {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  gap: 9px;
-  padding-top: 6px;
+  gap: 8px;
+  padding-top: 5px;
   white-space: nowrap;
 }
 
@@ -143,13 +180,13 @@ svg {
 .hero-actions {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding-top: 1px;
+  gap: 8px;
+  padding-top: 0;
 }
 
 .refresh-button {
   min-width: 136px;
-  height: 46px;
+  height: 44px;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 760;
@@ -157,8 +194,8 @@ svg {
 }
 
 .more-button {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
 }
 
@@ -170,8 +207,8 @@ svg {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 22px;
-  padding-top: 10px;
+  gap: 20px;
+  padding-top: 9px;
   border-top: 1px solid rgba(15, 23, 42, 0.1);
 }
 
@@ -179,18 +216,18 @@ svg {
 .interval-control {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   color: #111827;
   font-size: 14px;
   font-weight: 650;
 }
 
 .interval-select {
-  width: 150px;
+  width: 148px;
 }
 
 .usage-section {
-  padding: 13px 18px 15px;
+  padding: 13px 18px 14px;
 }
 
 .section-title,
@@ -223,7 +260,7 @@ svg {
 }
 
 .usage-card {
-  padding: 15px 20px 14px;
+  padding: 14px 20px 13px;
   border: 1px solid rgba(34, 197, 94, 0.2);
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.52);
@@ -250,7 +287,7 @@ svg {
 .usage-head {
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 13px;
+  margin-bottom: 12px;
 }
 
 .card-title {
@@ -316,13 +353,13 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 9px;
   color: #52627d;
   font-size: 13px;
 }
 
 .usage-card p {
-  margin: 7px 0 0;
+  margin: 6px 0 0;
   color: #667085;
   font-size: 13px;
 }
@@ -337,12 +374,12 @@ svg {
 .info-card {
   min-height: 0;
   overflow: hidden;
-  padding: 12px 22px 12px;
+  padding: 12px 22px 11px;
 }
 
 .card-heading {
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 }
 
 .card-heading p {
@@ -368,9 +405,9 @@ svg {
 
 .info-list > div,
 .hardware-list > div {
-  min-height: 28px;
+  min-height: 27px;
   gap: 11px;
-  padding: 0 14px;
+  padding: 0 15px;
   border-top: 1px solid rgba(15, 23, 42, 0.075);
   color: #475569;
   font-size: 12px;
@@ -388,14 +425,24 @@ svg {
   color: #111827;
   font-weight: 700;
   text-align: right;
+  min-width: 82px;
+}
+
+.hardware-list strong {
+  color: #334155;
+}
+
+.hardware-list .muted-state {
+  color: #94a3b8;
+  font-weight: 600;
 }
 
 .app-footer {
   margin: 0 -18px;
   padding: 0 24px;
   border-top: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.42);
-  color: #64748b;
+  background: rgba(255, 255, 255, 0.34);
+  color: #7b8799;
   font-size: 12px;
 }
 
@@ -407,11 +454,11 @@ svg {
 
 .app-footer button {
   border: 0;
-  color: #2563eb;
+  color: #3b82f6;
   background: transparent;
   cursor: pointer;
   font: inherit;
-  font-weight: 750;
+  font-weight: 650;
 }
 
 .widget-shell {
