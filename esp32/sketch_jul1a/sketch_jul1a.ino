@@ -25,6 +25,8 @@ String weeklyReset = "--";
 String lastRefresh = "--:--";
 String planName = "Codex";
 
+const char* wifiStatusText(wl_status_t status);
+
 String shortStatus(String status) {
   status.toUpperCase();
 
@@ -111,21 +113,69 @@ void showMessage(String line1, String line2 = "") {
 
 void connectWiFi() {
   WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true);
+  delay(300);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.print("Connecting Wi-Fi: ");
   Serial.println(WIFI_SSID);
   showMessage("WiFi connecting");
 
+  unsigned long startedAt = millis();
+  int dotCount = 0;
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    dotCount++;
+
+    if (dotCount % 10 == 0) {
+      wl_status_t status = WiFi.status();
+      Serial.print(" status=");
+      Serial.println(wifiStatusText(status));
+      showMessage("WiFi connecting", wifiStatusText(status));
+    }
+
+    if (millis() - startedAt > 30000) {
+      wl_status_t status = WiFi.status();
+      Serial.println();
+      Serial.print("Wi-Fi connect timeout, status=");
+      Serial.println(wifiStatusText(status));
+      showMessage("WiFi failed", wifiStatusText(status));
+      delay(5000);
+      startedAt = millis();
+      WiFi.disconnect();
+      delay(300);
+      WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+      showMessage("WiFi retrying");
+    }
   }
 
   Serial.println();
   Serial.print("Wi-Fi connected, IP: ");
   Serial.println(WiFi.localIP());
   showMessage("WiFi connected", WiFi.localIP().toString());
+}
+
+const char* wifiStatusText(wl_status_t status) {
+  switch (status) {
+    case WL_IDLE_STATUS:
+      return "IDLE";
+    case WL_NO_SSID_AVAIL:
+      return "NO_SSID";
+    case WL_SCAN_COMPLETED:
+      return "SCAN_DONE";
+    case WL_CONNECTED:
+      return "CONNECTED";
+    case WL_CONNECT_FAILED:
+      return "AUTH_FAIL";
+    case WL_CONNECTION_LOST:
+      return "LOST";
+    case WL_DISCONNECTED:
+      return "DISCONNECTED";
+    default:
+      return "UNKNOWN";
+  }
 }
 
 void sendJson(int statusCode, String body) {
