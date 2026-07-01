@@ -245,11 +245,8 @@ void handleOptions() {
 
 void setupRoutes() {
   server.on("/ping", HTTP_GET, handlePing);
-  server.on("/health", HTTP_GET, handlePing);
   server.on("/api/usage", HTTP_POST, handleQuota);
   server.on("/api/usage", HTTP_OPTIONS, handleOptions);
-  server.on("/quota", HTTP_POST, handleQuota);
-  server.on("/quota", HTTP_OPTIONS, handleOptions);
   server.onNotFound([]() {
     sendJson(404, "{\"ok\":false,\"error\":\"not_found\"}");
   });
