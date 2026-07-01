@@ -305,6 +305,10 @@ async function connectHardwareDisplay(): Promise<void> {
     hardwareAutoSync.value = settings.value.hardwareDisplayEnabled
     hardwareConnectionState.value = '已连接'
     hardwareStatusText.value = '外部小屏已连接'
+    const result = await window.codexMeter.pushLatestToDevice()
+    hardwareLastPushedAt.value = result.pushedAt
+    hardwareConnectionState.value = '推送成功'
+    hardwareStatusText.value = '当前额度已同步到小屏'
     hardwareDialogVisible.value = false
     showNotice(hardwareStatusText.value)
   } catch {
