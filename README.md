@@ -1,40 +1,44 @@
 # CodexMeter
 
-本地运行的 Codex 用量监控桌面工具。它用更直观的方式展示 5 小时额度、7 天额度、重置卡和当前套餐，并提供一个可固定在桌面的轻量小组件。
+![Windows](https://img.shields.io/badge/Windows-10%2F11-2563eb?logo=windows)
+![Electron](https://img.shields.io/badge/Electron-Desktop-47848f?logo=electron)
+![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?logo=typescript)
+![Release](https://img.shields.io/github/v/release/MrWanCC/CodexMeter?label=release)
+![License](https://img.shields.io/badge/license-non--commercial-orange)
 
-![CodexMeter main window](docs/images/main-window.png)
+本地运行的 Codex 用量监控桌面工具，支持 5 小时 / 7 天额度、重置时间、桌面小组件和本地安全存储。
 
-## 适合谁
+![CodexMeter overview](docs/images/showcase-overview.png)
 
-- 经常使用 Codex / ChatGPT Codex，想随时知道额度还剩多少
-- 想学习 Electron + Vue 3 + TypeScript 桌面应用结构
-- 想了解 OAuth 授权数据、本地安全存储、桌面小组件这类实现方式
-- 想把额度状态后续同步到串口屏、蓝牙屏、MQTT 或其它硬件设备
+## 直接下载
 
-## 功能
+不想研究源码，可以直接下载 Windows 便携版：
 
-- 5 小时额度和 7 天额度监控
-- 充足、正常、关注、紧张、预警、已耗尽 6 档状态提示
-- 重置时间显示，主窗口和小组件保持一致
-- Codex Plus 等套餐信息显示
+[下载 CodexMeter v0.1.0 Windows Portable](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0)
+
+也可以查看仓库内的 [downloads/README.md](downloads/README.md)。
+
+## 功能特性
+
+- 实时监控 5 小时额度使用情况
+- 实时监控 7 天额度使用情况
+- 显示重置时间倒计时
+- 桌面小组件，可固定、置顶显示
 - OAuth 授权读取用量数据
-- 可固定主窗口、置顶显示、定时刷新
-- 桌面小组件模式
-- 重置卡数量与可用状态提示
-- 本地安全存储授权信息，不硬编码任何 API Key
-- 预留硬件显示扩展入口
+- 本地安全存储授权信息
+- 不发起模型请求，不采集聊天内容
+- 预留串口屏、蓝牙、MQTT、外部小屏等硬件扩展位
 
-## 小组件
+## 项目截图
 
-![CodexMeter widget](docs/images/widget.png)
+| 主界面 | 固定小组件 |
+| --- | --- |
+| ![CodexMeter main](docs/images/showcase-main.png) | ![CodexMeter widget](docs/images/showcase-widget.png) |
 
-## 直接下载使用
-
-不想研究源码的用户，可以直接使用仓库里的便携版：
-
-- [Windows x64 便携版](downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe)
-
-说明见 [downloads/README.md](downloads/README.md)。
+| 安全说明 | Roadmap |
+| --- | --- |
+| ![CodexMeter security](docs/images/showcase-security.png) | ![CodexMeter roadmap](docs/images/showcase-roadmap.png) |
 
 ## 安全说明
 
@@ -48,7 +52,7 @@ CodexMeter 的目标是做一个本地辅助工具：
 
 项目会读取当前授权下的用量相关接口。相关接口可能随官方产品变化而调整，如果后续失效，欢迎提交 Issue 或 PR。
 
-## 快速开始
+## 开发运行
 
 环境要求：
 
@@ -73,10 +77,6 @@ npm run dist:portable
 
 打包后的文件会输出到 `release/` 目录。
 
-## 使用说明
-
-更完整的使用说明见 [docs/USER_GUIDE.md](docs/USER_GUIDE.md)。
-
 ## 技术栈
 
 - Electron
@@ -99,7 +99,12 @@ src/
   shared/     主进程与渲染进程共享类型和解析逻辑
 tests/        单元测试和 UI 尺寸回归测试
 docs/         使用说明和展示图片
+downloads/    可直接使用的成品说明和便携版
 ```
+
+## 使用说明
+
+更完整的使用说明见 [docs/USER_GUIDE.md](docs/USER_GUIDE.md)。
 
 ## Roadmap
 
@@ -111,7 +116,7 @@ docs/         使用说明和展示图片
 
 ## 贡献
 
-欢迎提交 Issue、建议和 PR。这个项目本身也适合用来学习桌面应用的工程组织、OAuth 数据读取、本地安全存储和小组件 UI。
+欢迎提交 Issue、建议和 PR。这个项目适合学习 Electron 桌面应用、OAuth 数据读取、本地安全存储和桌面小组件 UI。
 
 如果这个项目对你有帮助，欢迎点一个 Star。
 
