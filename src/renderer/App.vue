@@ -621,6 +621,7 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
               placeholder="192.168.1.114 或 http://192.168.1.114"
               @keyup.enter="connectHardwareDisplay"
             />
+            <em>支持直接填写 IP，保存时会自动补全 http://</em>
           </label>
           <p class="hardware-connect-help">请确保电脑和 ESP32-C3 在同一局域网，设备需支持 /ping 和 /api/usage 接口。</p>
           <div class="hardware-sync-row">
@@ -632,8 +633,11 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
           </div>
           <div class="hardware-connect-status" :class="hardwareStatusTone">
             <span class="oauth-status-dot" />
-            <strong>{{ hardwareConnectionState }}</strong>
-            <em>{{ hardwareStatusText || '等待连接' }}</em>
+            <div>
+              <strong>连接状态</strong>
+              <em>{{ hardwareStatusText || '等待连接' }}</em>
+            </div>
+            <b>{{ hardwareConnectionState }}</b>
           </div>
           <div class="hardware-connect-actions">
             <NButton size="small" :loading="hardwareSaving" @click="hardwareDialogVisible = false">取消</NButton>

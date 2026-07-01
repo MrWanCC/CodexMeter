@@ -123,8 +123,8 @@ svg {
 }
 
 .hardware-connect-popover {
-  width: min(420px, 100%);
-  padding: 18px;
+  width: min(400px, 100%);
+  padding: 18px 18px 16px;
   border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 18px;
   background:
@@ -140,7 +140,7 @@ svg {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .hardware-connect-head strong {
@@ -152,9 +152,10 @@ svg {
 
 .hardware-connect-head span {
   display: block;
-  margin-top: 3px;
+  margin-top: 4px;
   color: #64748b;
   font-size: 12px;
+  line-height: 1.45;
 }
 
 .hardware-connect-head button {
@@ -195,8 +196,16 @@ svg {
   font-weight: 600;
 }
 
+.hardware-connect-field em {
+  color: #94a3b8;
+  font-size: 11px;
+  font-style: normal;
+}
+
 .hardware-connect-help {
-  margin: 7px 0 12px;
+  margin: 8px 0 12px;
+  padding-left: 1px;
+  color: #64748b;
 }
 
 .hardware-sync-row {
@@ -228,13 +237,12 @@ svg {
 }
 
 .hardware-connect-status {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
+  display: flex;
   align-items: center;
-  gap: 7px;
-  min-height: 34px;
+  gap: 9px;
+  min-height: 42px;
   margin-top: 10px;
-  padding: 0 10px;
+  padding: 0 11px;
   border: 1px solid rgba(34, 197, 94, 0.18);
   border-radius: 12px;
   color: #64748b;
@@ -260,17 +268,31 @@ svg {
   background: rgba(234, 88, 12, 0.07);
 }
 
+.hardware-connect-status > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
 .hardware-connect-status strong {
   color: currentColor;
   font-size: 12px;
+  line-height: 1.2;
 }
 
 .hardware-connect-status em {
   overflow: hidden;
   color: #64748b;
   font-style: normal;
-  text-align: right;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hardware-connect-status b {
+  margin-left: auto;
+  color: currentColor;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -279,6 +301,10 @@ svg {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 14px;
+}
+
+.hardware-connect-actions .n-button {
+  min-width: 88px;
 }
 
 .notice-enter-active,
