@@ -11,3 +11,4 @@ release/
 .env
 .env.*
 !.env.example
+esp32/**/secrets.h

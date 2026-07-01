@@ -110,6 +110,12 @@ downloads/    可直接使用的成品说明和便携版
 
 更完整的使用说明见 [docs/USER_GUIDE.md](docs/USER_GUIDE.md)。
 
+## 硬件显示
+
+硬件联动开发在 `hardware-software` 分支继续推进，当前目标是 ESP32-C3 Mini 通过 Wi-Fi 接收桌面端 HTTP 推送。
+
+文档见 [docs/hardware/README.md](docs/hardware/README.md)。
+
 ## Roadmap
 
 - 更稳定的自动更新方案
