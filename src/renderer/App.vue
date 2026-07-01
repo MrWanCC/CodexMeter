@@ -614,25 +614,22 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
             </div>
             <button type="button" aria-label="关闭" @click="hardwareDialogVisible = false">×</button>
           </div>
-          <div class="hardware-connect-form">
-            <label class="hardware-connect-field">
-              <span>设备地址</span>
-              <NInput
-                v-model:value="hardwareEndpointInput"
-                size="small"
-                placeholder="192.168.1.114 或 http://192.168.1.114"
-                @keyup.enter="connectHardwareDisplay"
-              />
-            </label>
-            <div class="hardware-sync-row">
-              <div>
-                <strong>自动同步</strong>
-                <span>刷新额度后自动推送到小屏</span>
-              </div>
-              <NSwitch v-model:value="hardwareAutoSync" size="small" />
+          <label class="hardware-connect-field">
+            <span>设备地址</span>
+            <NInput
+              v-model:value="hardwareEndpointInput"
+              size="small"
+              placeholder="192.168.1.114 或 http://192.168.1.114"
+              @keyup.enter="connectHardwareDisplay"
+            />
+          </label>
+          <div class="hardware-sync-row">
+            <div>
+              <strong>自动同步</strong>
+              <span>刷新额度后自动推送到小屏</span>
             </div>
+            <NSwitch v-model:value="hardwareAutoSync" size="small" />
           </div>
-          <p class="hardware-connect-help">支持直接填写 IP；请确保电脑和 ESP32-C3 在同一局域网。</p>
           <div class="hardware-connect-status" :class="hardwareStatusTone">
             <span class="oauth-status-dot" />
             <div>
