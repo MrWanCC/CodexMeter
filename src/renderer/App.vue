@@ -304,6 +304,7 @@ async function connectHardwareDisplay(): Promise<void> {
     hardwareAutoSync.value = settings.value.hardwareDisplayEnabled
     hardwareConnectionState.value = '已连接'
     hardwareStatusText.value = '外部小屏已连接'
+    hardwareDialogVisible.value = false
     showNotice(hardwareStatusText.value)
   } catch {
     hardwareConnectionState.value = '连接失败'
@@ -613,28 +614,29 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
             </div>
             <button type="button" aria-label="关闭" @click="hardwareDialogVisible = false">×</button>
           </div>
-          <label class="hardware-connect-field">
-            <span>设备地址</span>
-            <NInput
-              v-model:value="hardwareEndpointInput"
-              size="small"
-              placeholder="192.168.1.114 或 http://192.168.1.114"
-              @keyup.enter="connectHardwareDisplay"
-            />
-            <em>支持直接填写 IP，保存时会自动补全 http://</em>
-          </label>
-          <p class="hardware-connect-help">请确保电脑和 ESP32-C3 在同一局域网，设备需支持 /ping 和 /api/usage 接口。</p>
-          <div class="hardware-sync-row">
-            <div>
-              <strong>自动同步</strong>
-              <span>刷新额度后自动推送到小屏</span>
+          <div class="hardware-connect-form">
+            <label class="hardware-connect-field">
+              <span>设备地址</span>
+              <NInput
+                v-model:value="hardwareEndpointInput"
+                size="small"
+                placeholder="192.168.1.114 或 http://192.168.1.114"
+                @keyup.enter="connectHardwareDisplay"
+              />
+            </label>
+            <div class="hardware-sync-row">
+              <div>
+                <strong>自动同步</strong>
+                <span>刷新额度后自动推送到小屏</span>
+              </div>
+              <NSwitch v-model:value="hardwareAutoSync" size="small" />
             </div>
-            <NSwitch v-model:value="hardwareAutoSync" size="small" />
           </div>
+          <p class="hardware-connect-help">支持直接填写 IP；请确保电脑和 ESP32-C3 在同一局域网。</p>
           <div class="hardware-connect-status" :class="hardwareStatusTone">
             <span class="oauth-status-dot" />
             <div>
-              <strong>连接状态</strong>
+              <strong>通信状态</strong>
               <em>{{ hardwareStatusText || '等待连接' }}</em>
             </div>
             <b>{{ hardwareConnectionState }}</b>
