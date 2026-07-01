@@ -3,16 +3,13 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { NButton, NConfigProvider, NInput, NProgress, NSelect, NSwitch, NTag, type GlobalThemeOverrides } from 'naive-ui'
 import {
   AlertCircle,
-  Bluetooth,
   Calendar,
   CheckCircle2,
   Clock,
-  Cpu,
   Lock,
   Monitor,
   MoreHorizontal,
   Plug,
-  Radio,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -983,19 +980,9 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
               <strong>{{ hardwareLastPushLabel }}</strong>
             </div>
             <div>
-              <Bluetooth :size="17" :stroke-width="2" />
-              <span>蓝牙连接</span>
-              <strong class="muted-state">待扩展</strong>
-            </div>
-            <div>
-              <Radio :size="17" :stroke-width="2" />
-              <span>MQTT 推送</span>
-              <strong class="muted-state">待扩展</strong>
-            </div>
-            <div>
-              <Cpu :size="17" :stroke-width="2" />
-              <span>USB 串口</span>
-              <strong>可选</strong>
+              <Plug :size="17" :stroke-width="2" />
+              <span>通信状态</span>
+              <strong :class="hardwareStatusTone">{{ hardwareConnectionState }}</strong>
             </div>
           </div>
         </div>
