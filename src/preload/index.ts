@@ -12,6 +12,7 @@ const api = {
   saveHardwareDisplay: (enabled: boolean, endpoint?: string) =>
     ipcRenderer.invoke('settings:saveHardwareDisplay', enabled, endpoint) as Promise<AppSettings>,
   listDevices: () => ipcRenderer.invoke('devices:list') as Promise<DisplayDevice[]>,
+  pushLatestToDevice: () => ipcRenderer.invoke('devices:pushLatest') as Promise<{ pushed: boolean }>,
   getOAuthStatus: () => ipcRenderer.invoke('oauth:status') as Promise<{ connected: boolean; email?: string }>,
   connectOAuth: (forceLogin = false) =>
     ipcRenderer.invoke('oauth:connect', forceLogin) as Promise<{ connected: boolean; email?: string; error?: string }>,

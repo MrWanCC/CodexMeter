@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('codexMeter', {
   saveRefreshInterval: (minutes) => ipcRenderer.invoke('settings:saveRefreshInterval', minutes),
   saveHardwareDisplay: (enabled, endpoint) => ipcRenderer.invoke('settings:saveHardwareDisplay', enabled, endpoint),
   listDevices: () => ipcRenderer.invoke('devices:list'),
+  pushLatestToDevice: () => ipcRenderer.invoke('devices:pushLatest'),
   getOAuthStatus: () => ipcRenderer.invoke('oauth:status'),
   connectOAuth: (forceLogin = false) => ipcRenderer.invoke('oauth:connect', forceLogin),
   cancelOAuth: () => ipcRenderer.invoke('oauth:cancel'),

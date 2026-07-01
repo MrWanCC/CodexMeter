@@ -132,6 +132,16 @@ async function refreshQuotaAndBroadcast(): Promise<QuotaSnapshot> {
   return snapshot
 }
 
+async function pushLatestSnapshotToDevice(): Promise<{ pushed: boolean }> {
+  const snapshot = latestSnapshot ?? await fetchQuotaSnapshot()
+  await deviceBridge.sendSnapshot(snapshot)
+  if (!latestSnapshot) {
+    broadcastQuotaSnapshot(snapshot)
+  }
+
+  return { pushed: true }
+}
+
 function createDeviceBridge(): DeviceBridge {
   const settings = getSettings()
   if (settings.hardwareDisplayEnabled && settings.hardwareEndpoint) {
@@ -182,6 +192,7 @@ ipcMain.handle('settings:saveHardwareDisplay', (_event, enabled: boolean, endpoi
 })
 
 ipcMain.handle('devices:list', () => deviceBridge.listDevices())
+ipcMain.handle('devices:pushLatest', () => pushLatestSnapshotToDevice())
 
 ipcMain.handle('oauth:status', () => {
   const token = getCodexOAuth()

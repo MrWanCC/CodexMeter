@@ -234,7 +234,12 @@ async function testHardwareDisplay(): Promise<void> {
     hardwareEndpointInput.value = settings.value.hardwareEndpoint ?? hardwareEndpointInput.value.trim()
     const devices = await window.codexMeter.listDevices()
     const device = devices[0]
-    hardwareStatusText.value = device?.connected ? 'ESP32 已连接' : 'ESP32 未响应'
+    if (device?.connected) {
+      await window.codexMeter.pushLatestToDevice()
+      hardwareStatusText.value = 'ESP32 已连接并已推送'
+    } else {
+      hardwareStatusText.value = 'ESP32 未响应'
+    }
     showNotice(hardwareStatusText.value)
   } catch (error) {
     hardwareStatusText.value = error instanceof Error ? error.message : 'ESP32 测试失败'
