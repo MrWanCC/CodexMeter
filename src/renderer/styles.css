@@ -982,7 +982,7 @@ svg {
 }
 
 .hardware-list .hardware-endpoint {
-  max-width: 170px;
+  max-width: 190px;
   overflow: hidden;
   color: #475569;
   font-family:
@@ -996,13 +996,8 @@ svg {
   white-space: nowrap;
 }
 
-.hardware-card .hardware-list > div {
-  min-height: 22px;
-  font-size: 11px;
-}
-
 .hardware-card .hardware-list strong {
-  min-width: 90px;
+  min-width: 118px;
 }
 
 .app-footer {
