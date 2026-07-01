@@ -123,6 +123,7 @@ const fiveHourState = computed(() => quotaState(fiveHourWindow.value))
 const sevenDayState = computed(() => quotaState(sevenDayWindow.value))
 const hardwareConnected = computed(() => Boolean(settings.value?.hardwareEndpoint))
 const hardwareAutoSyncLabel = computed(() => (settings.value?.hardwareDisplayEnabled ? '开启' : '关闭'))
+const hardwarePrimaryActionLabel = computed(() => (hardwareConnected.value ? '保存设置' : '保存并连接'))
 const hardwareStatusTone = computed(() => {
   if (hardwareConnectionState.value === '连接失败' || hardwareConnectionState.value === '推送失败') {
     return 'is-error'
@@ -309,6 +310,29 @@ async function connectHardwareDisplay(): Promise<void> {
   } catch {
     hardwareConnectionState.value = '连接失败'
     hardwareStatusText.value = '无法连接外部小屏，请确认 ESP32-C3 已连接 Wi-Fi，且电脑与设备在同一局域网。'
+  } finally {
+    hardwareSaving.value = false
+  }
+}
+
+async function testHardwareConnection(): Promise<void> {
+  if (!window.codexMeter) {
+    hardwareConnectionState.value = '连接失败'
+    hardwareStatusText.value = '当前环境无法连接外部小屏'
+    return
+  }
+
+  hardwareSaving.value = true
+  hardwareConnectionState.value = '连接中'
+  hardwareStatusText.value = '正在测试连接...'
+  try {
+    await window.codexMeter.pingHardwareDisplay(hardwareEndpointInput.value)
+    hardwareConnectionState.value = '已连接'
+    hardwareStatusText.value = '外部小屏可用'
+    showNotice('外部小屏连接正常')
+  } catch {
+    hardwareConnectionState.value = '连接失败'
+    hardwareStatusText.value = '无法连接外部小屏，请检查设备地址和局域网连接。'
   } finally {
     hardwareSaving.value = false
   }
@@ -628,23 +652,27 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
               <strong>自动同步</strong>
               <span>刷新额度后自动推送到小屏</span>
             </div>
+            <b>[{{ hardwareAutoSync ? '开启' : '关闭' }}]</b>
             <NSwitch v-model:value="hardwareAutoSync" size="small" />
           </div>
           <div class="hardware-connect-status" :class="hardwareStatusTone">
             <span class="oauth-status-dot" />
             <div>
               <strong>通信状态</strong>
-              <em>{{ hardwareStatusText || '等待连接' }}</em>
+              <em>{{ hardwareConnected ? hardwareDisplayAddress : hardwareStatusText || '等待连接' }}</em>
             </div>
             <b>{{ hardwareConnectionState }}</b>
           </div>
           <div class="hardware-connect-actions">
             <NButton size="small" :loading="hardwareSaving" @click="hardwareDialogVisible = false">取消</NButton>
-            <NButton size="small" :loading="hardwareSaving" @click="sendHardwareTestData">
-              发送测试数据
+            <NButton v-if="hardwareConnected" size="small" :loading="hardwareSaving" @click="disconnectHardwareDisplay">
+              断开连接
+            </NButton>
+            <NButton size="small" :loading="hardwareSaving" @click="hardwareConnected ? sendHardwareTestData() : testHardwareConnection()">
+              {{ hardwareConnected ? '发送测试' : '测试连接' }}
             </NButton>
             <NButton size="small" type="primary" :loading="hardwareSaving" @click="connectHardwareDisplay">
-              连接并保存
+              {{ hardwarePrimaryActionLabel }}
             </NButton>
           </div>
         </section>

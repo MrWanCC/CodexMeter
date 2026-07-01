@@ -208,6 +208,14 @@ svg {
   background: rgba(248, 250, 252, 0.62);
 }
 
+.hardware-sync-row b {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .hardware-sync-row strong,
 .hardware-sync-row span {
   display: block;
@@ -288,12 +296,12 @@ svg {
 .hardware-connect-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 9px;
+  gap: 8px;
   margin-top: 12px;
 }
 
 .hardware-connect-actions .n-button {
-  min-width: 96px;
+  min-width: 82px;
 }
 
 .notice-enter-active,
