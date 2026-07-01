@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Local Codex quota monitor for Windows with a compact desktop widget.",
   "author": "MrWanCC",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "main": "dist-electron/main/index.js",
   "private": false,

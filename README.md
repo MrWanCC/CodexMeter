@@ -28,6 +28,14 @@
 
 ![CodexMeter widget](docs/images/widget.png)
 
+## 直接下载使用
+
+不想研究源码的用户，可以直接使用仓库里的便携版：
+
+- [Windows x64 便携版](downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe)
+
+说明见 [downloads/README.md](downloads/README.md)。
+
 ## 安全说明
 
 CodexMeter 的目标是做一个本地辅助工具：
@@ -109,4 +117,11 @@ docs/         使用说明和展示图片
 
 ## License
 
-MIT
+本项目采用自定义非商业许可：
+
+- 可以学习
+- 可以个人直接使用
+- 可以非商业二次开发
+- 不允许商用
+
+完整条款见 [LICENSE](LICENSE)。

@@ -4,6 +4,12 @@ CodexMeter 是一个本地运行的 Codex 用量监控工具，主窗口适合�
 
 ## 安装与启动
 
+只想直接使用：
+
+1. 打开 [downloads](../downloads/README.md)
+2. 下载或双击 `CodexMeter-v0.1.0-win-x64-portable.exe`
+3. 按界面提示完成 OAuth 授权
+
 开发模式：
 
 ```powershell
@@ -83,6 +89,10 @@ npm run dist:portable
 - 不提交 `.env`、Token、缓存和构建产物
 - 不读取聊天内容
 - 不发起模型请求
+
+## 授权范围
+
+本项目允许学习、个人使用和非商业二次开发，不允许商业使用。商业使用需要先获得作者书面授权。
 
 ## 常见问题
 
