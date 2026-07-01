@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('codexMeter', {
   saveRefreshInterval: (minutes) => ipcRenderer.invoke('settings:saveRefreshInterval', minutes),
   saveHardwareDisplay: (enabled, endpoint) => ipcRenderer.invoke('settings:saveHardwareDisplay', enabled, endpoint),
   listDevices: () => ipcRenderer.invoke('devices:list'),
+  pingHardwareDisplay: (endpoint) => ipcRenderer.invoke('devices:ping', endpoint),
+  pushHardwareTest: (endpoint) => ipcRenderer.invoke('devices:pushTest', endpoint),
   pushLatestToDevice: () => ipcRenderer.invoke('devices:pushLatest'),
   getOAuthStatus: () => ipcRenderer.invoke('oauth:status'),
   connectOAuth: (forceLogin = false) => ipcRenderer.invoke('oauth:connect', forceLogin),
@@ -28,6 +30,11 @@ contextBridge.exposeInMainWorld('codexMeter', {
     const listener = (_event, snapshot) => callback(snapshot)
     ipcRenderer.on('quota:updated', listener)
     return () => ipcRenderer.removeListener('quota:updated', listener)
+  },
+  onHardwarePushUpdated: (callback) => {
+    const listener = (_event, pushedAt) => callback(pushedAt)
+    ipcRenderer.on('hardware:pushUpdated', listener)
+    return () => ipcRenderer.removeListener('hardware:pushUpdated', listener)
   }
 })
 `.trimStart()
