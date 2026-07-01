@@ -20,11 +20,11 @@ describe('HttpDeviceBridge', () => {
 
   it('checks health and posts quota snapshots', async () => {
     const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
-      if (url.endsWith('/health')) {
+      if (url.endsWith('/ping')) {
         return new Response('{"ok":true}', { status: 200 })
       }
 
-      if (url.endsWith('/quota') && init?.method === 'POST') {
+      if (url.endsWith('/api/usage') && init?.method === 'POST') {
         return new Response('{"ok":true}', { status: 200 })
       }
 
@@ -43,7 +43,7 @@ describe('HttpDeviceBridge', () => {
 
     await bridge.sendSnapshot(sampleQuotaSnapshot(new Date('2026-07-01T07:30:00.000Z')))
 
-    expect(fetcher).toHaveBeenCalledWith('http://192.168.1.120/quota', {
+    expect(fetcher).toHaveBeenCalledWith('http://192.168.1.120/api/usage', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -51,5 +51,18 @@ describe('HttpDeviceBridge', () => {
       body: expect.stringContaining('"type":"quota"'),
       signal: expect.any(AbortSignal)
     })
+  })
+
+  it('adds http protocol for bare IP endpoints', async () => {
+    const bridge = new HttpDeviceBridge('192.168.1.120', async () => {
+      return new Response('{"ok":true}', { status: 200 })
+    })
+
+    await expect(bridge.listDevices()).resolves.toMatchObject([
+      {
+        id: 'http://192.168.1.120',
+        connected: true
+      }
+    ])
   })
 })

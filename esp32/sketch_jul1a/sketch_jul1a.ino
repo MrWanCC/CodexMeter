@@ -185,7 +185,7 @@ void sendJson(int statusCode, String body) {
   server.send(statusCode, "application/json", body);
 }
 
-void handleHealth() {
+void handlePing() {
   StaticJsonDocument<192> doc;
   doc["ok"] = true;
   doc["device"] = "CodexMeter ESP32-C3";
@@ -204,7 +204,7 @@ void handleQuota() {
   }
 
   String body = server.arg("plain");
-  Serial.print("POST /quota ");
+  Serial.print("POST usage ");
   Serial.println(body);
 
   StaticJsonDocument<768> doc;
@@ -244,7 +244,10 @@ void handleOptions() {
 }
 
 void setupRoutes() {
-  server.on("/health", HTTP_GET, handleHealth);
+  server.on("/ping", HTTP_GET, handlePing);
+  server.on("/health", HTTP_GET, handlePing);
+  server.on("/api/usage", HTTP_POST, handleQuota);
+  server.on("/api/usage", HTTP_OPTIONS, handleOptions);
   server.on("/quota", HTTP_POST, handleQuota);
   server.on("/quota", HTTP_OPTIONS, handleOptions);
   server.onNotFound([]() {

@@ -33,6 +33,9 @@ const alwaysOnTop = ref(false)
 const hardwareEndpointInput = ref('')
 const hardwareSaving = ref(false)
 const hardwareStatusText = ref('')
+const hardwareConnectionState = ref<'未连接' | '连接中' | '已连接' | '连接失败' | '推送成功' | '推送失败'>('未连接')
+const hardwareAutoSync = ref(true)
+const hardwareLastPushedAt = ref<string | undefined>()
 const hardwareDialogVisible = ref(false)
 const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
@@ -46,6 +49,7 @@ let unsubscribeQuota: (() => void) | undefined
 let refreshTimer: ReturnType<typeof setInterval> | undefined
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
 let removeCopyListener: (() => void) | undefined
+let unsubscribeHardwarePush: (() => void) | undefined
 
 const intervalOptions = [
   { label: '手动刷新', value: 0 },
@@ -120,7 +124,35 @@ const refreshSummary = computed(() => {
 })
 const fiveHourState = computed(() => quotaState(fiveHourWindow.value))
 const sevenDayState = computed(() => quotaState(sevenDayWindow.value))
-const hardwareConnected = computed(() => Boolean(settings.value?.hardwareDisplayEnabled && settings.value.hardwareEndpoint))
+const hardwareConnected = computed(() => Boolean(settings.value?.hardwareEndpoint))
+const hardwareAutoSyncLabel = computed(() => (settings.value?.hardwareDisplayEnabled ? '开启' : '关闭'))
+const hardwareStatusTone = computed(() => {
+  if (hardwareConnectionState.value === '连接失败' || hardwareConnectionState.value === '推送失败') {
+    return 'is-error'
+  }
+
+  if (hardwareConnectionState.value === '连接中') {
+    return 'is-pending'
+  }
+
+  if (hardwareConnectionState.value === '已连接' || hardwareConnectionState.value === '推送成功') {
+    return 'is-success'
+  }
+
+  return 'is-idle'
+})
+const hardwareLastPushLabel = computed(() => {
+  if (!hardwareLastPushedAt.value) {
+    return '--'
+  }
+
+  const date = new Date(hardwareLastPushedAt.value)
+  if (Number.isNaN(date.getTime())) {
+    return '--'
+  }
+
+  return date.toLocaleTimeString()
+})
 const hardwareDisplayAddress = computed(() => {
   if (!hardwareConnected.value || !settings.value?.hardwareEndpoint) {
     return '未连接'
@@ -138,6 +170,10 @@ onMounted(async () => {
     snapshot.value = nextSnapshot
     status.value = `已刷新 ${new Date(nextSnapshot.refreshedAt).toLocaleTimeString()}`
   })
+  unsubscribeHardwarePush = window.codexMeter?.onHardwarePushUpdated((pushedAt) => {
+    hardwareLastPushedAt.value = pushedAt
+    hardwareConnectionState.value = '推送成功'
+  })
 
   if (isWidgetView) {
     snapshot.value = window.codexMeter ? await window.codexMeter.getLatestQuota() : sampleQuotaSnapshot()
@@ -147,6 +183,8 @@ onMounted(async () => {
   if (window.codexMeter) {
     settings.value = await window.codexMeter.getSettings()
     hardwareEndpointInput.value = settings.value.hardwareEndpoint ?? ''
+    hardwareAutoSync.value = settings.value.hardwareDisplayEnabled
+    hardwareConnectionState.value = settings.value.hardwareEndpoint ? '已连接' : '未连接'
     const oauth = await window.codexMeter.getOAuthStatus()
     oauthConnected.value = oauth.connected
     oauthEmail.value = oauth.email
@@ -155,6 +193,7 @@ onMounted(async () => {
     alwaysOnTop.value = widgetState.visible ? widgetState.alwaysOnTop : false
   } else {
     settings.value = { refreshIntervalMinutes: 5, hardwareDisplayEnabled: false }
+    hardwareAutoSync.value = false
   }
 
   await refreshQuota()
@@ -163,6 +202,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   unsubscribeQuota?.()
+  unsubscribeHardwarePush?.()
   removeCopyListener?.()
   clearAutoRefresh()
   clearNotice()
@@ -206,8 +246,10 @@ function showAbout(): void {
 
 function openHardwareDialog(): void {
   hardwareEndpointInput.value = settings.value?.hardwareEndpoint ?? hardwareEndpointInput.value
+  hardwareAutoSync.value = settings.value?.hardwareDisplayEnabled ?? true
   hardwareDialogVisible.value = true
-  hardwareStatusText.value = hardwareConnected.value ? '硬件推送已启用' : ''
+  hardwareConnectionState.value = hardwareConnected.value ? '已连接' : '未连接'
+  hardwareStatusText.value = ''
 }
 
 async function updateInterval(value: number): Promise<void> {
@@ -228,40 +270,74 @@ async function saveHardwareDisplay(enabled = true): Promise<void> {
           hardwareEndpoint: hardwareEndpointInput.value
         }
     hardwareEndpointInput.value = settings.value.hardwareEndpoint ?? hardwareEndpointInput.value.trim()
-    hardwareStatusText.value = settings.value.hardwareDisplayEnabled ? '硬件推送已启用' : '硬件推送已关闭'
+    hardwareAutoSync.value = settings.value.hardwareDisplayEnabled
+    hardwareConnectionState.value = settings.value.hardwareEndpoint ? '已连接' : '未连接'
+    hardwareStatusText.value = settings.value.hardwareDisplayEnabled ? '刷新额度后会自动推送到小屏' : '自动同步已关闭'
     showNotice(hardwareStatusText.value)
-    if (!settings.value.hardwareDisplayEnabled) {
+    if (!settings.value.hardwareEndpoint) {
       hardwareDialogVisible.value = false
     }
   } catch (error) {
+    hardwareConnectionState.value = '连接失败'
     hardwareStatusText.value = error instanceof Error ? error.message : '硬件设置保存失败'
   } finally {
     hardwareSaving.value = false
   }
 }
 
-async function testHardwareDisplay(): Promise<void> {
+async function disconnectHardwareDisplay(): Promise<void> {
+  hardwareEndpointInput.value = ''
+  await saveHardwareDisplay(false)
+}
+
+async function connectHardwareDisplay(): Promise<void> {
   if (!window.codexMeter) {
-    hardwareStatusText.value = '当前环境无法测试硬件'
+    hardwareConnectionState.value = '连接失败'
+    hardwareStatusText.value = '当前环境无法连接外部小屏'
     return
   }
 
   hardwareSaving.value = true
+  hardwareConnectionState.value = '连接中'
+  hardwareStatusText.value = '正在连接外部小屏...'
   try {
-    settings.value = await window.codexMeter.saveHardwareDisplay(true, hardwareEndpointInput.value)
+    await window.codexMeter.pingHardwareDisplay(hardwareEndpointInput.value)
+    settings.value = await window.codexMeter.saveHardwareDisplay(hardwareAutoSync.value, hardwareEndpointInput.value)
     hardwareEndpointInput.value = settings.value.hardwareEndpoint ?? hardwareEndpointInput.value.trim()
-    const devices = await window.codexMeter.listDevices()
-    const device = devices[0]
-    if (device?.connected) {
-      await window.codexMeter.pushLatestToDevice()
-      hardwareStatusText.value = 'ESP32 已连接并已推送'
-      hardwareDialogVisible.value = false
-    } else {
-      hardwareStatusText.value = 'ESP32 未响应'
-    }
+    hardwareAutoSync.value = settings.value.hardwareDisplayEnabled
+    hardwareConnectionState.value = '已连接'
+    hardwareStatusText.value = '外部小屏已连接'
     showNotice(hardwareStatusText.value)
   } catch (error) {
-    hardwareStatusText.value = error instanceof Error ? error.message : 'ESP32 测试失败'
+    hardwareConnectionState.value = '连接失败'
+    hardwareStatusText.value =
+      error instanceof Error
+        ? error.message
+        : '无法连接外部小屏，请确认 ESP32-C3 已连接 Wi-Fi，且电脑与设备在同一局域网。'
+  } finally {
+    hardwareSaving.value = false
+  }
+}
+
+async function sendHardwareTestData(): Promise<void> {
+  if (!window.codexMeter) {
+    hardwareConnectionState.value = '推送失败'
+    hardwareStatusText.value = '当前环境无法发送测试数据'
+    return
+  }
+
+  hardwareSaving.value = true
+  hardwareConnectionState.value = '连接中'
+  hardwareStatusText.value = '正在发送测试数据...'
+  try {
+    const result = await window.codexMeter.pushHardwareTest(hardwareEndpointInput.value)
+    hardwareLastPushedAt.value = result.pushedAt
+    hardwareConnectionState.value = '推送成功'
+    hardwareStatusText.value = '测试数据已发送到小屏'
+    showNotice(hardwareStatusText.value)
+  } catch {
+    hardwareConnectionState.value = '推送失败'
+    hardwareStatusText.value = '测试数据发送失败，请确认设备支持 /api/usage 接口。'
   } finally {
     hardwareSaving.value = false
   }
@@ -538,29 +614,40 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
         <section class="hardware-connect-popover">
           <div class="hardware-connect-head">
             <div>
-              <strong>连接硬件显示</strong>
-              <span>ESP32-C3 局域网同步</span>
+              <strong>连接外部小屏</strong>
+              <span>通过 HTTP 将 CodexMeter 额度状态推送到 ESP32-C3 OLED 小屏</span>
             </div>
             <button type="button" aria-label="关闭" @click="hardwareDialogVisible = false">×</button>
           </div>
-          <p>输入设备地址后，CodexMeter 会把当前额度状态推送到小屏。</p>
           <label class="hardware-connect-field">
             <span>设备地址</span>
             <NInput
               v-model:value="hardwareEndpointInput"
               size="small"
               placeholder="192.168.1.114 或 http://192.168.1.114"
-              @keyup.enter="testHardwareDisplay"
+              @keyup.enter="connectHardwareDisplay"
             />
           </label>
-          <span class="hardware-connect-status">{{ hardwareStatusText || '等待连接' }}</span>
+          <p class="hardware-connect-help">请确保电脑和 ESP32-C3 在同一局域网，设备需支持 /ping 和 /api/usage 接口。</p>
+          <div class="hardware-sync-row">
+            <div>
+              <strong>自动同步</strong>
+              <span>刷新额度后自动推送到小屏</span>
+            </div>
+            <NSwitch v-model:value="hardwareAutoSync" size="small" />
+          </div>
+          <div class="hardware-connect-status" :class="hardwareStatusTone">
+            <span class="oauth-status-dot" />
+            <strong>{{ hardwareConnectionState }}</strong>
+            <em>{{ hardwareStatusText || '等待连接' }}</em>
+          </div>
           <div class="hardware-connect-actions">
             <NButton size="small" :loading="hardwareSaving" @click="hardwareDialogVisible = false">取消</NButton>
-            <NButton v-if="hardwareConnected" size="small" :loading="hardwareSaving" @click="saveHardwareDisplay(false)">
-              断开连接
+            <NButton size="small" :loading="hardwareSaving" @click="sendHardwareTestData">
+              发送测试数据
             </NButton>
-            <NButton size="small" type="primary" :loading="hardwareSaving" @click="testHardwareDisplay">
-              连接并测试
+            <NButton size="small" type="primary" :loading="hardwareSaving" @click="connectHardwareDisplay">
+              连接并保存
             </NButton>
           </div>
         </section>
@@ -875,18 +962,28 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
                 class="oauth-action"
                 :type="hardwareConnected ? 'default' : 'primary'"
                 :loading="hardwareSaving"
-                @click="hardwareConnected ? saveHardwareDisplay(false) : openHardwareDialog()"
+                @click="hardwareConnected ? disconnectHardwareDisplay() : openHardwareDialog()"
               >
-                {{ hardwareConnected ? '断开连接' : '连接硬件' }}
+                {{ hardwareConnected ? '断开连接' : '连接小屏' }}
               </NButton>
             </div>
           </div>
 
           <div class="hardware-list">
             <div>
-              <Cpu :size="17" :stroke-width="2" />
-              <span>串口显示</span>
-              <strong class="hardware-endpoint">{{ hardwareDisplayAddress }}</strong>
+              <Monitor :size="17" :stroke-width="2" />
+              <span>HTTP 小屏</span>
+              <strong class="hardware-endpoint">{{ hardwareDisplayAddress }} {{ hardwareConnected ? '已连接' : '' }}</strong>
+            </div>
+            <div>
+              <RefreshCw :size="17" :stroke-width="2" />
+              <span>自动同步</span>
+              <strong>{{ hardwareAutoSyncLabel }}</strong>
+            </div>
+            <div>
+              <Clock :size="17" :stroke-width="2" />
+              <span>上次推送</span>
+              <strong>{{ hardwareLastPushLabel }}</strong>
             </div>
             <div>
               <Bluetooth :size="17" :stroke-width="2" />
@@ -899,9 +996,9 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
               <strong class="muted-state">待扩展</strong>
             </div>
             <div>
-              <Monitor :size="17" :stroke-width="2" />
-              <span>外部小屏</span>
-              <strong class="muted-state">待扩展</strong>
+              <Cpu :size="17" :stroke-width="2" />
+              <span>USB 串口</span>
+              <strong>可选</strong>
             </div>
           </div>
         </div>

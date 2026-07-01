@@ -56,23 +56,35 @@ export class HttpDeviceBridge implements DeviceBridge {
   }
 
   async sendSnapshot(snapshot: QuotaSnapshot): Promise<void> {
-    const response = await this.fetcher(`${this.endpoint}/quota`, {
+    await this.sendPayload(buildEsp32QuotaPayload(snapshot))
+  }
+
+  async sendTestPayload(): Promise<void> {
+    await this.sendPayload(buildEsp32TestPayload())
+  }
+
+  async ping(): Promise<boolean> {
+    return this.isOnline()
+  }
+
+  private async sendPayload(payload: Esp32QuotaPayload): Promise<void> {
+    const response = await this.fetcher(`${this.endpoint}/api/usage`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(buildEsp32QuotaPayload(snapshot)),
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(3000)
     })
 
     if (!response.ok) {
-      throw new Error(`ESP32 quota push failed: ${response.status}`)
+      throw new Error(`ESP32 usage push failed: ${response.status}`)
     }
   }
 
   private async isOnline(): Promise<boolean> {
     try {
-      const response = await this.fetcher(`${this.endpoint}/health`, {
+      const response = await this.fetcher(`${this.endpoint}/ping`, {
         method: 'GET',
         signal: AbortSignal.timeout(1500)
       })
@@ -80,6 +92,29 @@ export class HttpDeviceBridge implements DeviceBridge {
       return response.ok
     } catch {
       return false
+    }
+  }
+}
+
+export function buildEsp32TestPayload(now = new Date()): Esp32QuotaPayload {
+  return {
+    type: 'quota',
+    version: 1,
+    plan: 'Codex Test',
+    lastRefresh: formatLocalTime(now),
+    fiveHour: {
+      remaining: 88,
+      used: 12,
+      reset: '18:30',
+      status: 'enough',
+      label: statusLabel('enough')
+    },
+    weekly: {
+      remaining: 56,
+      used: 44,
+      reset: '07/07 10:18',
+      status: 'normal',
+      label: statusLabel('normal')
     }
   }
 }
@@ -228,5 +263,7 @@ function clampPercent(value: number): number {
 }
 
 function normalizeHttpEndpoint(endpoint: string): string {
-  return endpoint.replace(/\/+$/, '')
+  const value = endpoint.trim()
+  const withProtocol = /^[a-z][a-z\d+\-.]*:\/\//i.test(value) ? value : `http://${value}`
+  return withProtocol.replace(/\/+$/, '')
 }

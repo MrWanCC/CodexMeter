@@ -12,7 +12,11 @@ const api = {
   saveHardwareDisplay: (enabled: boolean, endpoint?: string) =>
     ipcRenderer.invoke('settings:saveHardwareDisplay', enabled, endpoint) as Promise<AppSettings>,
   listDevices: () => ipcRenderer.invoke('devices:list') as Promise<DisplayDevice[]>,
-  pushLatestToDevice: () => ipcRenderer.invoke('devices:pushLatest') as Promise<{ pushed: boolean }>,
+  pingHardwareDisplay: (endpoint: string) =>
+    ipcRenderer.invoke('devices:ping', endpoint) as Promise<{ connected: boolean }>,
+  pushHardwareTest: (endpoint: string) =>
+    ipcRenderer.invoke('devices:pushTest', endpoint) as Promise<{ pushed: boolean; pushedAt: string }>,
+  pushLatestToDevice: () => ipcRenderer.invoke('devices:pushLatest') as Promise<{ pushed: boolean; pushedAt: string }>,
   getOAuthStatus: () => ipcRenderer.invoke('oauth:status') as Promise<{ connected: boolean; email?: string }>,
   connectOAuth: (forceLogin = false) =>
     ipcRenderer.invoke('oauth:connect', forceLogin) as Promise<{ connected: boolean; email?: string; error?: string }>,
@@ -35,6 +39,11 @@ const api = {
     const listener = (_event: Electron.IpcRendererEvent, snapshot: QuotaSnapshot) => callback(snapshot)
     ipcRenderer.on('quota:updated', listener)
     return () => ipcRenderer.removeListener('quota:updated', listener)
+  },
+  onHardwarePushUpdated: (callback: (pushedAt: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, pushedAt: string) => callback(pushedAt)
+    ipcRenderer.on('hardware:pushUpdated', listener)
+    return () => ipcRenderer.removeListener('hardware:pushUpdated', listener)
   }
 }
 

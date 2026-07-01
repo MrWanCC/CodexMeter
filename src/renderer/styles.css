@@ -176,7 +176,8 @@ svg {
   background: rgba(15, 23, 42, 0.06);
 }
 
-.hardware-connect-popover p {
+.hardware-connect-popover p,
+.hardware-connect-help {
   margin: 0 0 14px;
   color: #64748b;
   font-size: 12px;
@@ -194,12 +195,83 @@ svg {
   font-weight: 600;
 }
 
-.hardware-connect-status {
+.hardware-connect-help {
+  margin: 7px 0 12px;
+}
+
+.hardware-sync-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.hardware-sync-row strong,
+.hardware-sync-row span {
   display: block;
-  min-height: 18px;
-  margin-top: 9px;
+}
+
+.hardware-sync-row strong {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.hardware-sync-row span {
+  margin-top: 2px;
   color: #64748b;
   font-size: 12px;
+}
+
+.hardware-connect-status {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  margin-top: 10px;
+  padding: 0 10px;
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-radius: 12px;
+  color: #64748b;
+  font-size: 12px;
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.hardware-connect-status.is-idle {
+  color: #64748b;
+  border-color: rgba(100, 116, 139, 0.18);
+  background: rgba(100, 116, 139, 0.06);
+}
+
+.hardware-connect-status.is-pending {
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.2);
+  background: rgba(37, 99, 235, 0.07);
+}
+
+.hardware-connect-status.is-error {
+  color: #ea580c;
+  border-color: rgba(234, 88, 12, 0.2);
+  background: rgba(234, 88, 12, 0.07);
+}
+
+.hardware-connect-status strong {
+  color: currentColor;
+  font-size: 12px;
+}
+
+.hardware-connect-status em {
+  overflow: hidden;
+  color: #64748b;
+  font-style: normal;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hardware-connect-actions {
@@ -910,7 +982,7 @@ svg {
 }
 
 .hardware-list .hardware-endpoint {
-  max-width: 150px;
+  max-width: 170px;
   overflow: hidden;
   color: #475569;
   font-family:
@@ -922,6 +994,15 @@ svg {
     monospace;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.hardware-card .hardware-list > div {
+  min-height: 22px;
+  font-size: 11px;
+}
+
+.hardware-card .hardware-list strong {
+  min-width: 90px;
 }
 
 .app-footer {

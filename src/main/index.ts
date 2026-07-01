@@ -24,6 +24,10 @@ let latestSnapshot: QuotaSnapshot | null = null
 let widgetAlwaysOnTop = false
 let deviceBridge: DeviceBridge = createDeviceBridge()
 
+function hardwareConnectionError(): Error {
+  return new Error('无法连接外部小屏，请确认 ESP32-C3 已连接 Wi-Fi，且电脑与设备在同一局域网。')
+}
+
 async function createWindow(): Promise<void> {
   mainWindow = new BrowserWindow({
     width: 900,
@@ -125,6 +129,7 @@ async function refreshQuotaAndBroadcast(): Promise<QuotaSnapshot> {
   const snapshot = await fetchQuotaSnapshot()
   try {
     await deviceBridge.sendSnapshot(snapshot)
+    broadcastHardwarePush()
   } catch (error) {
     console.warn('Hardware display push failed:', error)
   }
@@ -132,14 +137,22 @@ async function refreshQuotaAndBroadcast(): Promise<QuotaSnapshot> {
   return snapshot
 }
 
-async function pushLatestSnapshotToDevice(): Promise<{ pushed: boolean }> {
+async function pushLatestSnapshotToDevice(): Promise<{ pushed: boolean; pushedAt: string }> {
   const snapshot = latestSnapshot ?? await fetchQuotaSnapshot()
   await deviceBridge.sendSnapshot(snapshot)
+  const pushedAt = broadcastHardwarePush()
   if (!latestSnapshot) {
     broadcastQuotaSnapshot(snapshot)
   }
 
-  return { pushed: true }
+  return { pushed: true, pushedAt }
+}
+
+function broadcastHardwarePush(): string {
+  const pushedAt = new Date().toISOString()
+  mainWindow?.webContents.send('hardware:pushUpdated', pushedAt)
+  widgetWindow?.webContents.send('hardware:pushUpdated', pushedAt)
+  return pushedAt
 }
 
 function createDeviceBridge(): DeviceBridge {
@@ -193,6 +206,20 @@ ipcMain.handle('settings:saveHardwareDisplay', (_event, enabled: boolean, endpoi
 
 ipcMain.handle('devices:list', () => deviceBridge.listDevices())
 ipcMain.handle('devices:pushLatest', () => pushLatestSnapshotToDevice())
+ipcMain.handle('devices:ping', async (_event, endpoint: string) => {
+  const bridge = new HttpDeviceBridge(endpoint)
+  if (!(await bridge.ping())) {
+    throw hardwareConnectionError()
+  }
+
+  return { connected: true }
+})
+ipcMain.handle('devices:pushTest', async (_event, endpoint: string) => {
+  const bridge = new HttpDeviceBridge(endpoint)
+  await bridge.sendTestPayload()
+  const pushedAt = broadcastHardwarePush()
+  return { pushed: true, pushedAt }
+})
 
 ipcMain.handle('oauth:status', () => {
   const token = getCodexOAuth()
