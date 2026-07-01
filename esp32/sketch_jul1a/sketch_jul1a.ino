@@ -27,19 +27,6 @@ String planName = "Codex";
 
 const char* wifiStatusText(wl_status_t status);
 
-String shortStatus(String status) {
-  status.toUpperCase();
-
-  if (status == "ENOUGH") return "OK";
-  if (status == "NORMAL") return "NORM";
-  if (status == "WATCH") return "WATCH";
-  if (status == "TIGHT") return "TIGHT";
-  if (status == "WARNING") return "WARN";
-  if (status == "EMPTY") return "EMPTY";
-
-  return status;
-}
-
 String compactReset(String reset) {
   int spaceIndex = reset.indexOf(' ');
   if (spaceIndex > 0) {
@@ -75,37 +62,33 @@ void drawHeader() {
   display.drawLine(0, 10, 127, 10, SSD1306_WHITE);
 }
 
-void drawUsageRow(int topY, const char* label, int remaining, String status, String reset) {
+void drawUsageRow(int topY, const char* label, int remaining, String reset) {
   String percentText = String(remaining) + "%";
-  String statusText = shortStatus(status);
   String resetText = compactReset(reset);
-  int resetX = max(98, 128 - textWidth(resetText));
+  int percentX = 28;
+  int resetX = max(92, 128 - textWidth(resetText));
 
   display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
 
-  display.setCursor(0, topY + 3);
+  display.setCursor(0, topY);
   display.print(label);
 
-  display.setTextSize(2);
-  display.setCursor(20, topY);
+  display.setCursor(percentX, topY);
   display.print(percentText);
 
-  display.setTextSize(1);
-  display.setCursor(64, topY + 3);
-  display.print(statusText);
-
-  display.setCursor(resetX, topY + 3);
+  display.setCursor(resetX, topY);
   display.print(resetText);
 
-  drawBar(0, topY + 18, 128, 7, remaining);
+  drawBar(0, topY + 11, 128, 8, remaining);
 }
 
 void drawScreen() {
   display.clearDisplay();
   drawHeader();
 
-  drawUsageRow(12, "5H", fiveHourRemaining, fiveHourStatus, fiveHourReset);
-  drawUsageRow(38, "7D", weeklyRemaining, weeklyStatus, weeklyReset);
+  drawUsageRow(15, "5H", fiveHourRemaining, fiveHourReset);
+  drawUsageRow(39, "7D", weeklyRemaining, weeklyReset);
 
   display.display();
 }
