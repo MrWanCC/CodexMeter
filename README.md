@@ -9,7 +9,9 @@
 
 本地运行的 Codex 用量监控桌面工具，支持 5 小时 / 7 天额度、重置时间、桌面小组件和本地安全存储。
 
-![CodexMeter overview](docs/images/showcase-overview.png)
+<p align="center">
+  <img src="docs/images/showcase-overview.png" width="760" alt="CodexMeter overview" />
+</p>
 
 ## 直接下载
 
