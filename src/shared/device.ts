@@ -33,6 +33,57 @@ export interface DeviceBridge {
   sendSnapshot(snapshot: QuotaSnapshot): Promise<void>
 }
 
+type Fetcher = (url: string, init?: RequestInit) => Promise<Response>
+
+export class HttpDeviceBridge implements DeviceBridge {
+  private readonly endpoint: string
+  private readonly fetcher: Fetcher
+
+  constructor(endpoint: string, fetcher: Fetcher = fetch) {
+    this.endpoint = normalizeHttpEndpoint(endpoint)
+    this.fetcher = fetcher
+  }
+
+  async listDevices(): Promise<DisplayDevice[]> {
+    return [
+      {
+        id: this.endpoint,
+        name: 'ESP32-C3 HTTP Display',
+        channel: 'http',
+        connected: await this.isOnline()
+      }
+    ]
+  }
+
+  async sendSnapshot(snapshot: QuotaSnapshot): Promise<void> {
+    const response = await this.fetcher(`${this.endpoint}/quota`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(buildEsp32QuotaPayload(snapshot)),
+      signal: AbortSignal.timeout(3000)
+    })
+
+    if (!response.ok) {
+      throw new Error(`ESP32 quota push failed: ${response.status}`)
+    }
+  }
+
+  private async isOnline(): Promise<boolean> {
+    try {
+      const response = await this.fetcher(`${this.endpoint}/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(1500)
+      })
+
+      return response.ok
+    } catch {
+      return false
+    }
+  }
+}
+
 export function buildEsp32QuotaPayload(snapshot: QuotaSnapshot, now = new Date()): Esp32QuotaPayload {
   const fiveHour = snapshot.windows.find((window) => window.code === '5h')
   const weekly = snapshot.windows.find((window) => window.code === '7d')
@@ -174,4 +225,8 @@ function formatMonthDayTime(date: Date): string {
 
 function clampPercent(value: number): number {
   return Math.min(100, Math.max(0, value))
+}
+
+function normalizeHttpEndpoint(endpoint: string): string {
+  return endpoint.replace(/\/+$/, '')
 }

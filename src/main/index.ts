@@ -5,8 +5,9 @@ import { NoopDeviceBridge } from './deviceBridge.js'
 import { cancelCodexOAuth, startCodexOAuth } from './oauth.js'
 import { fetchQuotaSnapshot } from './quotaProvider.js'
 import { clearCodexOAuth, getCodexOAuth, getSettings, saveSettings } from './store.js'
+import { HttpDeviceBridge, type DeviceBridge } from '../shared/device.js'
 import { unavailableQuotaSnapshot, type QuotaSnapshot } from '../shared/quota.js'
-import { isRefreshIntervalMinutes } from '../shared/settings.js'
+import { isRefreshIntervalMinutes, normalizeHardwareEndpoint } from '../shared/settings.js'
 
 const devServerUrl = process.env.CODEXMETER_DEV_SERVER_URL
 const __filename = fileURLToPath(import.meta.url)
@@ -21,7 +22,7 @@ let tray: Tray | null = null
 let isQuitting = false
 let latestSnapshot: QuotaSnapshot | null = null
 let widgetAlwaysOnTop = false
-const deviceBridge = new NoopDeviceBridge()
+let deviceBridge: DeviceBridge = createDeviceBridge()
 
 async function createWindow(): Promise<void> {
   mainWindow = new BrowserWindow({
@@ -122,9 +123,22 @@ function createTray(): void {
 
 async function refreshQuotaAndBroadcast(): Promise<QuotaSnapshot> {
   const snapshot = await fetchQuotaSnapshot()
-  await deviceBridge.sendSnapshot(snapshot)
+  try {
+    await deviceBridge.sendSnapshot(snapshot)
+  } catch (error) {
+    console.warn('Hardware display push failed:', error)
+  }
   broadcastQuotaSnapshot(snapshot)
   return snapshot
+}
+
+function createDeviceBridge(): DeviceBridge {
+  const settings = getSettings()
+  if (settings.hardwareDisplayEnabled && settings.hardwareEndpoint) {
+    return new HttpDeviceBridge(settings.hardwareEndpoint)
+  }
+
+  return new NoopDeviceBridge()
 }
 
 function broadcastQuotaSnapshot(snapshot: QuotaSnapshot): void {
@@ -154,6 +168,17 @@ ipcMain.handle('settings:saveRefreshInterval', (_event, minutes: number) => {
     ...getSettings(),
     refreshIntervalMinutes: minutes
   })
+})
+
+ipcMain.handle('settings:saveHardwareDisplay', (_event, enabled: boolean, endpoint?: string) => {
+  const hardwareEndpoint = normalizeHardwareEndpoint(endpoint)
+  const nextSettings = saveSettings({
+    ...getSettings(),
+    hardwareDisplayEnabled: Boolean(enabled && hardwareEndpoint),
+    hardwareEndpoint
+  })
+  deviceBridge = createDeviceBridge()
+  return nextSettings
 })
 
 ipcMain.handle('devices:list', () => deviceBridge.listDevices())

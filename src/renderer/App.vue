@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { NButton, NConfigProvider, NProgress, NSelect, NSwitch, NTag, type GlobalThemeOverrides } from 'naive-ui'
+import { NButton, NConfigProvider, NInput, NProgress, NSelect, NSwitch, NTag, type GlobalThemeOverrides } from 'naive-ui'
 import {
   AlertCircle,
   Bluetooth,
@@ -30,6 +30,9 @@ const loading = ref(false)
 const status = ref('就绪')
 const widgetVisible = ref(false)
 const alwaysOnTop = ref(false)
+const hardwareEndpointInput = ref('')
+const hardwareSaving = ref(false)
+const hardwareStatusText = ref('')
 const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
 const connecting = ref(false)
@@ -134,6 +137,7 @@ onMounted(async () => {
 
   if (window.codexMeter) {
     settings.value = await window.codexMeter.getSettings()
+    hardwareEndpointInput.value = settings.value.hardwareEndpoint ?? ''
     const oauth = await window.codexMeter.getOAuthStatus()
     oauthConnected.value = oauth.connected
     oauthEmail.value = oauth.email
@@ -196,6 +200,47 @@ async function updateInterval(value: number): Promise<void> {
     ? await window.codexMeter.saveRefreshInterval(value as RefreshIntervalMinutes)
     : { refreshIntervalMinutes: value as RefreshIntervalMinutes, hardwareDisplayEnabled: false }
   configureAutoRefresh(settings.value.refreshIntervalMinutes)
+}
+
+async function saveHardwareDisplay(enabled = true): Promise<void> {
+  hardwareSaving.value = true
+  try {
+    settings.value = window.codexMeter
+      ? await window.codexMeter.saveHardwareDisplay(enabled, hardwareEndpointInput.value)
+      : {
+          refreshIntervalMinutes: settings.value?.refreshIntervalMinutes ?? 5,
+          hardwareDisplayEnabled: Boolean(enabled && hardwareEndpointInput.value),
+          hardwareEndpoint: hardwareEndpointInput.value
+        }
+    hardwareEndpointInput.value = settings.value.hardwareEndpoint ?? hardwareEndpointInput.value.trim()
+    hardwareStatusText.value = settings.value.hardwareDisplayEnabled ? '硬件推送已启用' : '硬件推送已关闭'
+    showNotice(hardwareStatusText.value)
+  } catch (error) {
+    hardwareStatusText.value = error instanceof Error ? error.message : '硬件设置保存失败'
+  } finally {
+    hardwareSaving.value = false
+  }
+}
+
+async function testHardwareDisplay(): Promise<void> {
+  if (!window.codexMeter) {
+    hardwareStatusText.value = '当前环境无法测试硬件'
+    return
+  }
+
+  hardwareSaving.value = true
+  try {
+    settings.value = await window.codexMeter.saveHardwareDisplay(true, hardwareEndpointInput.value)
+    hardwareEndpointInput.value = settings.value.hardwareEndpoint ?? hardwareEndpointInput.value.trim()
+    const devices = await window.codexMeter.listDevices()
+    const device = devices[0]
+    hardwareStatusText.value = device?.connected ? 'ESP32 已连接' : 'ESP32 未响应'
+    showNotice(hardwareStatusText.value)
+  } catch (error) {
+    hardwareStatusText.value = error instanceof Error ? error.message : 'ESP32 测试失败'
+  } finally {
+    hardwareSaving.value = false
+  }
 }
 
 function configureAutoRefresh(minutes: RefreshIntervalMinutes): void {
@@ -765,6 +810,20 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
             <div>
               <h2>硬件显示</h2>
             </div>
+          </div>
+
+          <div class="hardware-http-panel">
+            <div class="hardware-http-row">
+              <NInput
+                v-model:value="hardwareEndpointInput"
+                size="small"
+                placeholder="ESP32 地址，例如 192.168.1.120"
+                @keyup.enter="testHardwareDisplay"
+              />
+              <NButton size="small" :loading="hardwareSaving" @click="saveHardwareDisplay(false)">关闭</NButton>
+              <NButton size="small" type="primary" :loading="hardwareSaving" @click="testHardwareDisplay">测试</NButton>
+            </div>
+            <p>{{ hardwareStatusText || (settings?.hardwareDisplayEnabled ? 'HTTP 推送已启用' : '填写 ESP32 IP 后测试连接') }}</p>
           </div>
 
           <div class="hardware-list">

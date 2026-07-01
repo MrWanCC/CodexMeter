@@ -811,6 +811,25 @@ svg {
   font-weight: 600;
 }
 
+.hardware-http-panel {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 9px;
+}
+
+.hardware-http-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 7px;
+  align-items: center;
+}
+
+.hardware-http-panel p {
+  margin: 0;
+  color: #64748b;
+  font-size: 11px;
+}
+
 .app-footer {
   margin: 0 -18px;
   padding: 0 24px;
