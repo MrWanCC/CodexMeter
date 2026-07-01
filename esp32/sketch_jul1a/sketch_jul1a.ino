@@ -40,6 +40,19 @@ String shortStatus(String status) {
   return status;
 }
 
+String compactReset(String reset) {
+  int spaceIndex = reset.indexOf(' ');
+  if (spaceIndex > 0) {
+    return reset.substring(0, spaceIndex);
+  }
+
+  return reset;
+}
+
+int textWidth(String text, int textSize = 1) {
+  return text.length() * 6 * textSize;
+}
+
 void drawBar(int x, int y, int w, int h, int percent) {
   percent = constrain(percent, 0, 100);
 
@@ -63,29 +76,35 @@ void drawHeader() {
 }
 
 void drawUsageRow(int topY, const char* label, int remaining, String status, String reset) {
+  String percentText = String(remaining) + "%";
+  String statusText = shortStatus(status);
+  String resetText = compactReset(reset);
+  int resetX = max(98, 128 - textWidth(resetText));
+
   display.setTextSize(1);
 
-  display.setCursor(0, topY);
+  display.setCursor(0, topY + 3);
   display.print(label);
 
-  display.setCursor(22, topY);
-  display.print(remaining);
-  display.print("%");
+  display.setTextSize(2);
+  display.setCursor(20, topY);
+  display.print(percentText);
 
-  display.setCursor(60, topY);
-  display.print(shortStatus(status));
+  display.setTextSize(1);
+  display.setCursor(64, topY + 3);
+  display.print(statusText);
 
-  display.setCursor(98, topY);
-  display.print(reset);
+  display.setCursor(resetX, topY + 3);
+  display.print(resetText);
 
-  drawBar(0, topY + 10, 128, 8, remaining);
+  drawBar(0, topY + 18, 128, 7, remaining);
 }
 
 void drawScreen() {
   display.clearDisplay();
   drawHeader();
 
-  drawUsageRow(14, "5H", fiveHourRemaining, fiveHourStatus, fiveHourReset);
+  drawUsageRow(12, "5H", fiveHourRemaining, fiveHourStatus, fiveHourReset);
   drawUsageRow(38, "7D", weeklyRemaining, weeklyStatus, weeklyReset);
 
   display.display();
