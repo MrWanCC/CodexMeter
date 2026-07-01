@@ -878,23 +878,19 @@ svg {
   font-weight: 600;
 }
 
-.hardware-http-panel {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 9px;
-}
-
-.hardware-connect-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.hardware-http-panel p {
-  margin: 0;
-  color: #64748b;
-  font-size: 11px;
+.hardware-list .hardware-endpoint {
+  max-width: 150px;
+  overflow: hidden;
+  color: #475569;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-footer {

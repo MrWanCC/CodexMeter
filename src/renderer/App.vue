@@ -121,7 +121,13 @@ const refreshSummary = computed(() => {
 const fiveHourState = computed(() => quotaState(fiveHourWindow.value))
 const sevenDayState = computed(() => quotaState(sevenDayWindow.value))
 const hardwareConnected = computed(() => Boolean(settings.value?.hardwareDisplayEnabled && settings.value.hardwareEndpoint))
-const hardwareDisplayLabel = computed(() => settings.value?.hardwareEndpoint ?? '未连接')
+const hardwareDisplayAddress = computed(() => {
+  if (!hardwareConnected.value || !settings.value?.hardwareEndpoint) {
+    return '未连接'
+  }
+
+  return settings.value.hardwareEndpoint.replace(/^https?:\/\//, '').replace(/\/$/, '')
+})
 
 onMounted(async () => {
   const handleCopy = () => showNotice('已复制到剪贴板')
@@ -851,20 +857,14 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
 
         <div class="info-card hardware-card">
           <div class="card-heading">
-            <div>
-              <h2>硬件显示</h2>
-            </div>
-          </div>
-
-          <div class="hardware-http-panel">
-            <div class="hardware-connect-summary">
+            <h2>硬件显示</h2>
+            <div class="oauth-header-ops">
               <span class="oauth-status-badge" :class="hardwareConnected ? 'connected' : 'disconnected'">
                 <span class="oauth-status-dot" />
                 {{ hardwareConnected ? '已连接' : '未连接' }}
               </span>
               <NButton
                 class="oauth-action"
-                size="small"
                 :type="hardwareConnected ? 'default' : 'primary'"
                 :loading="hardwareSaving"
                 @click="hardwareConnected ? saveHardwareDisplay(false) : openHardwareDialog()"
@@ -872,14 +872,13 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
                 {{ hardwareConnected ? '断开连接' : '连接硬件' }}
               </NButton>
             </div>
-            <p>{{ hardwareStatusText || (hardwareConnected ? hardwareDisplayLabel : '在应用内连接 ESP32-C3 HTTP 显示设备') }}</p>
           </div>
 
           <div class="hardware-list">
             <div>
               <Cpu :size="17" :stroke-width="2" />
               <span>串口显示</span>
-              <strong>已预留</strong>
+              <strong class="hardware-endpoint">{{ hardwareDisplayAddress }}</strong>
             </div>
             <div>
               <Bluetooth :size="17" :stroke-width="2" />
