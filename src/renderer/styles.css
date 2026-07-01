@@ -111,6 +111,73 @@ svg {
   font-weight: 700;
 }
 
+.hardware-connect-popover {
+  position: fixed;
+  z-index: 50;
+  right: 24px;
+  bottom: 56px;
+  width: 360px;
+  padding: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 52px rgba(15, 23, 42, 0.18);
+}
+
+.hardware-connect-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.hardware-connect-head strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+.hardware-connect-head button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 8px;
+  color: #64748b;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 18px;
+}
+
+.hardware-connect-head button:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.hardware-connect-popover p {
+  margin: 0 0 12px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.hardware-connect-status {
+  display: block;
+  min-height: 18px;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.hardware-connect-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .notice-enter-active,
 .notice-leave-active {
   transition:
@@ -817,11 +884,11 @@ svg {
   margin-bottom: 9px;
 }
 
-.hardware-http-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 7px;
+.hardware-connect-summary {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .hardware-http-panel p {

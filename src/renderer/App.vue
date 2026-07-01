@@ -33,6 +33,7 @@ const alwaysOnTop = ref(false)
 const hardwareEndpointInput = ref('')
 const hardwareSaving = ref(false)
 const hardwareStatusText = ref('')
+const hardwareDialogVisible = ref(false)
 const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
 const connecting = ref(false)
@@ -119,6 +120,8 @@ const refreshSummary = computed(() => {
 })
 const fiveHourState = computed(() => quotaState(fiveHourWindow.value))
 const sevenDayState = computed(() => quotaState(sevenDayWindow.value))
+const hardwareConnected = computed(() => Boolean(settings.value?.hardwareDisplayEnabled && settings.value.hardwareEndpoint))
+const hardwareDisplayLabel = computed(() => settings.value?.hardwareEndpoint ?? '未连接')
 
 onMounted(async () => {
   const handleCopy = () => showNotice('已复制到剪贴板')
@@ -195,6 +198,12 @@ function showAbout(): void {
   aboutVisible.value = true
 }
 
+function openHardwareDialog(): void {
+  hardwareEndpointInput.value = settings.value?.hardwareEndpoint ?? hardwareEndpointInput.value
+  hardwareDialogVisible.value = true
+  hardwareStatusText.value = hardwareConnected.value ? '硬件推送已启用' : ''
+}
+
 async function updateInterval(value: number): Promise<void> {
   settings.value = window.codexMeter
     ? await window.codexMeter.saveRefreshInterval(value as RefreshIntervalMinutes)
@@ -215,6 +224,9 @@ async function saveHardwareDisplay(enabled = true): Promise<void> {
     hardwareEndpointInput.value = settings.value.hardwareEndpoint ?? hardwareEndpointInput.value.trim()
     hardwareStatusText.value = settings.value.hardwareDisplayEnabled ? '硬件推送已启用' : '硬件推送已关闭'
     showNotice(hardwareStatusText.value)
+    if (!settings.value.hardwareDisplayEnabled) {
+      hardwareDialogVisible.value = false
+    }
   } catch (error) {
     hardwareStatusText.value = error instanceof Error ? error.message : '硬件设置保存失败'
   } finally {
@@ -237,6 +249,7 @@ async function testHardwareDisplay(): Promise<void> {
     if (device?.connected) {
       await window.codexMeter.pushLatestToDevice()
       hardwareStatusText.value = 'ESP32 已连接并已推送'
+      hardwareDialogVisible.value = false
     } else {
       hardwareStatusText.value = 'ESP32 未响应'
     }
@@ -511,6 +524,32 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
         </div>
         <p>本地运行 · 不联网自动更新 · 仅读取授权后的用量数据</p>
         <button type="button" @click="aboutVisible = false">知道了</button>
+      </div>
+    </Transition>
+
+    <Transition name="notice">
+      <div v-if="hardwareDialogVisible" class="hardware-connect-popover">
+        <div class="hardware-connect-head">
+          <strong>连接硬件显示</strong>
+          <button type="button" aria-label="关闭" @click="hardwareDialogVisible = false">×</button>
+        </div>
+        <p>填写 ESP32-C3 的局域网地址，连接成功后会立即推送当前额度。</p>
+        <NInput
+          v-model:value="hardwareEndpointInput"
+          size="small"
+          placeholder="例如 192.168.1.114 或 http://192.168.1.114"
+          @keyup.enter="testHardwareDisplay"
+        />
+        <span class="hardware-connect-status">{{ hardwareStatusText || '等待连接' }}</span>
+        <div class="hardware-connect-actions">
+          <NButton size="small" :loading="hardwareSaving" @click="hardwareDialogVisible = false">取消</NButton>
+          <NButton v-if="hardwareConnected" size="small" :loading="hardwareSaving" @click="saveHardwareDisplay(false)">
+            断开连接
+          </NButton>
+          <NButton size="small" type="primary" :loading="hardwareSaving" @click="testHardwareDisplay">
+            连接并测试
+          </NButton>
+        </div>
       </div>
     </Transition>
 
@@ -818,17 +857,22 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
           </div>
 
           <div class="hardware-http-panel">
-            <div class="hardware-http-row">
-              <NInput
-                v-model:value="hardwareEndpointInput"
+            <div class="hardware-connect-summary">
+              <span class="oauth-status-badge" :class="hardwareConnected ? 'connected' : 'disconnected'">
+                <span class="oauth-status-dot" />
+                {{ hardwareConnected ? '已连接' : '未连接' }}
+              </span>
+              <NButton
+                class="oauth-action"
                 size="small"
-                placeholder="ESP32 地址，例如 192.168.1.120"
-                @keyup.enter="testHardwareDisplay"
-              />
-              <NButton size="small" :loading="hardwareSaving" @click="saveHardwareDisplay(false)">关闭</NButton>
-              <NButton size="small" type="primary" :loading="hardwareSaving" @click="testHardwareDisplay">测试</NButton>
+                :type="hardwareConnected ? 'default' : 'primary'"
+                :loading="hardwareSaving"
+                @click="hardwareConnected ? saveHardwareDisplay(false) : openHardwareDialog()"
+              >
+                {{ hardwareConnected ? '断开连接' : '连接硬件' }}
+              </NButton>
             </div>
-            <p>{{ hardwareStatusText || (settings?.hardwareDisplayEnabled ? 'HTTP 推送已启用' : '填写 ESP32 IP 后测试连接') }}</p>
+            <p>{{ hardwareStatusText || (hardwareConnected ? hardwareDisplayLabel : '在应用内连接 ESP32-C3 HTTP 显示设备') }}</p>
           </div>
 
           <div class="hardware-list">
