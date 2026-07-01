@@ -534,28 +534,36 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
     </Transition>
 
     <Transition name="notice">
-      <div v-if="hardwareDialogVisible" class="hardware-connect-popover">
-        <div class="hardware-connect-head">
-          <strong>连接硬件显示</strong>
-          <button type="button" aria-label="关闭" @click="hardwareDialogVisible = false">×</button>
-        </div>
-        <p>填写 ESP32-C3 的局域网地址，连接成功后会立即推送当前额度。</p>
-        <NInput
-          v-model:value="hardwareEndpointInput"
-          size="small"
-          placeholder="例如 192.168.1.114 或 http://192.168.1.114"
-          @keyup.enter="testHardwareDisplay"
-        />
-        <span class="hardware-connect-status">{{ hardwareStatusText || '等待连接' }}</span>
-        <div class="hardware-connect-actions">
-          <NButton size="small" :loading="hardwareSaving" @click="hardwareDialogVisible = false">取消</NButton>
-          <NButton v-if="hardwareConnected" size="small" :loading="hardwareSaving" @click="saveHardwareDisplay(false)">
-            断开连接
-          </NButton>
-          <NButton size="small" type="primary" :loading="hardwareSaving" @click="testHardwareDisplay">
-            连接并测试
-          </NButton>
-        </div>
+      <div v-if="hardwareDialogVisible" class="hardware-connect-backdrop" @click.self="hardwareDialogVisible = false">
+        <section class="hardware-connect-popover">
+          <div class="hardware-connect-head">
+            <div>
+              <strong>连接硬件显示</strong>
+              <span>ESP32-C3 局域网同步</span>
+            </div>
+            <button type="button" aria-label="关闭" @click="hardwareDialogVisible = false">×</button>
+          </div>
+          <p>输入设备地址后，CodexMeter 会把当前额度状态推送到小屏。</p>
+          <label class="hardware-connect-field">
+            <span>设备地址</span>
+            <NInput
+              v-model:value="hardwareEndpointInput"
+              size="small"
+              placeholder="192.168.1.114 或 http://192.168.1.114"
+              @keyup.enter="testHardwareDisplay"
+            />
+          </label>
+          <span class="hardware-connect-status">{{ hardwareStatusText || '等待连接' }}</span>
+          <div class="hardware-connect-actions">
+            <NButton size="small" :loading="hardwareSaving" @click="hardwareDialogVisible = false">取消</NButton>
+            <NButton v-if="hardwareConnected" size="small" :loading="hardwareSaving" @click="saveHardwareDisplay(false)">
+              断开连接
+            </NButton>
+            <NButton size="small" type="primary" :loading="hardwareSaving" @click="testHardwareDisplay">
+              连接并测试
+            </NButton>
+          </div>
+        </section>
       </div>
     </Transition>
 
