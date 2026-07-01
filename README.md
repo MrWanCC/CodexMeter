@@ -32,13 +32,15 @@
 
 ## 项目截图
 
-| 主界面 | 固定小组件 |
-| --- | --- |
-| ![CodexMeter main](docs/images/showcase-main.png) | ![CodexMeter widget](docs/images/showcase-widget.png) |
+<p align="center">
+  <img src="docs/images/showcase-main.png" width="48%" alt="CodexMeter 主界面" />
+  <img src="docs/images/showcase-widget.png" width="48%" alt="CodexMeter 固定小组件" />
+</p>
 
-| 安全说明 | Roadmap |
-| --- | --- |
-| ![CodexMeter security](docs/images/showcase-security.png) | ![CodexMeter roadmap](docs/images/showcase-roadmap.png) |
+<p align="center">
+  <img src="docs/images/showcase-security.png" width="48%" alt="CodexMeter 安全说明" />
+  <img src="docs/images/showcase-roadmap.png" width="48%" alt="CodexMeter Roadmap" />
+</p>
 
 ## 安全说明
 
