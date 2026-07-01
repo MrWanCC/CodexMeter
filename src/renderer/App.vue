@@ -5,22 +5,22 @@ import {
   AlertCircle,
   Bluetooth,
   Calendar,
+  CheckCircle2,
   Clock,
   Cpu,
-  Database,
-  CheckCircle2,
-  KeyRound,
+  Lock,
   Monitor,
   MoreHorizontal,
   Plug,
   Radio,
   RefreshCw,
   ShieldCheck,
-  User,
-  Wifi
+  Sparkles,
+  Ticket,
+  User
 } from 'lucide-vue-next'
 import appIcon from './assets/icon.png'
-import { sampleQuotaSnapshot, type QuotaSnapshot, type QuotaWindow } from '../shared/quota'
+import { sampleQuotaSnapshot, type QuotaSnapshot, type QuotaWindow, type ResetCard } from '../shared/quota'
 import type { AppSettings, RefreshIntervalMinutes } from '../shared/settings'
 
 const isWidgetView = new URLSearchParams(window.location.search).get('view') === 'widget'
@@ -33,8 +33,11 @@ const alwaysOnTop = ref(false)
 const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
 const connecting = ref(false)
+const moreOpen = ref(false)
+const cardDetailOpen = ref(false)
 const noticeVisible = ref(false)
 const noticeText = ref('')
+const aboutVisible = ref(false)
 let unsubscribeQuota: (() => void) | undefined
 let refreshTimer: ReturnType<typeof setInterval> | undefined
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
@@ -59,6 +62,30 @@ const themeOverrides: GlobalThemeOverrides = {
 
 const fiveHourWindow = computed(() => findWindow('5h'))
 const sevenDayWindow = computed(() => findWindow('7d'))
+const resetCards = computed<ResetCard[]>(() => snapshot.value?.resetCards ?? [])
+const codexPlanLabel = computed(() => {
+  const planType = formattedPlanType.value
+  if (!planType) {
+    return 'Codex OAuth'
+  }
+
+  return `Codex ${planType}`
+})
+const formattedPlanType = computed(() => formatPlanType(snapshot.value?.planType))
+
+function resetCardExpiryText(card: ResetCard): string {
+  const date = new Date(card.expiresAt)
+  if (Number.isNaN(date.getTime())) {
+    return '未知'
+  }
+  const now = Date.now()
+  const daysLeft = Math.ceil((date.getTime() - now) / (1000 * 60 * 60 * 24))
+  const dateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+  if (daysLeft <= 0) {
+    return `已过期 · ${dateStr}`
+  }
+  return `剩余 ${daysLeft} 天 · ${dateStr}`
+}
 const systemState = computed<'connected' | 'disconnected' | 'error'>(() => {
   if (snapshot.value && !snapshot.value.available && oauthConnected.value) {
     return 'error'
@@ -73,7 +100,6 @@ const systemStateLabel = computed(() => {
 
   return systemState.value === 'connected' ? '已连接' : '未连接'
 })
-const systemStateIcon = computed(() => (systemState.value === 'connected' ? Wifi : Plug))
 const refreshTime = computed(() => {
   if (!snapshot.value) {
     return '--:--:--'
@@ -113,7 +139,7 @@ onMounted(async () => {
     oauthEmail.value = oauth.email
     const widgetState = await window.codexMeter.getWidgetState()
     widgetVisible.value = widgetState.visible
-    alwaysOnTop.value = widgetState.alwaysOnTop
+    alwaysOnTop.value = widgetState.visible ? widgetState.alwaysOnTop : false
   } else {
     settings.value = { refreshIntervalMinutes: 5, hardwareDisplayEnabled: false }
   }
@@ -159,6 +185,10 @@ function clearNotice(): void {
     clearTimeout(noticeTimer)
     noticeTimer = undefined
   }
+}
+
+function showAbout(): void {
+  aboutVisible.value = true
 }
 
 async function updateInterval(value: number): Promise<void> {
@@ -241,16 +271,24 @@ async function disconnectOAuth(): Promise<void> {
 
 async function updateWidgetVisible(value: boolean): Promise<void> {
   widgetVisible.value = value
+  if (!value) {
+    alwaysOnTop.value = false
+  }
   if (!window.codexMeter) {
     return
   }
 
-  const state = await window.codexMeter.setWidgetVisible(value, alwaysOnTop.value)
+  const state = await window.codexMeter.setWidgetVisible(value, value ? alwaysOnTop.value : false)
   widgetVisible.value = state.visible
   alwaysOnTop.value = state.alwaysOnTop
 }
 
 async function updateAlwaysOnTop(value: boolean): Promise<void> {
+  if (!widgetVisible.value) {
+    alwaysOnTop.value = false
+    return
+  }
+
   alwaysOnTop.value = value
   if (!window.codexMeter) {
     return
@@ -265,6 +303,15 @@ function findWindow(code: '5h' | '7d'): QuotaWindow | null {
   return snapshot.value?.windows.find((window) => window.code === code) ?? null
 }
 
+function formatPlanType(planType: string | undefined): string | undefined {
+  const value = planType?.trim()
+  if (!value) {
+    return undefined
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 function remainingPercent(window: QuotaWindow | null): number {
   if (!window) {
     return 0
@@ -277,7 +324,9 @@ function usedPercent(window: QuotaWindow | null): number {
   return window ? Math.round(window.percentUsed * 100) / 100 : 0
 }
 
-function quotaState(window: QuotaWindow | null): 'empty' | 'exhausted' | 'warning' | 'normal' | 'abundant' {
+type QuotaState = 'empty' | 'abundant' | 'normal' | 'attention' | 'tight' | 'critical' | 'exhausted'
+
+function quotaState(window: QuotaWindow | null): QuotaState {
   if (!window) {
     return 'empty'
   }
@@ -287,70 +336,66 @@ function quotaState(window: QuotaWindow | null): 'empty' | 'exhausted' | 'warnin
     return 'exhausted'
   }
 
-  if (remaining <= 30) {
-    return 'warning'
-  }
+  const thresholds = window.code === '5h'
+    ? [60, 30, 20, 10] // 5h: >60 abundant, 30-60 normal, 20-30 attention, 10-20 tight, 1-10 critical
+    : [60, 40, 25, 10] // 7d: >60 abundant, 40-60 normal, 25-40 attention, 10-25 tight, 1-10 critical
 
-  if (remaining <= 70) {
-    return 'normal'
-  }
-
-  return 'abundant'
+  if (remaining > thresholds[0]) return 'abundant'
+  if (remaining > thresholds[1]) return 'normal'
+  if (remaining > thresholds[2]) return 'attention'
+  if (remaining > thresholds[3]) return 'tight'
+  return 'critical'
 }
 
-function quotaBadge(window: QuotaWindow | null, weekly = false): string {
-  const state = quotaState(window)
-  if (state === 'empty') {
-    return '无数据'
+function quotaBadge(window: QuotaWindow | null): string {
+  const labels: Record<QuotaState, string> = {
+    empty: '无数据',
+    abundant: '充足',
+    normal: '正常',
+    attention: '关注',
+    tight: '紧张',
+    critical: '预警',
+    exhausted: '已耗尽'
   }
-
-  if (state === 'exhausted') {
-    return '已耗尽'
-  }
-
-  if (state === 'warning') {
-    return '紧张'
-  }
-
-  return state === 'abundant' ? '充足' : '正常'
+  return labels[quotaState(window)]
 }
+
+
 
 function quotaColor(window: QuotaWindow | null): string {
-  const state = quotaState(window)
-  if (state === 'exhausted') {
-    return '#ef4444'
+  const colors: Record<QuotaState, string> = {
+    empty: '#94a3b8',
+    abundant: '#22c55e',
+    normal: '#16a34a',
+    attention: '#eab308',
+    tight: '#f97316',
+    critical: '#ea580c',
+    exhausted: '#ef4444'
   }
-
-  if (state === 'warning') {
-    return '#f59e0b'
-  }
-
-  return 'linear-gradient(90deg, #22c55e, #16a34a)'
+  return colors[quotaState(window)]
 }
 
-function quotaTagType(window: QuotaWindow | null): 'default' | 'error' | 'warning' | 'success' {
-  const state = quotaState(window)
-  if (state === 'empty') {
-    return 'default'
+function quotaTagType(window: QuotaWindow | null): 'default' | 'error' | 'warning' | 'success' | 'info' {
+  const types: Record<QuotaState, 'default' | 'error' | 'warning' | 'success' | 'info'> = {
+    empty: 'default',
+    abundant: 'success',
+    normal: 'success',
+    attention: 'warning',
+    tight: 'warning',
+    critical: 'error',
+    exhausted: 'error'
   }
-
-  if (state === 'exhausted') {
-    return 'error'
-  }
-
-  if (state === 'warning') {
-    return 'warning'
-  }
-
-  return 'success'
+  return types[quotaState(window)]
 }
 
 function quotaIcon(window: QuotaWindow | null, weekly = false) {
   const state = quotaState(window)
-  if (state === 'exhausted' || state === 'warning') {
+  if (state === 'exhausted' || state === 'critical') {
     return AlertCircle
   }
-
+  if (state === 'attention' || state === 'tight') {
+    return AlertCircle
+  }
   return weekly ? Calendar : Clock
 }
 
@@ -369,13 +414,34 @@ function resetLabel(window: QuotaWindow | null): string {
     : `重置 ${date.toLocaleDateString([], { month: '2-digit', day: '2-digit' })}`
 }
 
-function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): string {
-  if (!window) {
-    return '暂无可用数据'
+function widgetResetDateTime(window: QuotaWindow | null): string {
+  if (!window?.resetAt) {
+    return '--'
   }
 
-  return scope === 'short' ? '短周期额度可用' : '本周期额度充足'
+  const date = new Date(window.resetAt)
+  if (Number.isNaN(date.getTime())) {
+    return '--'
+  }
+
+  return `${date.toLocaleDateString([], { month: '2-digit', day: '2-digit' })} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 }
+
+function quotaPeriodDisplay(window: QuotaWindow | null): string {
+  if (!window?.resetAt) {
+    return '--'
+  }
+
+  const date = new Date(window.resetAt)
+  if (Number.isNaN(date.getTime())) {
+    return '--'
+  }
+
+  return window.code === '5h'
+    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : widgetResetDateTime(window)
+}
+
 </script>
 
 <template>
@@ -384,6 +450,17 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
       <div v-if="noticeVisible" class="app-notice">
         <CheckCircle2 :size="16" :stroke-width="2" />
         <span>{{ noticeText }}</span>
+      </div>
+    </Transition>
+
+    <Transition name="notice">
+      <div v-if="aboutVisible" class="about-popover">
+        <div>
+          <strong>CodexMeter</strong>
+          <span>版本 v1.0.0</span>
+        </div>
+        <p>本地运行 · 不联网自动更新 · 仅读取授权后的用量数据</p>
+        <button type="button" @click="aboutVisible = false">知道了</button>
       </div>
     </Transition>
 
@@ -397,7 +474,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
           </div>
         </div>
         <div class="widget-tools">
-          <span class="widget-source">Codex OAuth</span>
+          <span class="widget-source">{{ codexPlanLabel }}</span>
           <button class="widget-refresh" :class="{ 'is-loading': loading }" type="button" @click="refreshQuota">
             <RefreshCw :size="13" :stroke-width="2" />
           </button>
@@ -405,11 +482,10 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
       </header>
 
       <section class="widget-quota">
-        <article class="widget-quota-row">
+        <article class="widget-quota-row" :class="fiveHourState">
           <div class="widget-line">
             <div>
-              <span>5 小时额度</span>
-              <small>短周期</small>
+              <span>5 小时</span>
             </div>
             <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
           </div>
@@ -421,14 +497,19 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
             :color="quotaColor(fiveHourWindow)"
             rail-color="rgba(15, 23, 42, 0.12)"
           />
-          <p>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${usedPercent(fiveHourWindow)}%` : '暂无数据' }}</p>
+          <p>
+            <span>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${usedPercent(fiveHourWindow)}%` : '暂无数据' }}</span>
+            <span class="widget-reset">
+              <Clock :size="10" :stroke-width="2" />
+              {{ fiveHourWindow ? resetLabel(fiveHourWindow).replace('重置 ', '') : '--' }}
+            </span>
+          </p>
         </article>
 
-        <article class="widget-quota-row">
+        <article class="widget-quota-row" :class="sevenDayState">
           <div class="widget-line">
             <div>
-              <span>7 天额度</span>
-              <small>周周期</small>
+              <span>1 周</span>
             </div>
             <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
           </div>
@@ -440,7 +521,13 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
             :color="quotaColor(sevenDayWindow)"
             rail-color="rgba(15, 23, 42, 0.12)"
           />
-          <p>{{ sevenDayWindow ? `剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${usedPercent(sevenDayWindow)}%` : '暂无数据' }}</p>
+          <p>
+            <span>{{ sevenDayWindow ? `剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${usedPercent(sevenDayWindow)}%` : '暂无数据' }}</span>
+            <span class="widget-reset">
+              <Calendar :size="10" :stroke-width="2" />
+              {{ sevenDayWindow ? widgetResetDateTime(sevenDayWindow) : '--' }}
+            </span>
+          </p>
         </article>
       </section>
     </main>
@@ -466,21 +553,60 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
               <span>上次刷新：</span>
               <strong>{{ refreshTime }}</strong>
             </div>
-            <NTag :type="systemState === 'error' ? 'error' : systemState === 'connected' ? 'success' : 'warning'" round>
-              <component :is="systemStateIcon" :size="14" :stroke-width="2" />
-              {{ systemStateLabel }}
+            <NTag
+              class="state-tag"
+              :type="systemState === 'error' ? 'error' : systemState === 'connected' ? 'success' : 'warning'"
+              round
+            >
+              <span class="state-tag-inner">
+                <CheckCircle2 v-if="systemState === 'connected'" :size="13" :stroke-width="2" />
+                <Plug v-else :size="13" :stroke-width="2" />
+                <span>{{ systemStateLabel }}</span>
+              </span>
             </NTag>
           </div>
           <div class="hero-action-row">
-            <NButton class="refresh-button" type="primary" size="large" :loading="loading" @click="refreshQuota">
+            <NButton class="refresh-button" type="primary" size="medium" :loading="loading" @click="refreshQuota">
               <template #icon>
-                <RefreshCw :size="22" :stroke-width="2" />
+                <RefreshCw :size="16" :stroke-width="2" />
               </template>
               刷新
             </NButton>
-            <NButton class="more-button" size="large">
-              <MoreHorizontal :size="22" :stroke-width="2" />
-            </NButton>
+            <div class="reset-card-wrap">
+              <NButton
+                class="more-button"
+                :class="{ 'is-open': moreOpen }"
+                size="large"
+                @click="moreOpen = !moreOpen; cardDetailOpen = false"
+              >
+                <template #icon>
+                  <MoreHorizontal :size="20" :stroke-width="2" />
+                </template>
+              </NButton>
+              <div v-if="moreOpen" class="reset-card-panel">
+                <!-- 菜单：重置卡入口 -->
+                <div v-if="!cardDetailOpen" class="reset-card-menu-item" @click="cardDetailOpen = true">
+                  <Ticket :size="16" :stroke-width="2" />
+                  <span>重置卡</span>
+                  <span v-if="resetCards.length" class="reset-card-count">{{ resetCards.length }}</span>
+                </div>
+                <!-- 详情：重置卡列表 -->
+                <template v-else>
+                  <div class="reset-card-panel-head">
+                    <strong>重置卡 · {{ resetCards.length }} 张</strong>
+                    <span>可提前重置额度窗口</span>
+                  </div>
+                  <div v-if="resetCards.length" class="reset-card-list">
+                    <div v-for="(card, i) in resetCards" :key="card.id" class="reset-card-item">
+                      <Ticket :size="14" :stroke-width="2" />
+                      <span>第 {{ i + 1 }} 张</span>
+                      <strong>{{ resetCardExpiryText(card) }}</strong>
+                    </div>
+                  </div>
+                  <p v-else class="reset-card-empty">暂无可用重置卡</p>
+                </template>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -491,7 +617,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
           </label>
           <label>
             <span>置顶显示</span>
-            <NSwitch :value="alwaysOnTop" @update:value="updateAlwaysOnTop" />
+            <NSwitch :value="alwaysOnTop" :disabled="!widgetVisible" @update:value="updateAlwaysOnTop" />
           </label>
           <div class="interval-control">
             <span>刷新策略</span>
@@ -509,8 +635,10 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
         <div class="section-title">
           <h2>使用额度</h2>
           <NTag class="source-tag" type="success" round>
-            <ShieldCheck :size="14" :stroke-width="2" />
-            OAuth 授权数据
+            <span class="source-tag-inner">
+              <ShieldCheck :size="15" :stroke-width="2" />
+              <span>OAuth 授权数据</span>
+            </span>
           </NTag>
         </div>
 
@@ -518,8 +646,8 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
           <article class="usage-card" :class="fiveHourState">
             <div class="usage-head">
               <div class="card-title">
-                <component :is="quotaIcon(fiveHourWindow)" class="quota-icon" :size="20" :stroke-width="2" />
-                <h3>5 小时额度窗口</h3>
+                <!-- <component :is="quotaIcon(fiveHourWindow)" class="quota-icon" :size="20" :stroke-width="2" /> -->
+                <h3>5 小时额度</h3>
               </div>
             </div>
             <div class="usage-value-row">
@@ -541,16 +669,18 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
             />
             <div class="quota-details">
               <span>已用 {{ usedPercent(fiveHourWindow) }}%</span>
-              <span>{{ resetLabel(fiveHourWindow) }}</span>
+              <span class="quota-reset-time">
+                <Clock :size="12" :stroke-width="2" />
+                {{ quotaPeriodDisplay(fiveHourWindow) }}
+              </span>
             </div>
-            <p>{{ quotaCopy(fiveHourWindow, 'short') }}</p>
           </article>
 
           <article class="usage-card" :class="sevenDayState">
             <div class="usage-head">
               <div class="card-title">
-                <component :is="quotaIcon(sevenDayWindow, true)" class="quota-icon" :size="20" :stroke-width="2" />
-                <h3>7 天额度窗口</h3>
+                <!-- <component :is="quotaIcon(sevenDayWindow, true)" class="quota-icon" :size="20" :stroke-width="2" /> -->
+                <h3>7 天额度</h3>
               </div>
             </div>
             <div class="usage-value-row">
@@ -559,7 +689,7 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
                 <span>剩余</span>
               </div>
               <NTag :type="quotaTagType(sevenDayWindow)" round>
-                {{ quotaBadge(sevenDayWindow, true) }}
+                {{ quotaBadge(sevenDayWindow) }}
               </NTag>
             </div>
             <NProgress
@@ -572,9 +702,11 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
             />
             <div class="quota-details">
               <span>已用 {{ usedPercent(sevenDayWindow) }}%</span>
-              <span>{{ resetLabel(sevenDayWindow) }}</span>
+              <span class="quota-reset-time">
+                <Calendar :size="12" :stroke-width="2" />
+                {{ quotaPeriodDisplay(sevenDayWindow) }}
+              </span>
             </div>
-            <p>{{ quotaCopy(sevenDayWindow, 'weekly') }}</p>
           </article>
         </div>
       </section>
@@ -583,34 +715,45 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
         <div class="info-card">
           <div class="card-heading">
             <h2>Codex OAuth</h2>
-            <NButton
-              class="oauth-action"
-              :type="oauthConnected ? 'default' : 'primary'"
-              :secondary="connecting"
-              @click="connecting ? cancelOAuth() : oauthConnected ? disconnectOAuth() : connectOAuth()"
-            >
-              {{ connecting ? '取消连接' : oauthConnected ? '断开连接' : '连接 Codex' }}
-            </NButton>
+            <div class="oauth-header-ops">
+              <span class="oauth-status-badge" :class="oauthConnected ? 'connected' : 'disconnected'">
+                <span class="oauth-status-dot" />
+                {{ oauthConnected ? '已连接' : '未连接' }}
+              </span>
+              <NButton
+                class="oauth-action"
+                :type="oauthConnected ? 'default' : 'primary'"
+                :secondary="connecting"
+                @click="connecting ? cancelOAuth() : oauthConnected ? disconnectOAuth() : connectOAuth()"
+              >
+                {{ connecting ? '取消连接' : oauthConnected ? '断开连接' : '连接 Codex' }}
+              </NButton>
+            </div>
           </div>
 
           <div class="info-list soft">
             <div>
               <User :size="17" :stroke-width="2" />
               <span>当前账户</span>
-              <strong>{{ oauthConnected ? oauthEmail ?? '已授权账号' : '未授权' }}</strong>
+              <strong>{{ oauthConnected ? oauthEmail ?? '已授权' : '未授权' }}</strong>
             </div>
             <div>
-              <KeyRound :size="17" :stroke-width="2" />
-              <span>授权方式</span>
-              <strong>Codex OAuth</strong>
+              <Sparkles :size="17" :stroke-width="2" />
+              <span>当前套餐</span>
+              <strong>{{ oauthConnected && snapshot ? (formattedPlanType || '标准版') : '--' }}</strong>
             </div>
             <div>
               <ShieldCheck :size="17" :stroke-width="2" />
-              <span>请求权限</span>
-              <strong>只读用量数据</strong>
+              <span>凭据状态</span>
+              <strong class="oauth-credential-status">
+                <template v-if="oauthConnected">
+                  已授权
+                </template>
+                <template v-else>未授权</template>
+              </strong>
             </div>
             <div>
-              <Database :size="17" :stroke-width="2" />
+              <Lock :size="17" :stroke-width="2" />
               <span>数据存储</span>
               <strong>本地加密</strong>
             </div>
@@ -621,7 +764,6 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
           <div class="card-heading">
             <div>
               <h2>硬件显示</h2>
-              <p>后续支持将额度状态同步至外部设备</p>
             </div>
           </div>
 
@@ -651,10 +793,10 @@ function quotaCopy(window: QuotaWindow | null, scope: 'short' | 'weekly'): strin
       </section>
 
       <footer class="app-footer">
-        <div>本地安全运行 · 仅读取授权数据 · Codex OAuth</div>
+        <div>本地安全运行 · 仅读取授权数据 · Codex 授权</div>
         <div>
           <span>版本：v1.0.0</span>
-          <button type="button">检查更新</button>
+          <button type="button" @click="showAbout">关于</button>
         </div>
       </footer>
     </main>

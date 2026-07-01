@@ -1,11 +1,27 @@
 {
   "name": "codexmeter",
   "version": "0.1.0",
-  "description": "Windows desktop quota monitor with future hardware display support.",
-  "author": "CodexMeter contributors",
+  "description": "Local Codex quota monitor for Windows with a compact desktop widget.",
+  "author": "MrWanCC",
   "type": "module",
   "main": "dist-electron/main/index.js",
-  "private": true,
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MrWanCC/CodexMeter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MrWanCC/CodexMeter/issues"
+  },
+  "homepage": "https://github.com/MrWanCC/CodexMeter#readme",
+  "keywords": [
+    "codex",
+    "quota",
+    "electron",
+    "vue",
+    "desktop",
+    "usage-monitor"
+  ],
   "scripts": {
     "dev": "concurrently -k \"vite --host 127.0.0.1\" \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"wait-on tcp:5173 dist-electron/main/index.js && set CODEXMETER_DEV_SERVER_URL=http://127.0.0.1:5173&& electron .\"",
     "start": "npm run build && electron .",

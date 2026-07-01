@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseQuotaPayload } from '../src/shared/quota'
+import { parseQuotaPayload, parseResetCreditsPayload } from '../src/shared/quota'
 
 describe('parseQuotaPayload', () => {
   it('returns unavailable state for invalid payloads', () => {
@@ -70,5 +70,83 @@ describe('parseQuotaPayload', () => {
         resetAt: '2027-01-07T08:00:00.000Z'
       }
     ])
+  })
+
+  it('keeps weekly remaining percentages available for UI state thresholds', () => {
+    const snapshot = parseQuotaPayload(
+      {
+        rate_limit: {
+          secondary_window: {
+            used_percent: 61,
+            limit_window_seconds: 604800
+          }
+        }
+      },
+      new Date('2026-07-01T00:00:00Z')
+    )
+
+    expect(snapshot.windows).toEqual([
+      {
+        code: '7d',
+        label: '7 day window',
+        used: 61,
+        limit: 100,
+        percentUsed: 61,
+        resetAt: undefined
+      }
+    ])
+  })
+})
+
+describe('parseResetCreditsPayload', () => {
+  it('extracts available reset credits from the dedicated endpoint payload', () => {
+    const cards = parseResetCreditsPayload(
+      {
+        available_count: 2,
+        credits: [
+          {
+            id: 'credit-a',
+            granted_at: '2026-06-17T00:00:00.000Z',
+            expires_at: '2026-07-17T00:00:00.000Z',
+            status: 'available'
+          },
+          {
+            id: 'credit-b',
+            expires_at: '2026-07-18T00:00:00.000Z'
+          }
+        ]
+      },
+      new Date('2026-07-01T00:00:00.000Z')
+    )
+
+    expect(cards).toEqual([
+      {
+        id: 'credit-a',
+        grantedAt: '2026-06-17T00:00:00.000Z',
+        expiresAt: '2026-07-17T00:00:00.000Z',
+        status: 'available'
+      },
+      {
+        id: 'credit-b',
+        expiresAt: '2026-07-18T00:00:00.000Z',
+        grantedAt: undefined,
+        status: undefined
+      }
+    ])
+  })
+
+  it('filters expired and redeemed reset credits', () => {
+    const cards = parseResetCreditsPayload(
+      {
+        credits: [
+          { id: 'expired', expires_at: '2026-06-30T00:00:00.000Z' },
+          { id: 'used', expires_at: '2026-07-20T00:00:00.000Z', status: 'redeemed' },
+          { id: 'valid', expires_at: '2026-07-21T00:00:00.000Z', status: 'available' }
+        ]
+      },
+      new Date('2026-07-01T00:00:00.000Z')
+    )
+
+    expect(cards.map((card) => card.id)).toEqual(['valid'])
   })
 })

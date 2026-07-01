@@ -1,7 +1,8 @@
 import { getCodexOAuth } from './store.js'
-import { parseQuotaPayload, unavailableQuotaSnapshot, type QuotaSnapshot } from '../shared/quota.js'
+import { parseQuotaPayload, parseResetCreditsPayload, unavailableQuotaSnapshot, type QuotaSnapshot } from '../shared/quota.js'
 
 const usageEndpoint = 'https://chatgpt.com/backend-api/wham/usage'
+const resetCreditsEndpoint = 'https://chatgpt.com/backend-api/wham/rate-limit-reset-credits'
 
 export async function fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
   const token = getCodexOAuth()
@@ -10,14 +11,18 @@ export async function fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
   }
 
   const accountId = readJwtClaim(token.accessToken, 'https://api.openai.com/auth', 'chatgpt_account_id')
+  const sharedHeaders = {
+    Authorization: `Bearer ${token.accessToken}`,
+    Accept: 'application/json',
+    'User-Agent': 'CodexMeter/0.1',
+    'OpenAI-Beta': 'codex-1',
+    originator: 'Codex Desktop',
+    ...(accountId ? { 'ChatGPT-Account-Id': accountId } : {})
+  }
+
   const response = await fetch(usageEndpoint, {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token.accessToken}`,
-      Accept: 'application/json',
-      'User-Agent': 'CodexMeter/0.1',
-      ...(accountId ? { 'ChatGPT-Account-Id': accountId } : {})
-    }
+    headers: sharedHeaders
   })
 
   if (!response.ok) {
@@ -30,7 +35,29 @@ export async function fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
   }
 
   const payload = await response.json()
-  return parseQuotaPayload(payload)
+  const snapshot = parseQuotaPayload(payload)
+  const resetCards = await fetchResetCards(sharedHeaders)
+
+  return {
+    ...snapshot,
+    resetCards: resetCards ?? snapshot.resetCards
+  }
+}
+
+async function fetchResetCards(headers: Record<string, string>): Promise<QuotaSnapshot['resetCards'] | undefined> {
+  try {
+    const response = await fetch(resetCreditsEndpoint, {
+      method: 'GET',
+      headers
+    })
+    if (!response.ok) {
+      return undefined
+    }
+
+    return parseResetCreditsPayload(await response.json())
+  } catch {
+    return undefined
+  }
 }
 
 function readJwtClaim(token: string | undefined, namespace: string, claim: string): string | undefined {
