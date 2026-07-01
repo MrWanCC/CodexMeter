@@ -308,12 +308,9 @@ async function connectHardwareDisplay(): Promise<void> {
     hardwareConnectionState.value = '已连接'
     hardwareStatusText.value = '外部小屏已连接'
     showNotice(hardwareStatusText.value)
-  } catch (error) {
+  } catch {
     hardwareConnectionState.value = '连接失败'
-    hardwareStatusText.value =
-      error instanceof Error
-        ? error.message
-        : '无法连接外部小屏，请确认 ESP32-C3 已连接 Wi-Fi，且电脑与设备在同一局域网。'
+    hardwareStatusText.value = '无法连接外部小屏，请确认 ESP32-C3 已连接 Wi-Fi，且电脑与设备在同一局域网。'
   } finally {
     hardwareSaving.value = false
   }
