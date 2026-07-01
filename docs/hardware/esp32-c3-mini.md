@@ -48,6 +48,23 @@ esp32/
 - 解析 JSON
 - 更新 OLED 显示
 
+## 本地测试
+
+烧录后先从串口监视器查看 ESP32-C3 Mini 的 IP 地址，然后在桌面端运行：
+
+```powershell
+node scripts/send-esp32-http-test.mjs http://192.168.1.xxx
+```
+
+预期结果：
+
+```text
+GET /health 200 {"ok":true,...}
+POST /quota 200 {"ok":true}
+```
+
+OLED 应显示 5H / 7D 两行额度信息。
+
 ## OLED 显示建议
 
 128x64 屏幕空间有限，第一版建议显示：
