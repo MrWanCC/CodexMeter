@@ -23,6 +23,7 @@ let isQuitting = false
 let latestSnapshot: QuotaSnapshot | null = null
 let widgetAlwaysOnTop = false
 let deviceBridge: DeviceBridge = createDeviceBridge()
+let bluetoothSelectTimer: NodeJS.Timeout | undefined
 
 function hardwareConnectionError(): Error {
   return new Error('无法连接外部小屏，请确认 ESP32-C3 已连接 Wi-Fi，且电脑与设备在同一局域网。')
@@ -60,11 +61,28 @@ async function createWindow(): Promise<void> {
   Menu.setApplicationMenu(null)
   mainWindow.webContents.on('select-bluetooth-device', (event, devices, callback) => {
     event.preventDefault()
+    if (bluetoothSelectTimer) {
+      clearTimeout(bluetoothSelectTimer)
+      bluetoothSelectTimer = undefined
+    }
+
+    console.info(
+      'Bluetooth scan devices:',
+      devices.map((device) => `${device.deviceName || '(no name)'}:${device.deviceId}`).join(', ') || '(none)'
+    )
+
     const device =
       devices.find((item) => item.deviceName?.includes('CodexMeter')) ??
-      devices.find((item) => item.deviceName?.includes('ESP32')) ??
-      devices[0]
-    callback(device?.deviceId ?? '')
+      devices.find((item) => item.deviceName?.includes('ESP32'))
+    if (device) {
+      callback(device.deviceId)
+      return
+    }
+
+    bluetoothSelectTimer = setTimeout(() => {
+      callback(devices[0]?.deviceId ?? '')
+      bluetoothSelectTimer = undefined
+    }, 8000)
   })
 
   if (devServerUrl) {

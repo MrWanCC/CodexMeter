@@ -461,11 +461,7 @@ async function connectBluetoothDisplay(pushAfterConnect: boolean): Promise<void>
 
 async function requestBleCharacteristic(): Promise<BluetoothRemoteGATTCharacteristic> {
   const device = await navigator.bluetooth!.requestDevice({
-    filters: [
-      { services: [BLE_SERVICE_UUID] },
-      { namePrefix: 'CodexMeter' },
-      { namePrefix: 'ESP32' }
-    ],
+    acceptAllDevices: true,
     optionalServices: [BLE_SERVICE_UUID]
   })
   bleDeviceName.value = device.name ?? 'CodexMeter'
