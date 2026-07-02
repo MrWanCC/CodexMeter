@@ -9,7 +9,7 @@
 - 经常使用 Codex / ChatGPT Codex，想随时知道额度还剩多少
 - 想学习 Electron + Vue 3 + TypeScript 桌面应用结构
 - 想了解 OAuth 授权数据、本地安全存储、桌面小组件这类实现方式
-- 想把额度状态后续同步到串口屏、蓝牙屏、MQTT 或其它硬件设备
+- 只需要软件端监控，不需要外接硬件屏幕
 
 ## 功能
 
@@ -22,7 +22,7 @@
 - 桌面小组件模式
 - 重置卡数量与可用状态提示
 - 本地安全存储授权信息，不硬编码任何 API Key
-- 预留硬件显示扩展入口
+- 软件版不包含硬件连接功能，适合只在电脑本地查看额度
 
 ## 小组件
 
@@ -30,9 +30,10 @@
 
 ## 直接下载使用
 
-不想研究源码的用户，可以直接使用仓库里的便携版：
+不想研究源码的用户，可以直接使用发布页里的软件版：
 
-- [Windows x64 便携版](downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe)
+- [Windows x64 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0)
+- macOS 软件版：由 `software-only` 分支的 GitHub Actions 构建，产物在 Actions artifact 中
 
 说明见 [downloads/README.md](downloads/README.md)。
 

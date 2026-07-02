@@ -1,7 +1,7 @@
 {
   "name": "codexmeter",
   "version": "0.1.0",
-  "description": "Local Codex quota monitor for Windows with a compact desktop widget.",
+  "description": "Local Codex quota monitor for Windows and macOS with a compact desktop widget.",
   "author": "MrWanCC",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
@@ -30,7 +30,8 @@
     "test": "vitest run",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "dist:portable": "npm run build && electron-builder --win portable"
+    "dist:portable": "npm run build && electron-builder --win portable",
+    "dist:mac": "npm run build && electron-builder --mac dmg zip --x64 --arm64"
   },
   "dependencies": {
     "electron-store": "^10.1.0",
@@ -69,6 +70,29 @@
       ],
       "icon": "build/icon.ico",
       "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.productivity",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     }
   }
 }

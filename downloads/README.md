@@ -4,11 +4,14 @@
 
 ## 当前版本
 
-- Windows x64 便携版：`CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe`
+- Windows x64 软件版：见 [CodexMeter v0.1.0 Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0)
+- macOS 软件版：由 `software-only` 分支的 GitHub Actions 构建，产物在 Actions artifact 中
 
 ## 使用方式
 
-双击 `.exe` 即可运行，不需要先安装开发环境。
+Windows 双击 `.exe` 即可运行，不需要先安装开发环境。
+
+macOS 下载 `.dmg` 或 `.zip` 后打开运行。当前未做 Apple 开发者签名和 notarize，如系统提示未知开发者，需要在系统设置中允许打开。
 
 如果 Windows 提示未知发布者，这是因为当前版本还没有代码签名证书。确认文件来自本仓库后再运行。
 
