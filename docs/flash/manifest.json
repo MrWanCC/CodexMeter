@@ -1,7 +1,7 @@
 {
-  "name": "CodexMeter ESP32-C3 Display",
+  "name": "CodexMeter ESP32-C3 小屏固件",
   "version": "0.1.0",
-  "new_install_prompt_erase": true,
+  "new_install_prompt_erase": false,
   "new_install_improv_wait_time": 0,
   "builds": [
     {

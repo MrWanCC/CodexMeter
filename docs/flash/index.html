@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CodexMeter ESP32-C3 Web Flasher</title>
+    <title>CodexMeter ESP32-C3 网页刷机工具</title>
     <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
     <style>
       :root {
@@ -16,7 +16,7 @@
           BlinkMacSystemFont,
           sans-serif;
         color: #0f172a;
-        background: #f4f7fb;
+        background: #eef3f8;
       }
 
       * {
@@ -26,112 +26,252 @@
       body {
         margin: 0;
         min-height: 100vh;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(37, 99, 235, 0.18), transparent 32%),
+          radial-gradient(circle at 82% 10%, rgba(20, 184, 166, 0.16), transparent 30%),
+          linear-gradient(135deg, #f8fbff 0%, #edf4fb 58%, #e4edf7 100%);
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 48px));
+        min-height: 100vh;
+        margin: 0 auto;
         display: grid;
-        place-items: center;
-        padding: 28px;
+        align-items: center;
+        padding: 44px 0;
       }
 
-      main {
-        width: min(720px, 100%);
-        padding: 30px;
-        border: 1px solid #d7e0ea;
-        border-radius: 18px;
-        background: #ffffff;
-        box-shadow: 0 20px 55px rgba(15, 23, 42, 0.1);
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.72fr);
+        gap: 28px;
+        align-items: stretch;
       }
 
-      .eyebrow {
-        margin: 0 0 8px;
-        color: #2563eb;
+      .intro,
+      .install-card {
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+        backdrop-filter: blur(18px);
+      }
+
+      .intro {
+        min-height: 540px;
+        padding: clamp(30px, 5vw, 58px);
+        border-radius: 28px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        min-height: 30px;
+        padding: 0 12px;
+        border: 1px solid rgba(37, 99, 235, 0.16);
+        border-radius: 999px;
+        color: #1d4ed8;
+        background: rgba(37, 99, 235, 0.08);
         font-size: 13px;
         font-weight: 750;
       }
 
       h1 {
-        margin: 0;
-        color: #0f172a;
-        font-size: clamp(28px, 5vw, 42px);
-        line-height: 1.1;
+        max-width: 720px;
+        margin: 22px 0 0;
+        color: #07111f;
+        font-size: clamp(42px, 7vw, 76px);
+        line-height: 1.02;
         letter-spacing: 0;
       }
 
       .summary {
-        max-width: 590px;
-        margin: 14px 0 22px;
-        color: #475569;
-        font-size: 15px;
-        line-height: 1.7;
+        max-width: 680px;
+        margin: 24px 0 0;
+        color: #334155;
+        font-size: 17px;
+        line-height: 1.85;
       }
 
-      .panel {
+      .features {
         display: grid;
-        gap: 14px;
-        padding: 18px;
-        border: 1px solid #dbe5ef;
-        border-radius: 14px;
-        background: #f8fbff;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 34px;
       }
 
-      .panel strong {
+      .feature {
+        min-height: 86px;
+        padding: 15px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 16px;
+        background: rgba(248, 250, 252, 0.76);
+      }
+
+      .feature strong {
+        display: block;
+        color: #0f172a;
         font-size: 15px;
+      }
+
+      .feature span {
+        display: block;
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .install-card {
+        padding: 24px;
+        border-radius: 24px;
+      }
+
+      .install-card h2 {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 0;
+      }
+
+      .install-card > p {
+        margin: 8px 0 18px;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.65;
       }
 
       .steps {
-        margin: 0;
-        padding-left: 20px;
-        color: #334155;
-        line-height: 1.8;
+        display: grid;
+        gap: 10px;
+        margin: 0 0 18px;
+        padding: 0;
+        list-style: none;
       }
 
-      .install {
-        display: flex;
+      .steps li {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        align-items: start;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 14px;
+        color: #334155;
+        background: #f8fafc;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .steps b {
+        display: inline-flex;
         align-items: center;
-        gap: 14px;
-        flex-wrap: wrap;
-        padding-top: 4px;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        color: #ffffff;
+        background: #2563eb;
+        font-size: 13px;
+      }
+
+      .installer {
+        display: grid;
+        gap: 10px;
+        padding: 18px;
+        border: 1px solid rgba(37, 99, 235, 0.16);
+        border-radius: 18px;
+        background: rgba(37, 99, 235, 0.06);
+      }
+
+      .installer-label {
+        margin: 0;
+        color: #1e3a8a;
+        font-size: 13px;
+        font-weight: 750;
       }
 
       .note {
-        margin: 18px 0 0;
+        margin: 16px 0 0;
         color: #64748b;
         font-size: 13px;
-        line-height: 1.7;
+        line-height: 1.75;
       }
 
       code {
-        padding: 2px 5px;
+        padding: 2px 6px;
         border-radius: 6px;
         color: #0f172a;
         background: #e8eef6;
       }
+
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .intro {
+          min-height: auto;
+        }
+
+        .features {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
-    <main>
-      <p class="eyebrow">CodexMeter Hardware</p>
-      <h1>ESP32-C3 小屏一键刷机</h1>
-      <p class="summary">
-        用 Chrome 或 Edge 打开本页，插入 ESP32-C3，点击安装即可刷入 CodexMeter OLED 小屏固件。
-        固件同时包含蓝牙、HTTP 推送和 Wi-Fi 配网页。
-      </p>
+    <main class="shell">
+      <section class="hero">
+        <div class="intro">
+          <div>
+            <span class="brand">CodexMeter 硬件刷机工具</span>
+            <h1>给 ESP32-C3 小屏刷入 CodexMeter 固件</h1>
+            <p class="summary">
+              无需安装 Arduino IDE。使用 Chrome 或 Edge 打开本页，连接 ESP32-C3，点击安装即可写入小屏固件。
+              刷入后设备会提供蓝牙连接、HTTP 推送和 Wi-Fi 配网页。
+            </p>
+          </div>
 
-      <section class="panel">
-        <strong>刷机步骤</strong>
-        <ol class="steps">
-          <li>用 USB 线连接 ESP32-C3。</li>
-          <li>点击下方 Install 按钮，选择对应串口。</li>
-          <li>确认安装固件，等待刷入完成。</li>
-          <li>刷完后搜索 Wi-Fi 热点 <code>CodexMeter-Setup</code>，打开 <code>http://192.168.4.1</code> 配网。</li>
-        </ol>
-        <div class="install">
-          <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+          <div class="features">
+            <div class="feature">
+              <strong>蓝牙直连</strong>
+              <span>桌面端可直接搜索并连接 CodexMeter 小屏。</span>
+            </div>
+            <div class="feature">
+              <strong>网络推送</strong>
+              <span>配网后通过局域网 HTTP 自动同步额度状态。</span>
+            </div>
+            <div class="feature">
+              <strong>网页配网</strong>
+              <span>刷机完成后连接 CodexMeter-Setup 热点配置 Wi-Fi。</span>
+            </div>
+          </div>
         </div>
-      </section>
 
-      <p class="note">
-        Web Serial 需要 HTTPS 环境，仅支持 Chrome / Edge 等 Chromium 浏览器。
-        如果浏览器看不到设备，请按住开发板 BOOT 键后重新插入 USB，或更换数据线。
-      </p>
+        <aside class="install-card">
+          <h2>开始刷机</h2>
+          <p>按顺序操作。刷机过程会清空 ESP32-C3 上原有程序。</p>
+
+          <ol class="steps">
+            <li><b>1</b><span>用 USB 数据线连接 ESP32-C3。</span></li>
+            <li><b>2</b><span>点击下方安装按钮，选择 ESP32-C3 对应串口。</span></li>
+            <li><b>3</b><span>确认安装，等待固件写入完成。</span></li>
+            <li><b>4</b><span>连接 <code>CodexMeter-Setup</code> 热点，打开 <code>192.168.4.1</code> 配网。</span></li>
+          </ol>
+
+          <div class="installer">
+            <p class="installer-label">固件版本：v0.1.0</p>
+            <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+          </div>
+
+          <p class="note">
+            如果浏览器看不到设备，请按住开发板 BOOT 键后重新插入 USB，或更换支持数据传输的 USB 线。
+            安装按钮和系统串口授权弹窗由浏览器组件提供，个别按钮可能显示英文。
+          </p>
+        </aside>
+      </section>
     </main>
   </body>
 </html>
