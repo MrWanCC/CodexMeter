@@ -30,7 +30,7 @@
 
 适合需要连接 ESP32-C3 OLED 小屏的用户。
 
-平台：Windows  
+平台：Windows<br>
 支持：蓝牙 / HTTP 推送
 
 [下载 CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware)
