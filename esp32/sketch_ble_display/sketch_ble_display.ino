@@ -13,7 +13,7 @@
 #define OLED_SCL 4
 #define OLED_RESET -1
 
-#define BLE_DEVICE_NAME "CodexMeter"
+#define BLE_DEVICE_NAME "CMeter"
 #define BLE_SERVICE_UUID "6f4d0001-9c8f-4c2a-9f12-000000000001"
 #define BLE_USAGE_UUID "6f4d0002-9c8f-4c2a-9f12-000000000002"
 
@@ -134,6 +134,7 @@ class DisplayServerCallbacks : public BLEServerCallbacks {
 
 void setupBle() {
   BLEDevice::init(BLE_DEVICE_NAME);
+  BLEDevice::setPower(ESP_PWR_LVL_P9);
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new DisplayServerCallbacks());
   BLEService* service = server->createService(BLE_SERVICE_UUID);
@@ -145,11 +146,11 @@ void setupBle() {
   service->start();
 
   BLEAdvertising* advertising = BLEDevice::getAdvertising();
-  BLEAdvertisementData scanResponseData;
-  scanResponseData.setName(BLE_DEVICE_NAME);
-  advertising->addServiceUUID(BLE_SERVICE_UUID);
-  advertising->setScanResponseData(scanResponseData);
-  advertising->setScanResponse(true);
+  BLEAdvertisementData advertisementData;
+  advertisementData.setFlags(0x06);
+  advertisementData.setName(BLE_DEVICE_NAME);
+  advertising->setAdvertisementData(advertisementData);
+  advertising->setScanResponse(false);
   advertising->setMinPreferred(0x06);
   advertising->setMaxPreferred(0x12);
   BLEDevice::startAdvertising();
@@ -177,6 +178,9 @@ void loop() {
     BLEDevice::startAdvertising();
     restartAdvertising = false;
     Serial.println("BLE advertising restarted");
+  }
+  if (!bleConnected) {
+    BLEDevice::startAdvertising();
   }
   delay(1000);
 }

@@ -174,7 +174,7 @@ const hardwareLastPushLabel = computed(() => {
 })
 const hardwareDisplayAddress = computed(() => {
   if (hardwareMode.value === 'ble') {
-    return bleConnected.value ? bleDeviceName.value || 'CodexMeter' : '未连接'
+    return bleConnected.value ? bleDeviceName.value || 'CMeter' : '未连接'
   }
 
   if (!hardwareConnected.value || !settings.value?.hardwareEndpoint) {
@@ -464,7 +464,7 @@ async function requestBleCharacteristic(): Promise<BluetoothRemoteGATTCharacteri
     acceptAllDevices: true,
     optionalServices: [BLE_SERVICE_UUID]
   })
-  bleDeviceName.value = device.name ?? 'CodexMeter'
+  bleDeviceName.value = device.name ?? 'CMeter'
   device.addEventListener('gattserverdisconnected', () => {
     bleCharacteristic = undefined
     bleConnected.value = false
@@ -807,7 +807,7 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
           </label>
           <div v-else class="hardware-ble-summary">
             <Bluetooth :size="16" :stroke-width="2" />
-            <span>{{ bleConnected ? hardwareDisplayAddress : '搜索 CodexMeter 蓝牙小屏' }}</span>
+            <span>{{ bleConnected ? hardwareDisplayAddress : '搜索 CMeter 蓝牙小屏' }}</span>
           </div>
           <div class="hardware-sync-row">
             <div>

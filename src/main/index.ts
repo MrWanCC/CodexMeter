@@ -74,6 +74,7 @@ async function createWindow(): Promise<void> {
 
     const device =
       devices.find((item) => item.deviceName?.includes('CodexMeter')) ??
+      devices.find((item) => item.deviceName?.includes('CMeter')) ??
       devices.find((item) => item.deviceName?.includes('ESP32'))
     if (device) {
       callback(device.deviceId)
