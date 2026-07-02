@@ -6,6 +6,10 @@ describe('isRefreshIntervalMinutes', () => {
     expect(defaultSettings.refreshIntervalMinutes).toBe(5)
   })
 
+  it('enables hardware auto sync by default', () => {
+    expect(defaultSettings.hardwareDisplayEnabled).toBe(true)
+  })
+
   it.each([0, 5, 10])('accepts %s minutes', (minutes) => {
     expect(isRefreshIntervalMinutes(minutes)).toBe(true)
   })

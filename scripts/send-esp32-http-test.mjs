@@ -32,10 +32,10 @@ const payload = {
   }
 }
 
-const health = await fetch(`${baseUrl}/health`)
-console.log('GET /health', health.status, await health.text())
+const health = await fetch(`${baseUrl}/ping`)
+console.log('GET /ping', health.status, await health.text())
 
-const quota = await fetch(`${baseUrl}/quota`, {
+const quota = await fetch(`${baseUrl}/api/usage`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'
@@ -43,4 +43,4 @@ const quota = await fetch(`${baseUrl}/quota`, {
   body: JSON.stringify(payload)
 })
 
-console.log('POST /quota', quota.status, await quota.text())
+console.log('POST /api/usage', quota.status, await quota.text())

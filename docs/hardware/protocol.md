@@ -1,17 +1,17 @@
-# HTTP 数据协议
+# HTTP / BLE 数据协议
 
 ## 总体设计
 
 ESP32-C3 Mini 作为局域网 HTTP Server，CodexMeter 桌面端主动推送额度数据。
 
 ```text
-POST http://<esp32-ip>/quota
+POST http://<esp32-ip>/api/usage
 Content-Type: application/json
 ```
 
 ## 接口列表
 
-### GET /health
+### GET /ping
 
 用于检查设备是否在线。
 
@@ -22,11 +22,14 @@ Content-Type: application/json
   "ok": true,
   "device": "CodexMeter ESP32-C3",
   "version": "0.1.0",
-  "ip": "192.168.1.120"
+  "ip": "192.168.1.120",
+  "mode": "station"
 }
 ```
 
-### POST /quota
+`mode` 为 `setup` 时表示设备仍在 AP 配网模式。
+
+### POST /api/usage
 
 桌面端推送额度数据。
 
@@ -88,8 +91,8 @@ Content-Type: application/json
 
 桌面端：
 
-- `/health` 不通：显示硬件离线
-- `/quota` 超时：保留上次状态，提示推送失败
+- `/ping` 不通：显示硬件离线
+- `/api/usage` 超时：保留上次状态，提示推送失败
 - 连续失败：降低推送频率，避免刷屏
 
 ESP32：
@@ -97,3 +100,45 @@ ESP32：
 - JSON 解析失败：返回 `400`
 - 字段缺失：使用上次有效值或默认值
 - 数据合法：刷新屏幕并返回 `200`
+
+## BLE
+
+BLE 设备名：
+
+```text
+CodexMeter
+```
+
+Service UUID：
+
+```text
+6f4d0001-9c8f-4c2a-9f12-000000000001
+```
+
+Usage Characteristic UUID：
+
+```text
+6f4d0002-9c8f-4c2a-9f12-000000000002
+```
+
+桌面端写入紧凑 JSON：
+
+```json
+{
+  "t": "15:30",
+  "p": "Plus",
+  "h": 96,
+  "hr": "18:59",
+  "w": 38,
+  "wr": "07/07 10:18"
+}
+```
+
+字段含义：
+
+- `t`：推送时间
+- `p`：套餐
+- `h`：5 小时剩余额度百分比
+- `hr`：5 小时重置时间
+- `w`：7 天剩余额度百分比
+- `wr`：7 天重置时间

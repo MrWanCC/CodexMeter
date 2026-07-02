@@ -105,7 +105,7 @@ describe('buildEsp32QuotaPayload', () => {
     }
 
     expect(buildBleUsagePayload(snapshot, new Date('2026-07-01T07:30:00.000Z'))).toEqual({
-      t: '15:27',
+      t: '15:30',
       p: 'Plus',
       h: 96,
       hr: '18:59',

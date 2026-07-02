@@ -1,50 +1,40 @@
 # Wi-Fi 与配网策略
 
-## 第一版：写死 Wi-Fi
+## 当前方案：AP 配网
 
-第一版目标是先跑通硬件显示链路，不做复杂配网。
+主固件不再依赖 `secrets.h` 写死 Wi-Fi。ESP32-C3 会把 Wi-Fi 配置保存到 NVS / Preferences。
 
-ESP32-C3 Mini 固件中使用本地私有配置：
-
-```cpp
-// secrets.h，不提交到仓库
-#pragma once
-
-const char* WIFI_SSID = "your-wifi-name";
-const char* WIFI_PASSWORD = "your-wifi-password";
-```
-
-固件中引用：
-
-```cpp
-#include "secrets.h"
-```
-
-注意：真实 Wi-Fi 名称和密码只放在本地 `secrets.h`，不要提交到 GitHub。
-
-## 第二版：AP 配网
-
-后续做成用户可配置：
+首次启动或连接失败时：
 
 ```text
-1. ESP32 第一次启动，没有 Wi-Fi 配置
-2. 开启热点：CodexMeter-Setup
-3. 用户连接热点
+1. ESP32 开启热点：CodexMeter-Setup
+2. 热点密码：12345678
+3. 用户连接该热点
 4. 打开 http://192.168.4.1
 5. 输入 Wi-Fi 名称和密码
-6. 保存到 ESP32 NVS / Preferences
-7. 重启后自动连接家庭 Wi-Fi
+6. 保存后 ESP32 自动重启
+7. 重启后连接家庭/办公 Wi-Fi
+8. OLED 显示 ESP32 在局域网内的 IP
+9. CodexMeter 桌面端 HTTP 模式填写该 IP
 ```
 
-## 第三版：设备发现
+如果需要重新配网，连接当前 ESP32 地址后打开：
 
-跑通 HTTP 后再考虑自动发现：
+```text
+http://<esp32-ip>/reset
+```
+
+固件会清除已保存的 Wi-Fi 并重启，随后再次进入 `CodexMeter-Setup` 配网页。
+
+## 设备发现
+
+当前仍需要在桌面端手动填写 ESP32 IP。后续可以继续做自动发现：
 
 - mDNS：`codexmeter.local`
 - UDP broadcast
 - 桌面端扫描局域网
 
-第一版建议先手动填写 ESP32 IP，降低复杂度。
+建议下一步优先做 mDNS，这样用户不需要记 IP。
 
 ## 推荐连接逻辑
 
@@ -52,17 +42,18 @@ ESP32 启动：
 
 ```text
 1. 初始化屏幕
-2. 显示 Wi-Fi connecting
-3. 连接写死的 Wi-Fi
-4. 成功后显示 IP 地址
-5. 启动 HTTP Server
-6. 等待桌面端推送额度数据
+2. 读取 Preferences 中的 Wi-Fi 配置
+3. 没有配置则进入 AP 配网
+4. 有配置则连接 Wi-Fi
+5. 成功后显示 IP 地址
+6. 启动 HTTP Server 和 BLE 广播
+7. 等待桌面端推送额度数据
 ```
 
 连接失败：
 
 ```text
-1. 屏幕显示 Wi-Fi failed
+1. 屏幕显示 WiFi failed
 2. 串口输出错误
-3. 每隔 5 秒重试
+3. 进入 AP 配网，允许用户重新填写 Wi-Fi
 ```

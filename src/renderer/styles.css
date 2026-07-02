@@ -123,8 +123,8 @@ svg {
 }
 
 .hardware-connect-popover {
-  width: min(380px, 100%);
-  padding: 18px;
+  width: min(430px, 100%);
+  padding: 18px 18px 16px;
   border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 18px;
   background:
@@ -140,7 +140,7 @@ svg {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .hardware-connect-head strong {
@@ -155,7 +155,8 @@ svg {
   margin-top: 4px;
   color: #64748b;
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.5;
+  max-width: 330px;
 }
 
 .hardware-connect-head button {
@@ -177,35 +178,6 @@ svg {
   background: rgba(15, 23, 42, 0.06);
 }
 
-.hardware-mode-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.hardware-mode-tabs button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 32px;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  border-radius: 10px;
-  color: #475569;
-  background: rgba(248, 250, 252, 0.72);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.hardware-mode-tabs button.active {
-  color: #2563eb;
-  border-color: rgba(37, 99, 235, 0.28);
-  background: rgba(37, 99, 235, 0.08);
-}
-
 .hardware-connect-popover p {
   margin: 0 0 14px;
   color: #64748b;
@@ -213,32 +185,120 @@ svg {
   line-height: 1.55;
 }
 
-.hardware-connect-field {
+.hardware-channel-list {
   display: grid;
+  gap: 9px;
+}
+
+.hardware-channel {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.hardware-channel-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.hardware-channel-main {
+  min-width: 0;
+}
+
+.hardware-channel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hardware-channel-title strong {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.hardware-channel-title span {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.hardware-channel-title span.is-success {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.hardware-channel-title span.is-idle {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.1);
+}
+
+.hardware-channel-main p {
+  overflow: hidden;
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hardware-connect-field {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) auto;
+  align-items: center;
   gap: 6px;
+  padding-top: 3px;
 }
 
 .hardware-connect-field > span {
   color: #334155;
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
-.hardware-ble-summary {
-  display: flex;
+.hardware-address-input {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-  min-height: 34px;
-  padding: 0 10px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 10px;
-  color: #475569;
-  background: rgba(248, 250, 252, 0.72);
-  font-size: 12px;
 }
 
-.hardware-ble-summary svg {
-  color: #2563eb;
+.hardware-address-input > svg {
+  z-index: 1;
+  justify-self: center;
+  color: #94a3b8;
+}
+
+.hardware-address-input .n-input {
+  margin-left: -24px;
+}
+
+.hardware-address-input .n-input .n-input-wrapper {
+  padding-left: 28px;
+}
+
+.hardware-control-panel {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.58);
 }
 
 .hardware-sync-row {
@@ -246,12 +306,7 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  min-height: 44px;
-  margin-top: 10px;
-  padding: 0 12px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 12px;
-  background: rgba(248, 250, 252, 0.62);
+  min-height: 32px;
 }
 
 .hardware-sync-row b {
@@ -282,36 +337,53 @@ svg {
 .hardware-connect-status {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-height: 38px;
-  margin-top: 10px;
-  padding: 0 12px;
-  border: 1px solid rgba(34, 197, 94, 0.18);
-  border-radius: 12px;
+  gap: 10px;
+  min-height: 42px;
+  margin-top: 7px;
+  padding: 8px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 10px;
   color: #64748b;
   font-size: 12px;
-  background: rgba(34, 197, 94, 0.06);
+  background: rgba(255, 255, 255, 0.62);
 }
 
 .hardware-connect-status.is-idle {
   color: #64748b;
-  border-color: rgba(100, 116, 139, 0.18);
-  background: rgba(100, 116, 139, 0.06);
+  background: rgba(255, 255, 255, 0.62);
 }
 
 .hardware-connect-status.is-pending {
   color: #2563eb;
-  border-color: rgba(37, 99, 235, 0.2);
-  background: rgba(37, 99, 235, 0.07);
+  border-color: rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.05);
 }
 
 .hardware-connect-status.is-error {
   color: #ea580c;
-  border-color: rgba(234, 88, 12, 0.2);
-  background: rgba(234, 88, 12, 0.07);
+  border-color: rgba(234, 88, 12, 0.18);
+  background: rgba(234, 88, 12, 0.05);
 }
 
-.hardware-connect-status > div {
+.hardware-connect-status.is-success {
+  color: #15803d;
+  border-color: rgba(34, 197, 94, 0.18);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.hardware-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+}
+
+.hardware-connect-status .oauth-status-dot {
+  width: 7px;
+  height: 7px;
+}
+
+.hardware-status-copy {
   display: grid;
   min-width: 0;
   gap: 2px;
@@ -331,9 +403,15 @@ svg {
   white-space: nowrap;
 }
 
-.hardware-connect-status b {
+.hardware-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
   margin-left: auto;
+  border-radius: 999px;
   color: currentColor;
+  background: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;

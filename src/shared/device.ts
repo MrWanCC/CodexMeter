@@ -131,7 +131,7 @@ export function buildEsp32TestPayload(now = new Date()): Esp32QuotaPayload {
 export function buildBleUsagePayload(snapshot: QuotaSnapshot, now = new Date()): BleUsagePayload {
   const payload = buildEsp32QuotaPayload(snapshot, now)
   return {
-    t: payload.lastRefresh,
+    t: formatLocalTime(now),
     p: payload.plan.replace(/^Codex\s*/i, '') || 'Codex',
     h: payload.fiveHour.remaining,
     hr: payload.fiveHour.reset,

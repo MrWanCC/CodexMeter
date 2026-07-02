@@ -26,6 +26,5 @@ BLETEST
 
 ## 判断
 
-- 能搜到 `BLETEST`：板子 BLE 广播正常，再回到 `sketch_ble_display` 调业务固件。
+- 能搜到 `BLETEST`：板子 BLE 广播正常，再回到 `sketch_jul1a` 主固件调业务逻辑。
 - 搜不到 `BLETEST`：先检查 Arduino IDE 板卡是否选的是 ESP32C3 Dev Module，并确认手机使用的是 BLE Scanner / nRF Connect，不是系统蓝牙配对页。
-

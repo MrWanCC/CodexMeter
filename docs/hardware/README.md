@@ -1,21 +1,22 @@
 # CodexMeter Hardware
 
-这个目录记录 CodexMeter 的硬件显示方案。当前目标是让 ESP32-C3 Mini 连接 Wi-Fi 后接收桌面端推送的额度数据，并显示到 OLED 或其它外部小屏上。
+这个目录记录 CodexMeter 的硬件显示方案。当前目标是让 ESP32-C3 Mini 同时支持 BLE 和 HTTP 两种推送方式，并显示到 OLED 或其它外部小屏上。
 
 ## 当前阶段
 
-第一阶段采用：
+当前主固件：
 
 ```text
-CodexMeter Desktop
-  -> HTTP POST
-  -> ESP32-C3 Mini
-  -> OLED / external display
+esp32/sketch_jul1a/sketch_jul1a.ino
 ```
 
-暂不做复杂配网。Wi-Fi 信息先在本地固件配置里写死，后续再升级为 AP 配网页。
+它同时支持：
 
-## 为什么先走 Wi-Fi HTTP
+- BLE：桌面端直接连接 `CodexMeter` 设备并写入 GATT characteristic
+- HTTP：ESP32-C3 接入 Wi-Fi 后，桌面端通过 `/api/usage` 推送
+- AP 配网：首次启动时开启 `CodexMeter-Setup` 热点，用户通过 `http://192.168.4.1` 填写 Wi-Fi
+
+## 为什么保留 Wi-Fi HTTP
 
 USB 串口适合快速验证，但正式使用有明显限制：
 
@@ -35,17 +36,11 @@ Wi-Fi + HTTP 更适合这个项目：
 ## 文档
 
 - [Wi-Fi 与配网策略](wifi.md)
-- [HTTP 数据协议](protocol.md)
+- [HTTP / BLE 数据协议](protocol.md)
 - [ESP32-C3 Mini 开发说明](esp32-c3-mini.md)
 
 ## 安全约定
 
 不要把 Wi-Fi 密码、Token、OAuth 数据写进仓库。
 
-建议本地使用：
-
-```text
-esp32/**/secrets.h
-```
-
-并确保该文件被 `.gitignore` 忽略。仓库只提交 `secrets.example.h` 这类示例文件。
+主固件不再需要提交或维护 `secrets.h`。如果后续新增其它私有配置文件，仍需确保被 `.gitignore` 忽略。
