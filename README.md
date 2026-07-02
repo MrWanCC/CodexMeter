@@ -20,13 +20,18 @@
 
 ### 软件版
 
-适合只在电脑上查看 Codex 额度的用户，支持 Windows / macOS。
+适合只在电脑上查看 Codex 额度的用户。
+
+平台：Windows / macOS
 
 [下载 CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0)
 
 ### 硬件版
 
-适合需要连接 ESP32-C3 OLED 小屏的用户，支持 Windows，包含蓝牙和 HTTP 推送。
+适合需要连接 ESP32-C3 OLED 小屏的用户。
+
+平台：Windows  
+支持：蓝牙 / HTTP 推送
 
 [下载 CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware)
 
