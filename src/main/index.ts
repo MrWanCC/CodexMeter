@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, Tray } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, session, Tray } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { NoopDeviceBridge } from './deviceBridge.js'
@@ -28,6 +28,17 @@ function hardwareConnectionError(): Error {
   return new Error('无法连接外部小屏，请确认 ESP32-C3 已连接 Wi-Fi，且电脑与设备在同一局域网。')
 }
 
+function configureBluetoothPermissions(): void {
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+    const requestedPermission = String(permission)
+    return requestedPermission === 'bluetooth' || requestedPermission === 'bluetoothScanning'
+  })
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    const requestedPermission = String(permission)
+    callback(requestedPermission === 'bluetooth' || requestedPermission === 'bluetoothScanning')
+  })
+}
+
 async function createWindow(): Promise<void> {
   mainWindow = new BrowserWindow({
     width: 900,
@@ -47,6 +58,14 @@ async function createWindow(): Promise<void> {
     }
   })
   Menu.setApplicationMenu(null)
+  mainWindow.webContents.on('select-bluetooth-device', (event, devices, callback) => {
+    event.preventDefault()
+    const device =
+      devices.find((item) => item.deviceName?.includes('CodexMeter')) ??
+      devices.find((item) => item.deviceName?.includes('ESP32')) ??
+      devices[0]
+    callback(device?.deviceId ?? '')
+  })
 
   if (devServerUrl) {
     await mainWindow.loadURL(devServerUrl)
@@ -274,6 +293,7 @@ ipcMain.handle('widget:setAlwaysOnTop', (_event, enabled: boolean) => {
 })
 
 app.whenReady().then(async () => {
+  configureBluetoothPermissions()
   await createWindow()
   createTray()
 })

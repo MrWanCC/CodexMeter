@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildEsp32QuotaPayload } from '../src/shared/device'
+import { buildBleUsagePayload, buildEsp32QuotaPayload } from '../src/shared/device'
 import type { QuotaSnapshot } from '../src/shared/quota'
 
 describe('buildEsp32QuotaPayload', () => {
@@ -75,6 +75,42 @@ describe('buildEsp32QuotaPayload', () => {
         status: 'empty',
         label: '已耗尽'
       }
+    })
+  })
+
+  it('maps quota snapshot into compact BLE payload', () => {
+    const snapshot: QuotaSnapshot = {
+      available: true,
+      refreshedAt: '2026-07-01T07:27:08.000Z',
+      source: 'codex',
+      planType: 'plus',
+      windows: [
+        {
+          code: '5h',
+          label: '5 hour window',
+          used: 4,
+          limit: 100,
+          percentUsed: 4,
+          resetAt: '2026-07-01T10:59:00.000Z'
+        },
+        {
+          code: '7d',
+          label: '7 day window',
+          used: 62,
+          limit: 100,
+          percentUsed: 62,
+          resetAt: '2026-07-07T02:18:00.000Z'
+        }
+      ]
+    }
+
+    expect(buildBleUsagePayload(snapshot, new Date('2026-07-01T07:30:00.000Z'))).toEqual({
+      t: '15:27',
+      p: 'Plus',
+      h: 96,
+      hr: '18:59',
+      w: 38,
+      wr: '07/07 10:18'
     })
   })
 })

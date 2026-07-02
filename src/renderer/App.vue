@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { NButton, NConfigProvider, NInput, NProgress, NSelect, NSwitch, NTag, type GlobalThemeOverrides } from 'naive-ui'
 import {
   AlertCircle,
+  Bluetooth,
   Calendar,
   CheckCircle2,
   Clock,
@@ -17,8 +18,12 @@ import {
   User
 } from 'lucide-vue-next'
 import appIcon from './assets/icon.png'
+import { buildBleTestPayload, buildBleUsagePayload } from '../shared/device'
 import { sampleQuotaSnapshot, type QuotaSnapshot, type QuotaWindow, type ResetCard } from '../shared/quota'
 import type { AppSettings, RefreshIntervalMinutes } from '../shared/settings'
+
+const BLE_SERVICE_UUID = '6f4d0001-9c8f-4c2a-9f12-000000000001'
+const BLE_USAGE_UUID = '6f4d0002-9c8f-4c2a-9f12-000000000002'
 
 const isWidgetView = new URLSearchParams(window.location.search).get('view') === 'widget'
 const snapshot = ref<QuotaSnapshot | null>(null)
@@ -27,6 +32,7 @@ const loading = ref(false)
 const status = ref('就绪')
 const widgetVisible = ref(false)
 const alwaysOnTop = ref(false)
+const hardwareMode = ref<'ble' | 'http'>('ble')
 const hardwareEndpointInput = ref('')
 const hardwareSaving = ref(false)
 const hardwareStatusText = ref('')
@@ -34,6 +40,9 @@ const hardwareConnectionState = ref<'未连接' | '连接中' | '已连接' | '�
 const hardwareAutoSync = ref(true)
 const hardwareLastPushedAt = ref<string | undefined>()
 const hardwareDialogVisible = ref(false)
+const bleConnected = ref(false)
+const bleDeviceName = ref('')
+let bleCharacteristic: BluetoothRemoteGATTCharacteristic | undefined
 const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
 const connecting = ref(false)
@@ -121,9 +130,21 @@ const refreshSummary = computed(() => {
 })
 const fiveHourState = computed(() => quotaState(fiveHourWindow.value))
 const sevenDayState = computed(() => quotaState(sevenDayWindow.value))
-const hardwareConnected = computed(() => Boolean(settings.value?.hardwareEndpoint))
-const hardwareAutoSyncLabel = computed(() => (settings.value?.hardwareDisplayEnabled ? '开启' : '关闭'))
-const hardwarePrimaryActionLabel = computed(() => (hardwareConnected.value ? '保存设置' : '保存并连接'))
+const hardwareConnected = computed(() =>
+  hardwareMode.value === 'ble' ? bleConnected.value : Boolean(settings.value?.hardwareEndpoint)
+)
+const hardwareAutoSyncLabel = computed(() =>
+  hardwareMode.value === 'ble'
+    ? hardwareAutoSync.value ? '开启' : '关闭'
+    : settings.value?.hardwareDisplayEnabled ? '开启' : '关闭'
+)
+const hardwarePrimaryActionLabel = computed(() => {
+  if (hardwareConnected.value) {
+    return hardwareMode.value === 'ble' ? '保存设置' : '保存设置'
+  }
+
+  return hardwareMode.value === 'ble' ? '连接蓝牙' : '保存并连接'
+})
 const hardwareStatusTone = computed(() => {
   if (hardwareConnectionState.value === '连接失败' || hardwareConnectionState.value === '推送失败') {
     return 'is-error'
@@ -152,6 +173,10 @@ const hardwareLastPushLabel = computed(() => {
   return date.toLocaleTimeString()
 })
 const hardwareDisplayAddress = computed(() => {
+  if (hardwareMode.value === 'ble') {
+    return bleConnected.value ? bleDeviceName.value || 'CodexMeter Display' : '未连接'
+  }
+
   if (!hardwareConnected.value || !settings.value?.hardwareEndpoint) {
     return '未连接'
   }
@@ -167,6 +192,9 @@ onMounted(async () => {
   unsubscribeQuota = window.codexMeter?.onQuotaUpdated((nextSnapshot) => {
     snapshot.value = nextSnapshot
     status.value = `已刷新 ${new Date(nextSnapshot.refreshedAt).toLocaleTimeString()}`
+    if (hardwareMode.value === 'ble' && hardwareAutoSync.value && bleConnected.value) {
+      void sendBleSnapshot(nextSnapshot)
+    }
   })
   unsubscribeHardwarePush = window.codexMeter?.onHardwarePushUpdated((pushedAt) => {
     hardwareLastPushedAt.value = pushedAt
@@ -250,6 +278,12 @@ function openHardwareDialog(): void {
   hardwareStatusText.value = ''
 }
 
+function updateHardwareMode(mode: 'ble' | 'http'): void {
+  hardwareMode.value = mode
+  hardwareConnectionState.value = hardwareConnected.value ? '已连接' : '未连接'
+  hardwareStatusText.value = ''
+}
+
 async function updateInterval(value: number): Promise<void> {
   settings.value = window.codexMeter
     ? await window.codexMeter.saveRefreshInterval(value as RefreshIntervalMinutes)
@@ -284,11 +318,26 @@ async function saveHardwareDisplay(enabled = true): Promise<void> {
 }
 
 async function disconnectHardwareDisplay(): Promise<void> {
+  if (hardwareMode.value === 'ble') {
+    bleCharacteristic = undefined
+    bleConnected.value = false
+    bleDeviceName.value = ''
+    hardwareConnectionState.value = '未连接'
+    hardwareStatusText.value = '蓝牙已断开'
+    showNotice(hardwareStatusText.value)
+    return
+  }
+
   hardwareEndpointInput.value = ''
   await saveHardwareDisplay(false)
 }
 
 async function connectHardwareDisplay(): Promise<void> {
+  if (hardwareMode.value === 'ble') {
+    await connectBluetoothDisplay(true)
+    return
+  }
+
   if (!window.codexMeter) {
     hardwareConnectionState.value = '连接失败'
     hardwareStatusText.value = '当前环境无法连接外部小屏'
@@ -320,6 +369,11 @@ async function connectHardwareDisplay(): Promise<void> {
 }
 
 async function testHardwareConnection(): Promise<void> {
+  if (hardwareMode.value === 'ble') {
+    await connectBluetoothDisplay(false)
+    return
+  }
+
   if (!window.codexMeter) {
     hardwareConnectionState.value = '连接失败'
     hardwareStatusText.value = '当前环境无法连接外部小屏'
@@ -343,6 +397,11 @@ async function testHardwareConnection(): Promise<void> {
 }
 
 async function sendHardwareTestData(): Promise<void> {
+  if (hardwareMode.value === 'ble') {
+    await sendBlePayload(buildBleTestPayload(), '测试数据已发送到小屏')
+    return
+  }
+
   if (!window.codexMeter) {
     hardwareConnectionState.value = '推送失败'
     hardwareStatusText.value = '当前环境无法发送测试数据'
@@ -361,6 +420,91 @@ async function sendHardwareTestData(): Promise<void> {
   } catch {
     hardwareConnectionState.value = '推送失败'
     hardwareStatusText.value = '测试数据发送失败，请确认设备支持 /api/usage 接口。'
+  } finally {
+    hardwareSaving.value = false
+  }
+}
+
+async function connectBluetoothDisplay(pushAfterConnect: boolean): Promise<void> {
+  if (!navigator.bluetooth) {
+    hardwareConnectionState.value = '连接失败'
+    hardwareStatusText.value = '当前环境不支持蓝牙连接'
+    return
+  }
+
+  hardwareSaving.value = true
+  hardwareConnectionState.value = '连接中'
+  hardwareStatusText.value = '正在连接蓝牙小屏...'
+  try {
+    const characteristic = await requestBleCharacteristic()
+    bleCharacteristic = characteristic
+    bleConnected.value = true
+    hardwareConnectionState.value = '已连接'
+    hardwareStatusText.value = '蓝牙小屏已连接'
+
+    if (pushAfterConnect) {
+      const currentSnapshot = snapshot.value ?? (window.codexMeter ? await window.codexMeter.getLatestQuota() : sampleQuotaSnapshot())
+      await sendBleSnapshot(currentSnapshot)
+      hardwareDialogVisible.value = false
+    }
+
+    showNotice(hardwareStatusText.value)
+  } catch {
+    bleCharacteristic = undefined
+    bleConnected.value = false
+    hardwareConnectionState.value = '连接失败'
+    hardwareStatusText.value = '无法连接蓝牙小屏，请确认设备已上电并处于附近。'
+  } finally {
+    hardwareSaving.value = false
+  }
+}
+
+async function requestBleCharacteristic(): Promise<BluetoothRemoteGATTCharacteristic> {
+  const device = await navigator.bluetooth!.requestDevice({
+    filters: [{ namePrefix: 'CodexMeter' }],
+    optionalServices: [BLE_SERVICE_UUID]
+  })
+  bleDeviceName.value = device.name ?? 'CodexMeter Display'
+  device.addEventListener('gattserverdisconnected', () => {
+    bleCharacteristic = undefined
+    bleConnected.value = false
+    hardwareConnectionState.value = '未连接'
+    hardwareStatusText.value = '蓝牙已断开'
+  })
+  const server = await device.gatt?.connect()
+  if (!server) {
+    throw new Error('BLE GATT unavailable')
+  }
+
+  const service = await server.getPrimaryService(BLE_SERVICE_UUID)
+  return service.getCharacteristic(BLE_USAGE_UUID)
+}
+
+async function sendBleSnapshot(nextSnapshot: QuotaSnapshot): Promise<void> {
+  await sendBlePayload(buildBleUsagePayload(nextSnapshot), '当前额度已同步到小屏')
+}
+
+async function sendBlePayload(payload: unknown, successText: string): Promise<void> {
+  if (!bleCharacteristic) {
+    await connectBluetoothDisplay(false)
+  }
+
+  if (!bleCharacteristic) {
+    return
+  }
+
+  hardwareSaving.value = true
+  hardwareConnectionState.value = '连接中'
+  hardwareStatusText.value = '正在发送数据...'
+  try {
+    await bleCharacteristic.writeValue(new TextEncoder().encode(JSON.stringify(payload)))
+    hardwareLastPushedAt.value = new Date().toISOString()
+    hardwareConnectionState.value = '推送成功'
+    hardwareStatusText.value = successText
+    showNotice(successText)
+  } catch {
+    hardwareConnectionState.value = '推送失败'
+    hardwareStatusText.value = '蓝牙数据发送失败，请重新连接小屏。'
   } finally {
     hardwareSaving.value = false
   }
@@ -638,11 +782,21 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
           <div class="hardware-connect-head">
             <div>
               <strong>连接外部小屏</strong>
-              <span>通过 HTTP 将 CodexMeter 额度状态推送到 ESP32-C3 OLED 小屏</span>
+              <span>{{ hardwareMode === 'ble' ? '通过蓝牙将额度状态写入 ESP32-C3 OLED 小屏' : '通过 HTTP 将额度状态推送到 ESP32-C3 OLED 小屏' }}</span>
             </div>
             <button type="button" aria-label="关闭" @click="hardwareDialogVisible = false">×</button>
           </div>
-          <label class="hardware-connect-field">
+          <div class="hardware-mode-tabs">
+            <button type="button" :class="{ active: hardwareMode === 'ble' }" @click="updateHardwareMode('ble')">
+              <Bluetooth :size="14" :stroke-width="2" />
+              蓝牙
+            </button>
+            <button type="button" :class="{ active: hardwareMode === 'http' }" @click="updateHardwareMode('http')">
+              <Monitor :size="14" :stroke-width="2" />
+              HTTP
+            </button>
+          </div>
+          <label v-if="hardwareMode === 'http'" class="hardware-connect-field">
             <span>设备地址</span>
             <NInput
               v-model:value="hardwareEndpointInput"
@@ -651,6 +805,10 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
               @keyup.enter="connectHardwareDisplay"
             />
           </label>
+          <div v-else class="hardware-ble-summary">
+            <Bluetooth :size="16" :stroke-width="2" />
+            <span>{{ bleConnected ? hardwareDisplayAddress : '搜索 CodexMeter Display 蓝牙小屏' }}</span>
+          </div>
           <div class="hardware-sync-row">
             <div>
               <strong>自动同步</strong>
@@ -1000,8 +1158,8 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
 
           <div class="hardware-list">
             <div>
-              <Monitor :size="17" :stroke-width="2" />
-              <span>HTTP 小屏</span>
+              <component :is="hardwareMode === 'ble' ? Bluetooth : Monitor" :size="17" :stroke-width="2" />
+              <span>{{ hardwareMode === 'ble' ? '蓝牙小屏' : 'HTTP 小屏' }}</span>
               <strong class="hardware-endpoint">{{ hardwareDisplayAddress }} {{ hardwareConnected ? '已连接' : '' }}</strong>
             </div>
             <div>

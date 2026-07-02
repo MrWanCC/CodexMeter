@@ -21,6 +21,15 @@ export interface Esp32QuotaPayload {
   weekly: Esp32QuotaWindowPayload
 }
 
+export interface BleUsagePayload {
+  t: string
+  p: string
+  h: number
+  hr: string
+  w: number
+  wr: string
+}
+
 export interface DisplayDevice {
   id: string
   name: string
@@ -116,6 +125,29 @@ export function buildEsp32TestPayload(now = new Date()): Esp32QuotaPayload {
       status: 'normal',
       label: statusLabel('normal')
     }
+  }
+}
+
+export function buildBleUsagePayload(snapshot: QuotaSnapshot, now = new Date()): BleUsagePayload {
+  const payload = buildEsp32QuotaPayload(snapshot, now)
+  return {
+    t: payload.lastRefresh,
+    p: payload.plan.replace(/^Codex\s*/i, '') || 'Codex',
+    h: payload.fiveHour.remaining,
+    hr: payload.fiveHour.reset,
+    w: payload.weekly.remaining,
+    wr: payload.weekly.reset
+  }
+}
+
+export function buildBleTestPayload(now = new Date()): BleUsagePayload {
+  return {
+    t: formatLocalTime(now),
+    p: 'Test',
+    h: 88,
+    hr: '18:30',
+    w: 56,
+    wr: '07/07'
   }
 }
 

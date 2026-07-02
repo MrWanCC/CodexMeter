@@ -177,6 +177,35 @@ svg {
   background: rgba(15, 23, 42, 0.06);
 }
 
+.hardware-mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.hardware-mode-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 10px;
+  color: #475569;
+  background: rgba(248, 250, 252, 0.72);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hardware-mode-tabs button.active {
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.28);
+  background: rgba(37, 99, 235, 0.08);
+}
+
 .hardware-connect-popover p {
   margin: 0 0 14px;
   color: #64748b;
@@ -193,6 +222,23 @@ svg {
   color: #334155;
   font-size: 12px;
   font-weight: 600;
+}
+
+.hardware-ble-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  color: #475569;
+  background: rgba(248, 250, 252, 0.72);
+  font-size: 12px;
+}
+
+.hardware-ble-summary svg {
+  color: #2563eb;
 }
 
 .hardware-sync-row {
