@@ -151,9 +151,11 @@ void setupBle() {
   service->start();
 
   NimBLEAdvertising* advertising = NimBLEDevice::getAdvertising();
+  NimBLEAdvertisementData scanResponseData;
+  scanResponseData.setName(BLE_DEVICE_NAME);
   advertising->setName(BLE_DEVICE_NAME);
   advertising->addServiceUUID(BLE_SERVICE_UUID);
-  advertising->setScanResponse(true);
+  advertising->setScanResponseData(scanResponseData);
   advertising->setMinInterval(160);
   advertising->setMaxInterval(240);
   startBleAdvertising();
