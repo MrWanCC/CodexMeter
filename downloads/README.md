@@ -4,14 +4,16 @@
 
 ## 当前版本
 
-| 版本 | 说明 | 下载 |
-| --- | --- | --- |
-| 软件版 | 不带硬件连接功能，只在电脑本地查看 Codex 额度 | [CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
-| 硬件版 | 支持蓝牙和 HTTP 连接 ESP32-C3 OLED 小屏 | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
+| 版本 | 平台 | 说明 | 下载 |
+| --- | --- | --- | --- |
+| 软件版 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度 | [CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
+| 硬件版 | Windows | 支持蓝牙和 HTTP 连接 ESP32-C3 OLED 小屏 | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 ## 使用方式
 
-双击 `.exe` 即可运行，不需要先安装开发环境。
+Windows 双击 `.exe` 即可运行，不需要先安装开发环境。
+
+macOS 下载 `.dmg` 后打开运行。当前未做 Apple 开发者签名和 notarize，如系统提示未知开发者，需要在系统设置中允许打开。
 
 如果只想看额度，下载软件版。需要外接小屏时，下载硬件版。
 

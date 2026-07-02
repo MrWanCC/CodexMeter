@@ -1,6 +1,7 @@
 # CodexMeter
 
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-2563eb?logo=windows)
+![macOS](https://img.shields.io/badge/macOS-software%20edition-111827?logo=apple)
 ![Electron](https://img.shields.io/badge/Electron-Desktop-47848f?logo=electron)
 ![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?logo=typescript)
@@ -15,12 +16,12 @@
 
 ## 直接下载
 
-不想研究源码，可以直接下载 Windows 便携版。现在分为两个版本：
+不想研究源码，可以直接下载桌面版。现在分为两个版本：
 
-| 版本 | 适合谁 | 下载 |
-| --- | --- | --- |
-| 软件版 | 只需要在电脑上查看 Codex 额度 | [下载 CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
-| 硬件版 | 需要连接 ESP32-C3 OLED 小屏，支持蓝牙和 HTTP 推送 | [下载 CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
+| 版本 | 平台 | 适合谁 | 下载 |
+| --- | --- | --- | --- |
+| 软件版 | Windows / macOS | 只需要在电脑上查看 Codex 额度 | [下载 CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
+| 硬件版 | Windows | 需要连接 ESP32-C3 OLED 小屏，支持蓝牙和 HTTP 推送 | [下载 CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 也可以查看仓库内的 [downloads/README.md](downloads/README.md)。
 
