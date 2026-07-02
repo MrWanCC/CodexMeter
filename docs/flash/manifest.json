@@ -1,0 +1,17 @@
+{
+  "name": "CodexMeter ESP32-C3 Display",
+  "version": "0.1.0",
+  "new_install_prompt_erase": true,
+  "new_install_improv_wait_time": 0,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "firmware/codexmeter-esp32c3-v0.1.0.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

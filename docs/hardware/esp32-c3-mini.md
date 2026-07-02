@@ -32,6 +32,18 @@
 
 `WiFi`、`WebServer`、`DNSServer` 和 `Preferences` 来自 ESP32 Arduino Core。
 
+## 烧录
+
+推荐方式：打开网页刷机工具，直接通过浏览器刷入固件。
+
+[CodexMeter ESP32-C3 Web Flasher](https://mrwancc.github.io/CodexMeter/flash/)
+
+开发方式：使用 Arduino IDE 打开：
+
+```text
+esp32/sketch_jul1a/sketch_jul1a.ino
+```
+
 ## 固件结构建议
 
 ```text

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CodexMeter ESP32-C3 Web Flasher</title>
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family:
+          Inter,
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        color: #0f172a;
+        background: #f4f7fb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 28px;
+      }
+
+      main {
+        width: min(720px, 100%);
+        padding: 30px;
+        border: 1px solid #d7e0ea;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 20px 55px rgba(15, 23, 42, 0.1);
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: #2563eb;
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      h1 {
+        margin: 0;
+        color: #0f172a;
+        font-size: clamp(28px, 5vw, 42px);
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .summary {
+        max-width: 590px;
+        margin: 14px 0 22px;
+        color: #475569;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .panel {
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+        border: 1px solid #dbe5ef;
+        border-radius: 14px;
+        background: #f8fbff;
+      }
+
+      .panel strong {
+        font-size: 15px;
+      }
+
+      .steps {
+        margin: 0;
+        padding-left: 20px;
+        color: #334155;
+        line-height: 1.8;
+      }
+
+      .install {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        padding-top: 4px;
+      }
+
+      .note {
+        margin: 18px 0 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      code {
+        padding: 2px 5px;
+        border-radius: 6px;
+        color: #0f172a;
+        background: #e8eef6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">CodexMeter Hardware</p>
+      <h1>ESP32-C3 小屏一键刷机</h1>
+      <p class="summary">
+        用 Chrome 或 Edge 打开本页，插入 ESP32-C3，点击安装即可刷入 CodexMeter OLED 小屏固件。
+        固件同时包含蓝牙、HTTP 推送和 Wi-Fi 配网页。
+      </p>
+
+      <section class="panel">
+        <strong>刷机步骤</strong>
+        <ol class="steps">
+          <li>用 USB 线连接 ESP32-C3。</li>
+          <li>点击下方 Install 按钮，选择对应串口。</li>
+          <li>确认安装固件，等待刷入完成。</li>
+          <li>刷完后搜索 Wi-Fi 热点 <code>CodexMeter-Setup</code>，打开 <code>http://192.168.4.1</code> 配网。</li>
+        </ol>
+        <div class="install">
+          <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+        </div>
+      </section>
+
+      <p class="note">
+        Web Serial 需要 HTTPS 环境，仅支持 Chrome / Edge 等 Chromium 浏览器。
+        如果浏览器看不到设备，请按住开发板 BOOT 键后重新插入 USB，或更换数据线。
+      </p>
+    </main>
+  </body>
+</html>

@@ -3,8 +3,11 @@ dist/
 dist-electron/
 release/
 .vite/
+.tools/
 .dotnet/
 .dotnet-install.ps1
+build/firmware/
+esp32/**/build/
 *.log
 *.local
 *.tsbuildinfo

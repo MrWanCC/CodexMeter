@@ -18,12 +18,31 @@
 
 不想研究源码？选择适合你的版本，下载后即可使用。
 
-| 版本 | 平台 | 适合谁 | 下载 |
-| --- | --- | --- | --- |
-| 💻 软件版 | Windows / macOS | 只需要在电脑上查看 Codex 额度 | [下载软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
-| 🔌 硬件版 | Windows | 连接 ESP32-C3 OLED 小屏，支持蓝牙 / HTTP 推送 | [下载硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
+<table width="100%">
+  <tr>
+    <th width="50%">💻 软件版</th>
+    <th width="50%">🔌 硬件版</th>
+  </tr>
+  <tr>
+    <td>适合只在电脑上查看 Codex 额度的用户</td>
+    <td>适合需要连接 ESP32-C3 OLED 小屏的用户</td>
+  </tr>
+  <tr>
+    <td><strong>平台：</strong>Windows / macOS</td>
+    <td><strong>平台：</strong>Windows</td>
+  </tr>
+  <tr>
+    <td><strong>特点：</strong>无需连接硬件</td>
+    <td><strong>支持：</strong>蓝牙 / HTTP 推送</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0">⬇️ 下载 CodexMeter v0.1.0 软件版</a></td>
+    <td><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware">⬇️ 下载 CodexMeter v0.1.0 硬件版</a></td>
+  </tr>
+</table>
 
 > 更多下载说明、历史版本和使用方式，可以查看 [downloads/README.md](downloads/README.md)。
+> 硬件小屏固件可通过 [ESP32-C3 Web Flasher](https://mrwancc.github.io/CodexMeter/flash/) 网页刷入。
 
 ## 功能特性
 

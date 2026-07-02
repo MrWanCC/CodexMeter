@@ -16,6 +16,20 @@ esp32/sketch_jul1a/sketch_jul1a.ino
 - HTTP：ESP32-C3 接入 Wi-Fi 后，桌面端通过 `/api/usage` 推送
 - AP 配网：首次启动时开启 `CodexMeter-Setup` 热点，用户通过 `http://192.168.4.1` 填写 Wi-Fi
 
+## 网页刷机
+
+硬件版固件可以通过浏览器刷入 ESP32-C3：
+
+[打开 CodexMeter ESP32-C3 Web Flasher](https://mrwancc.github.io/CodexMeter/flash/)
+
+要求：
+
+- 使用 Chrome 或 Edge
+- 通过 HTTPS 打开页面
+- 用数据线连接 ESP32-C3
+
+如果页面暂时打不开，需要在 GitHub 仓库设置中启用 Pages，来源选择 `main` 分支的 `/docs` 目录。
+
 ## 为什么保留 Wi-Fi HTTP
 
 USB 串口适合快速验证，但正式使用有明显限制：
@@ -38,6 +52,7 @@ Wi-Fi + HTTP 更适合这个项目：
 - [Wi-Fi 与配网策略](wifi.md)
 - [HTTP / BLE 数据协议](protocol.md)
 - [ESP32-C3 Mini 开发说明](esp32-c3-mini.md)
+- [ESP32-C3 Web Flasher](../flash/)
 
 ## 安全约定
 
