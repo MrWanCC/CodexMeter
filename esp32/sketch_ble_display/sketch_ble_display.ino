@@ -145,10 +145,10 @@ void setupBle() {
   service->start();
 
   BLEAdvertising* advertising = BLEDevice::getAdvertising();
-  BLEAdvertisementData advertisementData;
-  advertisementData.setName(BLE_DEVICE_NAME);
-  advertisementData.setCompleteServices(BLEUUID(BLE_SERVICE_UUID));
-  advertising->setAdvertisementData(advertisementData);
+  BLEAdvertisementData scanResponseData;
+  scanResponseData.setName(BLE_DEVICE_NAME);
+  advertising->addServiceUUID(BLE_SERVICE_UUID);
+  advertising->setScanResponseData(scanResponseData);
   advertising->setScanResponse(true);
   advertising->setMinPreferred(0x06);
   advertising->setMaxPreferred(0x12);

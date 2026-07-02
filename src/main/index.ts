@@ -55,6 +55,7 @@ async function createWindow(): Promise<void> {
       preload: path.join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      experimentalFeatures: true,
       sandbox: false
     }
   })
@@ -124,6 +125,7 @@ async function createWidgetWindow(): Promise<BrowserWindow> {
       preload: path.join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      experimentalFeatures: true,
       sandbox: false
     }
   })
