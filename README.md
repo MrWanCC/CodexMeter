@@ -18,10 +18,30 @@
 
 不想研究源码，可以直接下载桌面版。现在分为两个版本：
 
-| 版本 | 平台 | 适合谁 | 下载 |
-| --- | --- | --- | --- |
-| 软件版 | Windows / macOS | 只需要在电脑上查看 Codex 额度 | [下载 CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
-| 硬件版 | Windows | 需要连接 ESP32-C3 OLED 小屏，支持蓝牙和 HTTP 推送 | [下载 CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
+<table>
+  <tr>
+    <td width="50%">
+      <h3>软件版</h3>
+      <p>适合只在电脑上查看 Codex 额度的用户。</p>
+      <p><strong>平台：</strong>Windows / macOS</p>
+      <p>
+        <a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0">
+          下载软件版
+        </a>
+      </p>
+    </td>
+    <td width="50%">
+      <h3>硬件版</h3>
+      <p>适合需要连接 ESP32-C3 OLED 小屏的用户。</p>
+      <p><strong>平台：</strong>Windows</p>
+      <p>
+        <a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware">
+          下载硬件版
+        </a>
+      </p>
+    </td>
+  </tr>
+</table>
 
 也可以查看仓库内的 [downloads/README.md](downloads/README.md)。
 
