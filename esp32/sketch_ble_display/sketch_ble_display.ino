@@ -19,6 +19,8 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+bool bleConnected = false;
+bool restartAdvertising = false;
 String lastRefresh = "--:--";
 String planName = "Codex";
 String fiveHourReset = "--";
@@ -114,9 +116,26 @@ class UsageCharacteristicCallbacks : public BLECharacteristicCallbacks {
   }
 };
 
+class DisplayServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer* server) override {
+    bleConnected = true;
+    restartAdvertising = false;
+    Serial.println("BLE connected");
+    showMessage("BLE connected", BLE_DEVICE_NAME);
+  }
+
+  void onDisconnect(BLEServer* server) override {
+    bleConnected = false;
+    restartAdvertising = true;
+    Serial.println("BLE disconnected");
+    showMessage("BLE advertising", BLE_DEVICE_NAME);
+  }
+};
+
 void setupBle() {
   BLEDevice::init(BLE_DEVICE_NAME);
   BLEServer* server = BLEDevice::createServer();
+  server->setCallbacks(new DisplayServerCallbacks());
   BLEService* service = server->createService(BLE_SERVICE_UUID);
   BLECharacteristic* usage = service->createCharacteristic(
     BLE_USAGE_UUID,
@@ -129,6 +148,7 @@ void setupBle() {
   advertising->addServiceUUID(BLE_SERVICE_UUID);
   advertising->setScanResponse(true);
   BLEDevice::startAdvertising();
+  Serial.println("BLE advertising");
 }
 
 void setup() {
@@ -142,10 +162,16 @@ void setup() {
     return;
   }
 
-  showMessage("BLE ready", BLE_DEVICE_NAME);
   setupBle();
+  showMessage("BLE advertising", BLE_DEVICE_NAME);
 }
 
 void loop() {
+  if (restartAdvertising) {
+    delay(300);
+    BLEDevice::startAdvertising();
+    restartAdvertising = false;
+    Serial.println("BLE advertising restarted");
+  }
   delay(1000);
 }

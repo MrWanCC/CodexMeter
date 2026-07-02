@@ -39,3 +39,9 @@ Usage Characteristic UUID: 6f4d0002-9c8f-4c2a-9f12-000000000002
 {"t":"15:27","p":"Plus","h":96,"hr":"18:59","w":38,"wr":"07/07 10:18"}
 ```
 
+## 搜不到蓝牙时
+
+1. 确认 Arduino IDE 打开的是 `sketch_ble_display.ino`，不是 `sketch_jul1a.ino`。
+2. 重新上电后，OLED 应显示 `BLE advertising`。
+3. 如果 Windows 曾经连接过但现在搜不到，先在系统蓝牙设置里删除旧的 `CodexMeter Display`，再重新连接。
+4. 断开连接后，固件会自动重新开始广播。
