@@ -174,7 +174,7 @@ const hardwareLastPushLabel = computed(() => {
 })
 const hardwareDisplayAddress = computed(() => {
   if (hardwareMode.value === 'ble') {
-    return bleConnected.value ? bleDeviceName.value || 'CodexMeter Display' : '未连接'
+    return bleConnected.value ? bleDeviceName.value || 'CodexMeter' : '未连接'
   }
 
   if (!hardwareConnected.value || !settings.value?.hardwareEndpoint) {
@@ -461,10 +461,14 @@ async function connectBluetoothDisplay(pushAfterConnect: boolean): Promise<void>
 
 async function requestBleCharacteristic(): Promise<BluetoothRemoteGATTCharacteristic> {
   const device = await navigator.bluetooth!.requestDevice({
-    filters: [{ namePrefix: 'CodexMeter' }],
+    filters: [
+      { services: [BLE_SERVICE_UUID] },
+      { namePrefix: 'CodexMeter' },
+      { namePrefix: 'ESP32' }
+    ],
     optionalServices: [BLE_SERVICE_UUID]
   })
-  bleDeviceName.value = device.name ?? 'CodexMeter Display'
+  bleDeviceName.value = device.name ?? 'CodexMeter'
   device.addEventListener('gattserverdisconnected', () => {
     bleCharacteristic = undefined
     bleConnected.value = false
@@ -807,7 +811,7 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
           </label>
           <div v-else class="hardware-ble-summary">
             <Bluetooth :size="16" :stroke-width="2" />
-            <span>{{ bleConnected ? hardwareDisplayAddress : '搜索 CodexMeter Display 蓝牙小屏' }}</span>
+            <span>{{ bleConnected ? hardwareDisplayAddress : '搜索 CodexMeter 蓝牙小屏' }}</span>
           </div>
           <div class="hardware-sync-row">
             <div>

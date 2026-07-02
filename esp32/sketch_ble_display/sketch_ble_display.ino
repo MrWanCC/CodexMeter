@@ -13,7 +13,7 @@
 #define OLED_SCL 4
 #define OLED_RESET -1
 
-#define BLE_DEVICE_NAME "CodexMeter Display"
+#define BLE_DEVICE_NAME "CodexMeter"
 #define BLE_SERVICE_UUID "6f4d0001-9c8f-4c2a-9f12-000000000001"
 #define BLE_USAGE_UUID "6f4d0002-9c8f-4c2a-9f12-000000000002"
 
@@ -147,6 +147,8 @@ void setupBle() {
   BLEAdvertising* advertising = BLEDevice::getAdvertising();
   advertising->addServiceUUID(BLE_SERVICE_UUID);
   advertising->setScanResponse(true);
+  advertising->setMinPreferred(0x06);
+  advertising->setMaxPreferred(0x12);
   BLEDevice::startAdvertising();
   Serial.println("BLE advertising");
 }
