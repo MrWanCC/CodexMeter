@@ -2,9 +2,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <ArduinoJson.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
+#include <NimBLEDevice.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -107,8 +105,8 @@ void applyUsageJson(String body) {
   drawScreen();
 }
 
-class UsageCharacteristicCallbacks : public BLECharacteristicCallbacks {
-  void onWrite(BLECharacteristic* characteristic) override {
+class UsageCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* characteristic, NimBLEConnInfo& connInfo) override {
     String body = characteristic->getValue().c_str();
     Serial.print("BLE usage ");
     Serial.println(body);
@@ -116,15 +114,15 @@ class UsageCharacteristicCallbacks : public BLECharacteristicCallbacks {
   }
 };
 
-class DisplayServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* server) override {
+class DisplayServerCallbacks : public NimBLEServerCallbacks {
+  void onConnect(NimBLEServer* server, NimBLEConnInfo& connInfo) override {
     bleConnected = true;
     restartAdvertising = false;
     Serial.println("BLE connected");
     showMessage("BLE connected", BLE_DEVICE_NAME);
   }
 
-  void onDisconnect(BLEServer* server) override {
+  void onDisconnect(NimBLEServer* server, NimBLEConnInfo& connInfo, int reason) override {
     bleConnected = false;
     restartAdvertising = true;
     Serial.println("BLE disconnected");
@@ -132,28 +130,33 @@ class DisplayServerCallbacks : public BLEServerCallbacks {
   }
 };
 
+void startBleAdvertising() {
+  NimBLEAdvertising* advertising = NimBLEDevice::getAdvertising();
+  advertising->start();
+}
+
 void setupBle() {
-  BLEDevice::init(BLE_DEVICE_NAME);
-  BLEDevice::setPower(ESP_PWR_LVL_P9);
-  BLEServer* server = BLEDevice::createServer();
+  NimBLEDevice::init(BLE_DEVICE_NAME);
+  NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+  NimBLEDevice::setMTU(128);
+
+  NimBLEServer* server = NimBLEDevice::createServer();
   server->setCallbacks(new DisplayServerCallbacks());
-  BLEService* service = server->createService(BLE_SERVICE_UUID);
-  BLECharacteristic* usage = service->createCharacteristic(
+  NimBLEService* service = server->createService(BLE_SERVICE_UUID);
+  NimBLECharacteristic* usage = service->createCharacteristic(
     BLE_USAGE_UUID,
-    BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR
+    NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR
   );
   usage->setCallbacks(new UsageCharacteristicCallbacks());
   service->start();
 
-  BLEAdvertising* advertising = BLEDevice::getAdvertising();
-  BLEAdvertisementData advertisementData;
-  advertisementData.setFlags(0x06);
-  advertisementData.setName(BLE_DEVICE_NAME);
-  advertising->setAdvertisementData(advertisementData);
-  advertising->setScanResponse(false);
-  advertising->setMinPreferred(0x06);
-  advertising->setMaxPreferred(0x12);
-  BLEDevice::startAdvertising();
+  NimBLEAdvertising* advertising = NimBLEDevice::getAdvertising();
+  advertising->setName(BLE_DEVICE_NAME);
+  advertising->addServiceUUID(BLE_SERVICE_UUID);
+  advertising->setScanResponse(true);
+  advertising->setMinInterval(160);
+  advertising->setMaxInterval(240);
+  startBleAdvertising();
   Serial.println("BLE advertising");
 }
 
@@ -175,12 +178,9 @@ void setup() {
 void loop() {
   if (restartAdvertising) {
     delay(300);
-    BLEDevice::startAdvertising();
+    startBleAdvertising();
     restartAdvertising = false;
     Serial.println("BLE advertising restarted");
-  }
-  if (!bleConnected) {
-    BLEDevice::startAdvertising();
   }
   delay(1000);
 }

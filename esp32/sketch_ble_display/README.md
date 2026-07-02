@@ -15,7 +15,7 @@ esp32/sketch_ble_display/sketch_ble_display.ino
 - Adafruit SSD1306
 - Adafruit GFX Library
 - ArduinoJson
-- ESP32 Arduino Core 自带 BLE 库
+- NimBLE-Arduino
 
 ## OLED 引脚
 
