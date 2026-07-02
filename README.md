@@ -15,9 +15,12 @@
 
 ## 直接下载
 
-不想研究源码，可以直接下载 Windows 便携版：
+不想研究源码，可以直接下载 Windows 便携版。现在分为两个版本：
 
-[下载 CodexMeter v0.1.0 Windows Portable](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0)
+| 版本 | 适合谁 | 下载 |
+| --- | --- | --- |
+| 软件版 | 只需要在电脑上查看 Codex 额度 | [下载 CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
+| 硬件版 | 需要连接 ESP32-C3 OLED 小屏，支持蓝牙和 HTTP 推送 | [下载 CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 也可以查看仓库内的 [downloads/README.md](downloads/README.md)。
 
@@ -30,7 +33,9 @@
 - OAuth 授权读取用量数据
 - 本地安全存储授权信息
 - 不发起模型请求，不采集聊天内容
-- 预留串口屏、蓝牙、MQTT、外部小屏等硬件扩展位
+- 硬件版支持 ESP32-C3 OLED 小屏
+- 硬件版支持蓝牙和 HTTP 两种推送方式
+- 硬件版支持 ESP32-C3 Wi-Fi 配网页
 
 ## 项目截图
 

@@ -4,11 +4,16 @@
 
 ## 当前版本
 
-- Windows x64 便携版：`CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe`
+| 版本 | 说明 | 下载 |
+| --- | --- | --- |
+| 软件版 | 不带硬件连接功能，只在电脑本地查看 Codex 额度 | [CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
+| 硬件版 | 支持蓝牙和 HTTP 连接 ESP32-C3 OLED 小屏 | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 ## 使用方式
 
 双击 `.exe` 即可运行，不需要先安装开发环境。
+
+如果只想看额度，下载软件版。需要外接小屏时，下载硬件版。
 
 如果 Windows 提示未知发布者，这是因为当前版本还没有代码签名证书。确认文件来自本仓库后再运行。
 
