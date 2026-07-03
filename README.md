@@ -45,6 +45,24 @@
 > 更多下载说明、历史版本和使用方式，可以查看 [downloads/README.md](downloads/README.md)。
 > 硬件小屏固件可通过 [ESP32-C3 Web Flasher](https://mrwancc.github.io/CodexMeter/flash/) 网页刷入。
 
+## 硬件版快速上手
+
+硬件版适合把 Codex 额度状态推送到 ESP32-C3 OLED 小屏，支持蓝牙直连和 HTTP 局域网推送。
+
+- 推荐硬件：ESP32-C3 Mini + SSD1306 128x64 OLED
+- 接线：`VDD->3V3`、`GND->GND`、`SCL->GPIO4`、`SDA->GPIO6`、`RES/RESET` 不接
+- 刷机：[ESP32-C3 Web Flasher](https://mrwancc.github.io/CodexMeter/flash/)
+- 配网热点：`CodexMeter-Setup`，密码 `12345678`
+- 配网页：`http://192.168.4.1`
+
+完整接线、刷机、配网和连接教程见：[docs/hardware.md](docs/hardware.md)。
+
+<p align="center">
+  <img src="docs/images/hardware-wiring.png" width="32%" alt="CodexMeter 硬件接线示意图" />
+  <img src="docs/images/hardware-flashing.png" width="32%" alt="CodexMeter ESP32-C3 刷固件教程" />
+  <img src="docs/images/hardware-quickstart.png" width="32%" alt="CodexMeter 硬件版使用速查" />
+</p>
+
 ## 功能特性
 
 - 实时监控 5 小时额度使用情况
@@ -142,9 +160,9 @@ downloads/    可直接使用的成品说明和便携版
 
 ## 硬件显示
 
-硬件联动开发在 `hardware-software` 分支继续推进，当前目标是 ESP32-C3 Mini 通过 Wi-Fi 接收桌面端 HTTP 推送。
+硬件版支持 ESP32-C3 Mini + SSD1306 OLED 小屏，可通过 BLE 蓝牙或 HTTP 局域网推送额度状态。
 
-文档见 [docs/hardware/README.md](docs/hardware/README.md)。
+接线、刷固件、配网和连接教程见 [docs/hardware.md](docs/hardware.md)。
 
 ## Roadmap
 
