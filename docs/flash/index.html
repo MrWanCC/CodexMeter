@@ -67,18 +67,18 @@
         min-height: 100vh;
         display: grid;
         place-items: center;
-        padding: 54px 68px;
+        padding: 32px 44px;
       }
 
       .canvas {
-        width: min(1760px, 100%);
-        min-height: min(860px, calc(100vh - 108px));
+        width: min(1510px, 100%);
+        min-height: min(760px, calc(100vh - 64px));
         display: grid;
-        grid-template-columns: minmax(0, 1.08fr) 1px minmax(430px, 0.72fr);
-        gap: 38px;
-        padding: clamp(34px, 4vw, 68px);
+        grid-template-columns: minmax(820px, 1.08fr) 1px minmax(430px, 0.68fr);
+        gap: 34px;
+        padding: clamp(28px, 3.2vw, 48px);
         border: 1px solid rgba(148, 163, 184, 0.28);
-        border-radius: 34px;
+        border-radius: 30px;
         background:
           linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.92)),
           #ffffff;
@@ -95,140 +95,151 @@
 
       .left {
         display: grid;
-        grid-template-rows: auto minmax(190px, 1fr) auto;
+        grid-template-columns: minmax(500px, 0.62fr) minmax(320px, 0.38fr);
+        grid-template-rows: minmax(372px, auto) auto;
+        column-gap: 28px;
         align-content: space-between;
+        align-items: start;
         min-width: 0;
       }
 
       .badge {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 9px;
         width: fit-content;
-        min-height: 54px;
-        padding: 0 24px;
+        max-width: 100%;
+        min-height: 44px;
+        padding: 0 20px;
         border: 1px solid rgba(37, 99, 235, 0.26);
         border-radius: 999px;
         color: #2563eb;
         background: linear-gradient(180deg, rgba(239, 246, 255, 0.86), rgba(255, 255, 255, 0.72));
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 800;
+        white-space: nowrap;
       }
 
       .badge iconify-icon {
-        font-size: 24px;
+        font-size: 22px;
       }
 
       h1 {
-        margin: 44px 0 0;
-        max-width: 710px;
+        margin: 32px 0 0;
+        max-width: 620px;
         color: #07111f;
-        font-size: clamp(54px, 5.4vw, 86px);
-        line-height: 1.14;
+        font-size: clamp(48px, 4vw, 64px);
+        line-height: 1.08;
         letter-spacing: 0;
+      }
+
+      h1 .line {
+        display: block;
+        white-space: nowrap;
       }
 
       h1 span {
         color: #2563eb;
+        white-space: nowrap;
       }
 
       .summary {
-        max-width: 680px;
-        margin: 32px 0 0;
+        max-width: 610px;
+        margin: 26px 0 0;
         color: #334155;
-        font-size: 22px;
-        line-height: 1.7;
+        font-size: 18px;
+        line-height: 1.65;
       }
 
       .hero-visual {
         position: relative;
-        align-self: center;
+        align-self: start;
         justify-self: end;
-        width: min(390px, 42%);
-        min-width: 300px;
-        aspect-ratio: 1;
-        margin-top: -120px;
-        margin-right: 28px;
+        width: min(390px, 100%);
+        min-width: 320px;
+        aspect-ratio: 1.08;
+        margin-top: 58px;
+        margin-left: 0;
+        margin-right: 0;
       }
 
-      .circuit {
+      .device-sketch {
         position: absolute;
-        inset: 4% 0 0;
-        opacity: 0.8;
-        background:
-          linear-gradient(90deg, transparent 0 18%, rgba(125, 211, 252, 0.55) 18% 19%, transparent 19% 100%),
-          linear-gradient(0deg, transparent 0 22%, rgba(125, 211, 252, 0.5) 22% 23%, transparent 23% 100%);
-        clip-path: polygon(6% 44%, 24% 44%, 24% 26%, 42% 26%, 42% 12%, 58% 12%, 58% 26%, 74% 26%, 74% 43%, 94% 43%, 94% 49%, 70% 49%, 70% 33%, 54% 33%, 54% 20%, 46% 20%, 46% 34%, 30% 34%, 30% 51%, 6% 51%);
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        filter: drop-shadow(0 28px 28px rgba(37, 99, 235, 0.16));
       }
 
-      .device {
-        position: absolute;
-        left: 19%;
-        top: 18%;
-        width: 58%;
-        height: 58%;
-        border-radius: 28px;
-        transform: rotateX(58deg) rotateZ(-38deg);
-        transform-style: preserve-3d;
-        background: linear-gradient(145deg, #ffffff, #dce9ff);
-        box-shadow:
-          24px 34px 42px rgba(37, 99, 235, 0.2),
-          inset -10px -12px 20px rgba(37, 99, 235, 0.12),
-          inset 8px 8px 18px rgba(255, 255, 255, 0.9);
+      .device-sketch .wire {
+        fill: none;
+        stroke: #9ee7f5;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0.46;
       }
 
-      .device::before {
-        content: "</>";
-        position: absolute;
-        inset: 17%;
-        display: grid;
-        place-items: center;
-        border-radius: 18px;
-        color: #dbeafe;
-        background: linear-gradient(145deg, #1d4ed8, #0f2f78);
-        box-shadow: inset 0 0 0 4px rgba(147, 197, 253, 0.28);
-        font-size: 46px;
-        font-weight: 900;
-        transform: translateZ(28px);
+      .device-sketch .wire-dot {
+        fill: #8de4f4;
+        opacity: 0.5;
       }
 
-      .device::after {
-        content: "";
-        position: absolute;
-        left: 30%;
-        right: 30%;
-        bottom: 9%;
-        height: 12px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #2563eb, #38bdf8);
-        transform: translateZ(32px);
+      .device-sketch .base-fill {
+        stroke: #9cc5ff;
+        stroke-width: 3;
       }
 
-      .base {
-        position: absolute;
-        left: 13%;
-        right: 13%;
-        bottom: 10%;
-        height: 25%;
-        border-radius: 30px;
-        transform: rotateX(58deg) rotateZ(-38deg);
-        background: linear-gradient(145deg, rgba(239, 246, 255, 0.96), rgba(147, 197, 253, 0.4));
-        box-shadow: 24px 30px 44px rgba(37, 99, 235, 0.18);
+      .device-sketch .body {
+        stroke: #9cc5ff;
+        stroke-width: 4;
+      }
+
+      .device-sketch .side {
+        opacity: 0.72;
+      }
+
+      .device-sketch .screen {
+        stroke: #6ea8ff;
+        stroke-width: 4;
+      }
+
+      .device-sketch .code {
+        fill: none;
+        stroke: #ffffff;
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .device-sketch .led-bar {
+        fill: url(#ledGrad);
+      }
+
+      .device-sketch .led {
+        fill: #b8edff;
+      }
+
+      .device-sketch .shadow {
+        fill: #bfdbfe;
+        opacity: 0.34;
       }
 
       .features {
+        grid-column: 1 / -1;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 24px;
-        margin-top: 42px;
+        gap: 18px;
+        margin-top: 18px;
       }
 
       .feature {
-        min-height: 205px;
-        padding: 26px;
+        min-height: 158px;
+        padding: 20px;
         border: 1px solid rgba(147, 197, 253, 0.56);
-        border-radius: 22px;
+        border-radius: 18px;
         background: rgba(255, 255, 255, 0.68);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
       }
@@ -236,32 +247,32 @@
       .feature-icon {
         display: grid;
         place-items: center;
-        width: 70px;
-        height: 70px;
-        border-radius: 22px;
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
         color: #2563eb;
         background: linear-gradient(180deg, #eff6ff, #dbeafe);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
       }
 
       .feature-icon iconify-icon {
-        font-size: 40px;
+        font-size: 32px;
       }
 
       .feature strong {
         display: block;
-        margin-top: 22px;
+        margin-top: 16px;
         color: #07111f;
-        font-size: 24px;
+        font-size: 20px;
         line-height: 1.2;
       }
 
       .feature span {
         display: block;
-        margin-top: 12px;
+        margin-top: 8px;
         color: #475569;
-        font-size: 17px;
-        line-height: 1.55;
+        font-size: 15px;
+        line-height: 1.5;
       }
 
       .right {
@@ -274,20 +285,20 @@
       .right h2 {
         margin: 0;
         color: #07111f;
-        font-size: 40px;
+        font-size: 34px;
         letter-spacing: 0;
       }
 
       .right > p {
-        margin: 14px 0 30px;
+        margin: 12px 0 24px;
         color: #475569;
-        font-size: 19px;
+        font-size: 17px;
         line-height: 1.55;
       }
 
       .steps {
         display: grid;
-        gap: 16px;
+        gap: 12px;
         margin: 0;
         padding: 0;
         list-style: none;
@@ -295,13 +306,13 @@
 
       .steps li {
         display: grid;
-        grid-template-columns: 46px 42px minmax(0, 1fr);
+        grid-template-columns: 40px 34px minmax(0, 1fr);
         align-items: center;
-        gap: 16px;
-        min-height: 76px;
-        padding: 14px 20px 14px 14px;
+        gap: 14px;
+        min-height: 64px;
+        padding: 12px 18px 12px 12px;
         border: 1px solid rgba(147, 197, 253, 0.48);
-        border-radius: 18px;
+        border-radius: 16px;
         background: rgba(255, 255, 255, 0.78);
         box-shadow: 0 12px 28px rgba(37, 99, 235, 0.06);
       }
@@ -309,24 +320,24 @@
       .steps b {
         display: grid;
         place-items: center;
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
         color: #ffffff;
         background: linear-gradient(180deg, #2563eb, #1d4ed8);
         box-shadow: 0 8px 16px rgba(37, 99, 235, 0.26);
-        font-size: 24px;
+        font-size: 21px;
       }
 
       .steps iconify-icon {
         color: #2563eb;
-        font-size: 34px;
+        font-size: 29px;
       }
 
       .steps span {
         color: #1f2937;
-        font-size: 18px;
-        line-height: 1.55;
+        font-size: 16px;
+        line-height: 1.5;
       }
 
       .steps a {
@@ -337,21 +348,21 @@
 
       .installer {
         position: relative;
-        min-height: 170px;
-        margin-top: 26px;
-        padding: 28px 210px 28px 28px;
+        min-height: 132px;
+        margin-top: 20px;
+        padding: 22px 160px 22px 24px;
         overflow: hidden;
         border: 1px solid rgba(37, 99, 235, 0.28);
-        border-radius: 22px;
+        border-radius: 18px;
         background:
           radial-gradient(circle at 88% 45%, rgba(96, 165, 250, 0.28), transparent 32%),
           linear-gradient(135deg, rgba(239, 246, 255, 0.96), rgba(255, 255, 255, 0.88));
       }
 
       .installer-label {
-        margin: 0 0 18px;
+        margin: 0 0 14px;
         color: #1e3a8a;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 850;
       }
 
@@ -362,36 +373,36 @@
 
       .shield {
         position: absolute;
-        right: 28px;
-        bottom: 6px;
-        width: 150px;
-        height: 150px;
+        right: 24px;
+        bottom: 0;
+        width: 118px;
+        height: 118px;
         opacity: 0.82;
         color: #bfdbfe;
       }
 
       .shield iconify-icon {
-        font-size: 150px;
+        font-size: 118px;
         filter: drop-shadow(0 14px 18px rgba(37, 99, 235, 0.18));
       }
 
       .note {
         display: grid;
-        grid-template-columns: 28px minmax(0, 1fr);
-        gap: 12px;
-        margin-top: 26px;
-        padding: 18px 22px;
+        grid-template-columns: 24px minmax(0, 1fr);
+        gap: 10px;
+        margin-top: 18px;
+        padding: 14px 18px;
         border: 1px solid rgba(148, 163, 184, 0.24);
-        border-radius: 18px;
+        border-radius: 16px;
         color: #475569;
         background: rgba(248, 250, 252, 0.72);
-        font-size: 15px;
-        line-height: 1.7;
+        font-size: 14px;
+        line-height: 1.62;
       }
 
       .note iconify-icon {
         color: #2563eb;
-        font-size: 26px;
+        font-size: 23px;
       }
 
       code {
@@ -410,6 +421,10 @@
         .canvas {
           grid-template-columns: 1fr;
           gap: 28px;
+        }
+
+        .left {
+          grid-template-columns: minmax(0, 1fr);
         }
 
         .divider {
@@ -472,7 +487,11 @@
               <span>CodexMeter 硬件刷机工具</span>
             </div>
 
-            <h1>给 ESP32-C3 小屏刷入 <span>CodexMeter</span> 固件</h1>
+            <h1>
+              <span class="line">给 ESP32-C3</span>
+              <span class="line">小屏刷入</span>
+              <span class="line">CodexMeter 固件</span>
+            </h1>
 
             <p class="summary">
               无需安装 Arduino IDE，使用 Chrome 或 Edge 打开本页，连接 ESP32-C3，点击安装即可写入小屏固件。
@@ -481,9 +500,72 @@
           </div>
 
           <div class="hero-visual" aria-hidden="true">
-            <div class="circuit"></div>
-            <div class="base"></div>
-            <div class="device"></div>
+            <svg class="device-sketch" viewBox="0 0 520 440" role="img" aria-label="ESP32-C3 小屏手绘图">
+              <defs>
+                <linearGradient id="bodyGrad" x1="145" y1="72" x2="348" y2="304" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#ffffff" />
+                  <stop offset="0.58" stop-color="#eef6ff" />
+                  <stop offset="1" stop-color="#cfe3ff" />
+                </linearGradient>
+                <linearGradient id="sideGrad" x1="300" y1="80" x2="380" y2="286" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#e9f4ff" />
+                  <stop offset="1" stop-color="#9ec7ff" />
+                </linearGradient>
+                <linearGradient id="screenGrad" x1="190" y1="118" x2="290" y2="230" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#245ee8" />
+                  <stop offset="1" stop-color="#0f2b80" />
+                </linearGradient>
+                <linearGradient id="baseGrad" x1="100" y1="266" x2="360" y2="370" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#ffffff" />
+                  <stop offset="0.55" stop-color="#e7f2ff" />
+                  <stop offset="1" stop-color="#9fc6ff" />
+                </linearGradient>
+                <linearGradient id="ledGrad" x1="210" y1="250" x2="290" y2="250" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#1d4ed8" />
+                  <stop offset="1" stop-color="#3bd3ff" />
+                </linearGradient>
+                <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
+                  <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#2563eb" flood-opacity="0.2" />
+                </filter>
+              </defs>
+
+              <path class="wire" d="M54 212 H130 V164 H184" />
+              <path class="wire" d="M84 270 H164 V304 H218" />
+              <path class="wire" d="M92 146 H142 V112 H198" />
+              <path class="wire" d="M360 124 H432 V64" />
+              <path class="wire" d="M374 188 H466 V142" />
+              <path class="wire" d="M364 250 H448 V210" />
+              <path class="wire" d="M300 96 V46 H244" />
+              <path class="wire" d="M210 104 V56" />
+              <circle class="wire-dot" cx="54" cy="212" r="5" />
+              <circle class="wire-dot" cx="84" cy="270" r="5" />
+              <circle class="wire-dot" cx="92" cy="146" r="5" />
+              <circle class="wire-dot" cx="432" cy="64" r="5" />
+              <circle class="wire-dot" cx="466" cy="142" r="5" />
+              <circle class="wire-dot" cx="448" cy="210" r="5" />
+              <circle class="wire-dot" cx="210" cy="56" r="5" />
+
+              <ellipse class="shadow" cx="272" cy="356" rx="150" ry="34" />
+              <g filter="url(#softShadow)">
+                <path class="base-fill" fill="url(#baseGrad)" d="M98 294 L260 220 L424 286 L258 364 Z" />
+                <path class="side" fill="#b7d6ff" d="M98 294 L258 364 L258 394 L98 324 Z" />
+                <path class="side" fill="#82b6ff" d="M258 364 L424 286 L424 314 L258 394 Z" />
+                <path fill="#2b72f6" opacity="0.92" d="M176 304 L260 264 L346 298 L260 340 Z" />
+                <path fill="#7dd3fc" opacity="0.88" d="M204 306 L260 280 L318 302 L260 328 Z" />
+
+                <path class="side" fill="url(#sideGrad)" d="M328 74 C372 90 394 116 394 160 V264 C394 302 364 324 326 306 Z" />
+                <rect class="body" x="142" y="58" width="190" height="258" rx="40" fill="url(#bodyGrad)" transform="rotate(-2 237 187)" />
+                <path fill="#ffffff" opacity="0.72" d="M178 78 C226 62 292 76 318 108" />
+                <rect class="screen" x="176" y="100" width="122" height="138" rx="19" fill="url(#screenGrad)" transform="rotate(-2 237 169)" />
+                <path class="code" d="M216 150 L188 176 L216 202" />
+                <path class="code" d="M260 150 L288 176 L260 202" />
+                <path class="code" d="M252 142 L234 210" />
+                <rect class="led-bar" x="194" y="256" width="94" height="22" rx="11" transform="rotate(-2 241 267)" />
+                <circle class="led" cx="218" cy="266" r="3.5" />
+                <circle class="led" cx="242" cy="265" r="3.5" />
+                <circle class="led" cx="266" cy="264" r="3.5" />
+              </g>
+            </svg>
           </div>
 
           <div class="features">
@@ -519,7 +601,7 @@
             </li>
             <li>
               <b>2</b>
-              <iconify-icon icon="solar:printer-2-bold"></iconify-icon>
+              <iconify-icon icon="solar:download-minimalistic-bold"></iconify-icon>
               <span>点击下方安装按钮，选择 ESP32-C3 对应串口。</span>
             </li>
             <li>
