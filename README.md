@@ -57,11 +57,24 @@
 
 完整接线、刷机、配网和连接教程见：[docs/hardware.md](docs/hardware.md)。
 
-<p align="center">
-  <img src="docs/images/hardware-wiring.png" width="32%" alt="CodexMeter 硬件接线示意图" />
-  <img src="docs/images/hardware-flashing.png" width="32%" alt="CodexMeter ESP32-C3 刷固件教程" />
-  <img src="docs/images/hardware-quickstart.png" width="32%" alt="CodexMeter 硬件版使用速查" />
-</p>
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>1. 硬件接线</strong><br />
+      <img src="docs/images/hardware-wiring.png" width="100%" alt="CodexMeter 硬件接线示意图" />
+    </td>
+    <td width="50%" align="center">
+      <strong>2. 网页刷机</strong><br />
+      <img src="docs/images/hardware-flashing.png" width="100%" alt="CodexMeter ESP32-C3 刷固件教程" />
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <strong>3. 接线速查与使用方式</strong><br />
+      <img src="docs/images/hardware-quickstart.png" width="72%" alt="CodexMeter 硬件版使用速查" />
+    </td>
+  </tr>
+</table>
 
 ## 功能特性
 
