@@ -14,6 +14,7 @@
   <img src="docs/images/showcase-overview.png" width="850" alt="CodexMeter overview" />
 </p>
 
+
 ## 直接下载
 
 不想研究源码？选择适合你的版本，下载后即可使用。
@@ -60,13 +61,17 @@
 ## 项目截图
 
 <p align="center">
-  <img src="docs/images/showcase-main.png" width="48%" alt="CodexMeter 主界面" />
-  <img src="docs/images/showcase-widget.png" width="48%" alt="CodexMeter 固定小组件" />
+  <img src="docs/images/showcase-02-main.png" width="48%" alt="CodexMeter 主界面额度总览" />
+  <img src="docs/images/showcase-03-widget.png" width="48%" alt="CodexMeter 固定小组件" />
 </p>
 
 <p align="center">
-  <img src="docs/images/showcase-security.png" width="48%" alt="CodexMeter 安全说明" />
-  <img src="docs/images/showcase-roadmap.png" width="48%" alt="CodexMeter Roadmap" />
+  <img src="docs/images/showcase-04-reset-card.png" width="48%" alt="CodexMeter 重置卡" />
+  <img src="docs/images/showcase-05-external-screen.png" width="48%" alt="CodexMeter 连接外部小屏" />
+</p>
+
+<p align="center">
+  <img src="docs/images/showcase-06-hardware-screen.png" width="48%" alt="CodexMeter 外部小屏显示效果" />
 </p>
 
 ## 安全说明
