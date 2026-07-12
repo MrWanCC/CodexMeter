@@ -367,13 +367,18 @@ function openHardwareDialog(): void {
   hardwareStatusText.value = ''
 }
 
-function toggleHardwareConnection(): void {
-  if (hardwareConnected.value) {
-    void disconnectHardwareDisplay()
+function toggleAccountConnection(): void {
+  if (connecting.value) {
+    void cancelOAuth()
     return
   }
 
-  openHardwareDialog()
+  if (oauthConnected.value) {
+    void disconnectOAuth()
+    return
+  }
+
+  void connectOAuth()
 }
 
 async function updateInterval(value: number): Promise<void> {
@@ -1077,12 +1082,12 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
               {{ alwaysOnTop ? '已置顶' : '未置顶' }}
             </div>
           </button>
-          <button type="button" :class="{ active: hardwareConnected }" @click="toggleHardwareConnection">
-            <Monitor :size="18" :stroke-width="2" />
+          <button type="button" :class="{ active: oauthConnected }" @click="toggleAccountConnection">
+            <User :size="18" :stroke-width="2" />
             <span>连接</span>
-            <div class="control-status" :class="{ active: hardwareConnected }">
+            <div class="control-status" :class="{ active: oauthConnected }">
               <CheckCircle2 :size="14" :stroke-width="2" />
-              {{ hardwareConnected ? '断开' : '连接' }}
+              {{ connecting ? '取消' : oauthConnected ? '断开' : '连接' }}
             </div>
           </button>
         </section>
