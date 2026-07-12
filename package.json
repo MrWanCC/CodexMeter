@@ -1,6 +1,6 @@
 {
   "name": "codexmeter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local Codex quota monitor for Windows with a compact desktop widget.",
   "author": "MrWanCC",
   "license": "SEE LICENSE IN LICENSE",

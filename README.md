@@ -1,125 +1,53 @@
 # CodexMeter
 
+CodexMeter 是一个本地运行的 Codex 额度状态面板，支持查看 5 小时额度、7 天额度、重置时间、额度重置卡，并提供桌面悬浮球。
+
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-2563eb?logo=windows)
 ![macOS](https://img.shields.io/badge/macOS-software%20edition-111827?logo=apple)
 ![Electron](https://img.shields.io/badge/Electron-Desktop-47848f?logo=electron)
 ![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs)
-![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?logo=typescript)
 ![Release](https://img.shields.io/github/v/release/MrWanCC/CodexMeter?label=release)
-![License](https://img.shields.io/badge/license-non--commercial-orange)
-
-本地运行的 Codex 用量监控桌面工具，支持 5 小时 / 7 天额度、重置时间、桌面小组件和本地安全存储。
 
 <p align="center">
   <img src="docs/images/showcase-overview.png" width="850" alt="CodexMeter overview" />
 </p>
 
-
 ## 直接下载
 
-不想研究源码？选择适合你的版本，下载后即可使用。
+如果只是想使用软件，不需要下载源码。
 
-**Windows 用户推荐下载：**[CodexMeter v0.1.0 Windows 便携版](https://github.com/MrWanCC/CodexMeter/raw/software-edition/downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe)
+**Windows 用户推荐下载：**[CodexMeter v0.1.1 Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.1/CodexMeter-v0.1.1-win-x64-portable.exe)
 
-如果你不确定该下哪个，优先下载上面这个 `.exe`。macOS 用户再进入软件版 Release 选择 `.dmg`。
+macOS 用户进入 [v0.1.1 软件版 Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.1) 下载 `.dmg`：
 
-<table width="100%">
-  <tr>
-    <th width="50%">💻 软件版</th>
-    <th width="50%">🔌 硬件版</th>
-  </tr>
-  <tr>
-    <td>适合只在电脑上查看 Codex 额度的用户</td>
-    <td>适合需要连接 ESP32-C3 OLED 小屏的用户</td>
-  </tr>
-  <tr>
-    <td><strong>平台：</strong>Windows / macOS</td>
-    <td><strong>平台：</strong>Windows</td>
-  </tr>
-  <tr>
-    <td><strong>特点：</strong>无需连接硬件</td>
-    <td><strong>支持：</strong>蓝牙 / HTTP 推送</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/MrWanCC/CodexMeter/raw/software-edition/downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe">⬇️ Windows 直接下载</a><br /><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0">macOS 下载入口</a></td>
-    <td><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware">⬇️ 下载 CodexMeter v0.1.0 硬件版</a></td>
-  </tr>
-</table>
+- Apple 芯片：`CodexMeter-v0.1.1-software-mac-arm64.dmg`
+- Intel 芯片：`CodexMeter-v0.1.1-software-mac-x64.dmg`
 
-> 更多下载说明、历史版本和使用方式，可以查看 [downloads/README.md](downloads/README.md)。
-> 硬件小屏固件可通过 [ESP32-C3 Web Flasher](https://mrwancc.github.io/CodexMeter/flash/) 网页刷入。
+> GitHub Release 页面里的 `Source code (zip)` 和 `Source code (tar.gz)` 是源码包，不是普通用户运行的软件。
 
-## 硬件版快速上手
+| 版本 | 适合用户 | 平台 | 下载 |
+| --- | --- | --- | --- |
+| 软件版 | 只想在电脑本地查看 Codex 额度 | Windows / macOS | [Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.1/CodexMeter-v0.1.1-win-x64-portable.exe) / [macOS Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.1) |
+| 硬件版 | 需要连接 ESP32-C3 OLED 小屏 | Windows | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
-硬件版适合把 Codex 额度状态推送到 ESP32-C3 OLED 小屏，支持蓝牙直连和 HTTP 局域网推送。
+更多下载说明见 [downloads/README.md](downloads/README.md)。
+
+## 软件版功能
+
+- 查看 5 小时额度和 7 天额度
+- 查看重置时间和额度重置卡
+- OAuth 连接或断开 Codex 账号授权
+- 默认 1 分钟自动刷新
+- 桌面悬浮球展示核心额度状态
+- 本地保存授权信息，不上传 Token
+
+## 硬件版说明
+
+硬件版用于把额度状态推送到 ESP32-C3 OLED 小屏，支持蓝牙和 HTTP 推送。
 
 - 推荐硬件：ESP32-C3 Mini + SSD1306 128x64 OLED
-- 接线：`VDD->3V3`、`GND->GND`、`SCL->GPIO4`、`SDA->GPIO6`、`RES/RESET` 不接
-- 刷机：[ESP32-C3 Web Flasher](https://mrwancc.github.io/CodexMeter/flash/)
-- 配网热点：`CodexMeter-Setup`，密码 `12345678`
-- 配网页：`http://192.168.4.1`
-
-完整接线、刷机、配网和连接教程见：[docs/hardware.md](docs/hardware.md)。
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <strong>1. 硬件接线</strong><br />
-      <img src="docs/images/hardware-wiring.png" width="100%" alt="CodexMeter 硬件接线示意图" />
-    </td>
-    <td width="50%" align="center">
-      <strong>2. 网页刷机</strong><br />
-      <img src="docs/images/hardware-flashing.png" width="100%" alt="CodexMeter ESP32-C3 刷固件教程" />
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">
-      <strong>3. 接线速查与使用方式</strong><br />
-      <img src="docs/images/hardware-quickstart.png" width="72%" alt="CodexMeter 硬件版使用速查" />
-    </td>
-  </tr>
-</table>
-
-## 功能特性
-
-- 实时监控 5 小时额度使用情况
-- 实时监控 7 天额度使用情况
-- 显示重置时间倒计时
-- 桌面小组件，可固定、置顶显示
-- OAuth 授权读取用量数据
-- 本地安全存储授权信息
-- 不发起模型请求，不采集聊天内容
-- 硬件版支持 ESP32-C3 OLED 小屏
-- 硬件版支持蓝牙和 HTTP 两种推送方式
-- 硬件版支持 ESP32-C3 Wi-Fi 配网页
-
-## 项目截图
-
-<p align="center">
-  <img src="docs/images/showcase-02-main.png" width="48%" alt="CodexMeter 主界面额度总览" />
-  <img src="docs/images/showcase-03-widget.png" width="48%" alt="CodexMeter 固定小组件" />
-</p>
-
-<p align="center">
-  <img src="docs/images/showcase-04-reset-card.png" width="48%" alt="CodexMeter 重置卡" />
-  <img src="docs/images/showcase-05-external-screen.png" width="48%" alt="CodexMeter 连接外部小屏" />
-</p>
-
-<p align="center">
-  <img src="docs/images/showcase-06-hardware-screen.png" width="48%" alt="CodexMeter 外部小屏显示效果" />
-</p>
-
-## 安全说明
-
-CodexMeter 的目标是做一个本地辅助工具：
-
-- 不发起模型请求
-- 不采集聊天内容
-- 不提交 OAuth Token 到第三方服务
-- 授权数据保存在本机
-- `.env`、本地缓存、构建产物不会提交到仓库
-
-项目会读取当前授权下的用量相关接口。相关接口可能随官方产品变化而调整，如果后续失效，欢迎提交 Issue 或 PR。
+- Web 刷机：[ESP32-C3 Web Flasher](https://mrwancc.github.io/CodexMeter/flash/)
+- 完整教程：[docs/hardware.md](docs/hardware.md)
 
 ## 开发运行
 
@@ -127,7 +55,7 @@ CodexMeter 的目标是做一个本地辅助工具：
 
 - Node.js 20+
 - npm
-- Windows 10/11
+- Windows 10/11 或 macOS
 
 ```powershell
 git clone https://github.com/MrWanCC/CodexMeter.git
@@ -144,64 +72,23 @@ npm run build
 npm run dist:portable
 ```
 
-打包后的文件会输出到 `release/` 目录。
+构建产物输出到 `release/` 目录。
 
-## 技术栈
+## 安全说明
 
-- Electron
-- Vue 3
-- TypeScript
-- Vite
-- Naive UI
-- lucide-vue-next
-- electron-store
-- electron-builder
-- Vitest
-
-## 项目结构
-
-```text
-src/
-  main/       Electron 主进程、OAuth、用量数据读取
-  preload/    安全暴露给渲染进程的 IPC 接口
-  renderer/   Vue 页面、小组件和样式
-  shared/     主进程与渲染进程共享类型和解析逻辑
-tests/        单元测试和 UI 尺寸回归测试
-docs/         使用说明和展示图片
-downloads/    可直接使用的成品说明和便携版
-```
-
-## 使用说明
-
-更完整的使用说明见 [docs/USER_GUIDE.md](docs/USER_GUIDE.md)。
-
-## 硬件显示
-
-硬件版支持 ESP32-C3 Mini + SSD1306 OLED 小屏，可通过 BLE 蓝牙或 HTTP 局域网推送额度状态。
-
-接线、刷固件、配网和连接教程见 [docs/hardware.md](docs/hardware.md)。
-
-## Roadmap
-
-- 更稳定的自动更新方案
-- 硬件显示设备同步
-- 更多额度来源兼容
-- 更完整的发布包和安装指引
-- 多语言文档
-
-## 贡献
-
-欢迎提交 Issue、建议和 PR。这个项目适合学习 Electron 桌面应用、OAuth 数据读取、本地安全存储和桌面小组件 UI。
-
-如果这个项目对你有帮助，欢迎点一个 Star。
+- 不发起模型请求
+- 不采集聊天内容
+- 不把 OAuth Token 提交到第三方服务
+- 授权数据只保存在本机
+- `.env`、本地缓存和构建产物不提交到仓库
 
 ## License
 
-本项目采用自定义非商业许可：
+本项目采用自定义非商业许可证：
 
 - 可以学习
 - 可以个人直接使用
 - 可以非商业二次开发
-- 不允许商用
+- 不允许商业使用
 
 完整条款见 [LICENSE](LICENSE)。

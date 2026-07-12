@@ -1,0 +1,198 @@
+name: Release Software Edition
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, for example v0.1.1"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  CSC_IDENTITY_AUTO_DISCOVERY: false
+
+jobs:
+  build-windows:
+    name: Build Windows portable
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.ref_name, '-') }}
+
+    steps:
+      - name: Resolve release tag
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            "RELEASE_TAG=${{ inputs.tag }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            "RELEASE_TAG=${{ github.ref_name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build Windows portable app
+        run: npm run dist:portable
+
+      - name: Collect Windows asset
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          New-Item -ItemType Directory -Force release-assets | Out-Null
+          Copy-Item -LiteralPath "release/CodexMeter $version.exe" -Destination "release-assets/CodexMeter-$env:RELEASE_TAG-win-x64-portable.exe"
+
+      - name: Upload Windows asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: software-windows
+          path: release-assets/*.exe
+          if-no-files-found: error
+
+  build-macos:
+    name: Build macOS ${{ matrix.arch }} DMG
+    runs-on: macos-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.ref_name, '-') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - arm64
+          - x64
+
+    steps:
+      - name: Resolve release tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ inputs.tag }}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS icon
+        run: |
+          mkdir -p build/icon.iconset
+          sips -z 16 16 build/icon.png --out build/icon.iconset/icon_16x16.png
+          sips -z 32 32 build/icon.png --out build/icon.iconset/icon_16x16@2x.png
+          sips -z 32 32 build/icon.png --out build/icon.iconset/icon_32x32.png
+          sips -z 64 64 build/icon.png --out build/icon.iconset/icon_32x32@2x.png
+          sips -z 128 128 build/icon.png --out build/icon.iconset/icon_128x128.png
+          sips -z 256 256 build/icon.png --out build/icon.iconset/icon_128x128@2x.png
+          sips -z 256 256 build/icon.png --out build/icon.iconset/icon_256x256.png
+          sips -z 512 512 build/icon.png --out build/icon.iconset/icon_256x256@2x.png
+          sips -z 512 512 build/icon.png --out build/icon.iconset/icon_512x512.png
+          sips -z 1024 1024 build/icon.png --out build/icon.iconset/icon_512x512@2x.png
+          iconutil -c icns build/icon.iconset -o build/icon.icns
+
+      - name: Test
+        run: npm test
+
+      - name: Build macOS DMG
+        run: npm run dist:mac -- --${{ matrix.arch }}
+
+      - name: Collect macOS asset
+        run: |
+          mkdir -p release-assets
+          cp release/*.dmg "release-assets/CodexMeter-${RELEASE_TAG}-software-mac-${{ matrix.arch }}.dmg"
+
+      - name: Upload macOS asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: software-macos-${{ matrix.arch }}
+          path: release-assets/*.dmg
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.ref_name, '-') }}
+    needs:
+      - build-windows
+      - build-macos
+
+    steps:
+      - name: Resolve release tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ inputs.tag }}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Write release notes
+        run: |
+          cat > release-notes.md <<EOF
+          ## 推荐下载
+
+          ### Windows 用户
+
+          下载 \`CodexMeter-${RELEASE_TAG}-win-x64-portable.exe\`。
+
+          双击即可运行，不需要安装。
+
+          ### macOS 用户
+
+          - Apple 芯片：下载 \`CodexMeter-${RELEASE_TAG}-software-mac-arm64.dmg\`
+          - Intel 芯片：下载 \`CodexMeter-${RELEASE_TAG}-software-mac-x64.dmg\`
+
+          ### 不要下载这些
+
+          - \`Source code (zip)\`
+          - \`Source code (tar.gz)\`
+
+          这两个是源码包，不是普通用户运行的软件。
+
+          ## 本版说明
+
+          - 软件版默认 1 分钟刷新一次额度。
+          - 主页面额度条右侧百分比已放大。
+          - 连接按钮表示连接或断开 Codex 账号授权，不是连接硬件设备。
+          EOF
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --title "CodexMeter $RELEASE_TAG - Software Edition" --notes-file release-notes.md
+            gh release upload "$RELEASE_TAG" release-assets/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* --repo "$GITHUB_REPOSITORY" --title "CodexMeter $RELEASE_TAG - Software Edition" --notes-file release-notes.md --latest
+          fi
