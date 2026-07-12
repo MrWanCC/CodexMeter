@@ -31,7 +31,7 @@
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
     "dist:portable": "npm run build && electron-builder --win portable",
-    "dist:mac": "npm run build && electron-builder --mac dmg zip"
+    "dist:mac": "npm run build && electron-builder --mac dmg zip --publish never"
   },
   "dependencies": {
     "electron-store": "^10.1.0",
