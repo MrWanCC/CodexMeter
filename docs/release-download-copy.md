@@ -9,7 +9,7 @@
 
 下载这个：
 
-[CodexMeter-v0.1.0-win-x64-portable.exe](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.0/CodexMeter-v0.1.0-win-x64-portable.exe)
+[CodexMeter-v0.1.0-win-x64-portable.exe](https://github.com/MrWanCC/CodexMeter/raw/software-edition/downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe)
 
 双击即可运行，不需要安装。
 

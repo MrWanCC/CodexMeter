@@ -4,7 +4,7 @@
 
 ## 推荐下载
 
-**Windows 用户直接下载：**[CodexMeter v0.1.0 Windows 便携版](CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe)
+**Windows 用户直接下载：**[CodexMeter v0.1.0 Windows 便携版](https://github.com/MrWanCC/CodexMeter/raw/software-edition/downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe)
 
 如果你不确定该下哪个，就下载上面这个 `.exe`。它不需要安装，双击即可运行。
 
@@ -12,7 +12,7 @@
 
 | 版本 | 平台 | 说明 | 下载 |
 | --- | --- | --- | --- |
-| 软件版 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度；当前 Windows 成品默认 1 分钟刷新，额度条右侧百分比已放大 | [Windows 便携版](CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe) / [macOS Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
+| 软件版 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度；当前 Windows 成品默认 1 分钟刷新，额度条右侧百分比已放大 | [Windows 便携版](https://github.com/MrWanCC/CodexMeter/raw/software-edition/downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe) / [macOS Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
 | 硬件版 | Windows | 支持蓝牙和 HTTP 连接 ESP32-C3 OLED 小屏 | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 ## 使用方式
