@@ -26,6 +26,11 @@ contextBridge.exposeInMainWorld('codexMeter', {
   getWidgetState: () => ipcRenderer.invoke('widget:state'),
   setWidgetVisible: (visible, alwaysOnTop) => ipcRenderer.invoke('widget:setVisible', visible, alwaysOnTop),
   setWidgetAlwaysOnTop: (enabled) => ipcRenderer.invoke('widget:setAlwaysOnTop', enabled),
+  setWidgetExpanded: (expanded) => ipcRenderer.invoke('widget:setExpanded', expanded),
+  sendWidgetPointer: (input) => ipcRenderer.send('widget:pointer', input),
+  moveWidgetBy: (deltaX, deltaY) => ipcRenderer.invoke('widget:moveBy', deltaX, deltaY),
+  minimizeWindow: () => ipcRenderer.invoke('window:minimize'),
+  closeWindow: () => ipcRenderer.invoke('window:close'),
   onQuotaUpdated: (callback) => {
     const listener = (_event, snapshot) => callback(snapshot)
     ipcRenderer.on('quota:updated', listener)
@@ -35,6 +40,11 @@ contextBridge.exposeInMainWorld('codexMeter', {
     const listener = (_event, pushedAt) => callback(pushedAt)
     ipcRenderer.on('hardware:pushUpdated', listener)
     return () => ipcRenderer.removeListener('hardware:pushUpdated', listener)
+  },
+  onWidgetExpandedChanged: (callback) => {
+    const listener = (_event, expanded) => callback(expanded)
+    ipcRenderer.on('widget:expandedChanged', listener)
+    return () => ipcRenderer.removeListener('widget:expandedChanged', listener)
   }
 })
 `.trimStart()

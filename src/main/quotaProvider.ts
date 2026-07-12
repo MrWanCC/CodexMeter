@@ -20,35 +20,39 @@ export async function fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
     ...(accountId ? { 'ChatGPT-Account-Id': accountId } : {})
   }
 
-  const response = await fetch(usageEndpoint, {
-    method: 'GET',
-    headers: sharedHeaders
-  })
+  return await fetchWithRetry(async () => {
+    const response = await fetch(usageEndpoint, {
+      method: 'GET',
+      headers: sharedHeaders,
+      signal: AbortSignal.timeout(15_000)
+    })
 
-  if (!response.ok) {
-    return {
-      available: false,
-      refreshedAt: new Date().toISOString(),
-      windows: [],
-      source: 'unavailable'
+    if (!response.ok) {
+      return {
+        available: false,
+        refreshedAt: new Date().toISOString(),
+        windows: [],
+        source: 'unavailable'
+      }
     }
-  }
 
-  const payload = await response.json()
-  const snapshot = parseQuotaPayload(payload)
-  const resetCards = await fetchResetCards(sharedHeaders)
+    const payload = await response.json()
+    const snapshot = parseQuotaPayload(payload)
+    const resetCards = await fetchResetCards(sharedHeaders)
 
-  return {
-    ...snapshot,
-    resetCards: resetCards ?? snapshot.resetCards
-  }
+    return {
+      ...snapshot,
+      resetCards: resetCards ?? snapshot.resetCards
+    }
+  }) ?? unavailableQuotaSnapshot()
 }
 
 async function fetchResetCards(headers: Record<string, string>): Promise<QuotaSnapshot['resetCards'] | undefined> {
   try {
     const response = await fetch(resetCreditsEndpoint, {
       method: 'GET',
-      headers
+      headers,
+      signal: AbortSignal.timeout(10_000)
     })
     if (!response.ok) {
       return undefined
@@ -58,6 +62,21 @@ async function fetchResetCards(headers: Record<string, string>): Promise<QuotaSn
   } catch {
     return undefined
   }
+}
+
+async function fetchWithRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 1000): Promise<T | undefined> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      if (attempt === retries) {
+        console.warn(`[quota] fetch failed after ${retries + 1} attempts:`, (err as Error).message)
+        return undefined
+      }
+      await new Promise(resolve => setTimeout(resolve, delayMs * (attempt + 1)))
+    }
+  }
+  return undefined
 }
 
 function readJwtClaim(token: string | undefined, namespace: string, claim: string): string | undefined {

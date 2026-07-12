@@ -24,7 +24,7 @@ const api = {
   disconnectOAuth: () =>
     ipcRenderer.invoke('oauth:disconnect') as Promise<{ connected: boolean; snapshot: QuotaSnapshot }>,
   getWidgetState: () =>
-    ipcRenderer.invoke('widget:state') as Promise<{ visible: boolean; alwaysOnTop: boolean }>,
+    ipcRenderer.invoke('widget:state') as Promise<{ visible: boolean; alwaysOnTop: boolean; expanded: boolean }>,
   setWidgetVisible: (visible: boolean, alwaysOnTop: boolean) =>
     ipcRenderer.invoke('widget:setVisible', visible, alwaysOnTop) as Promise<{
       visible: boolean
@@ -35,6 +35,20 @@ const api = {
       visible: boolean
       alwaysOnTop: boolean
     }>,
+  setWidgetExpanded: (expanded: boolean) =>
+    ipcRenderer.invoke('widget:setExpanded', expanded) as Promise<{ expanded: boolean }>,
+  sendWidgetPointer: (input: {
+    type: 'down' | 'move' | 'up' | 'cancel'
+    x: number
+    y: number
+    localX: number
+    localY: number
+    at: number
+  }) => ipcRenderer.send('widget:pointer', input),
+  moveWidgetBy: (deltaX: number, deltaY: number) =>
+    ipcRenderer.invoke('widget:moveBy', deltaX, deltaY) as Promise<void>,
+  minimizeWindow: () => ipcRenderer.invoke('window:minimize') as Promise<void>,
+  closeWindow: () => ipcRenderer.invoke('window:close') as Promise<void>,
   onQuotaUpdated: (callback: (snapshot: QuotaSnapshot) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, snapshot: QuotaSnapshot) => callback(snapshot)
     ipcRenderer.on('quota:updated', listener)
@@ -44,6 +58,11 @@ const api = {
     const listener = (_event: Electron.IpcRendererEvent, pushedAt: string) => callback(pushedAt)
     ipcRenderer.on('hardware:pushUpdated', listener)
     return () => ipcRenderer.removeListener('hardware:pushUpdated', listener)
+  },
+  onWidgetExpandedChanged: (callback: (expanded: boolean) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, expanded: boolean) => callback(expanded)
+    ipcRenderer.on('widget:expandedChanged', listener)
+    return () => ipcRenderer.removeListener('widget:expandedChanged', listener)
   }
 }
 

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { NButton, NConfigProvider, NInput, NProgress, NSelect, NSwitch, NTag, type GlobalThemeOverrides } from 'naive-ui'
 import {
@@ -6,17 +6,20 @@ import {
   Bluetooth,
   Calendar,
   CheckCircle2,
+  CircleGauge,
+  ChevronRight,
   Clock,
+  Crown,
   Lock,
   Monitor,
   MoreHorizontal,
-  Plug,
+  Minus,
+  Pin,
   RefreshCw,
-  ShieldCheck,
-  Sparkles,
   Ticket,
   User,
-  Wifi
+  Wifi,
+  X
 } from 'lucide-vue-next'
 import appIcon from './assets/icon.png'
 import { buildBleUsagePayload } from '../shared/device'
@@ -46,8 +49,8 @@ let bleCharacteristic: BluetoothRemoteGATTCharacteristic | undefined
 const oauthConnected = ref(false)
 const oauthEmail = ref<string | undefined>()
 const connecting = ref(false)
-const moreOpen = ref(false)
 const cardDetailOpen = ref(false)
+const widgetExpanded = ref(false)
 const noticeVisible = ref(false)
 const noticeText = ref('')
 const aboutVisible = ref(false)
@@ -56,6 +59,7 @@ let refreshTimer: ReturnType<typeof setInterval> | undefined
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
 let removeCopyListener: (() => void) | undefined
 let unsubscribeHardwarePush: (() => void) | undefined
+let unsubscribeWidgetExpanded: (() => void) | undefined
 
 const intervalOptions = [
   { label: '手动刷新', value: 0 },
@@ -86,6 +90,78 @@ const codexPlanLabel = computed(() => {
   return `Codex ${planType}`
 })
 const formattedPlanType = computed(() => formatPlanType(snapshot.value?.planType))
+const nearestResetCardDate = computed(() => {
+  const card = resetCards.value[0]
+  if (!card) return ''
+  const date = new Date(card.expiresAt)
+  if (Number.isNaN(date.getTime())) return ''
+  return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+})
+const widgetRingStyle = computed<Record<string, string>>(() => ({
+  '--five-ring': `${(remainingPercent(fiveHourWindow.value) ?? 0) * 3.6}deg`,
+  '--week-ring': `${(remainingPercent(sevenDayWindow.value) ?? 0) * 3.6}deg`
+}))
+const widgetPrimaryPercent = computed(() => remainingPercent(fiveHourWindow.value) ?? remainingPercent(sevenDayWindow.value) ?? null)
+const widgetSecondaryPercent = computed(() => remainingPercent(sevenDayWindow.value) ?? null)
+const widgetRefreshRecency = computed(() => {
+  if (!snapshot.value?.refreshedAt) return '尚未刷新'
+  const refreshedAt = new Date(snapshot.value.refreshedAt).getTime()
+  if (Number.isNaN(refreshedAt)) return '尚未刷新'
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - refreshedAt) / 60000))
+  return elapsedMinutes < 1 ? '刚刚刷新' : `${elapsedMinutes}分钟前刷新`
+})
+
+function quotaRingStyle(window: QuotaWindow | null): Record<string, string> {
+  const remaining = remainingPercent(window) ?? 0
+  return {
+    '--quota-ring': `${remaining * 3.6}deg`,
+    '--quota-percent': `${remaining}`,
+    '--quota-color': quotaColor(window)
+  }
+}
+
+function widgetArc(window: QuotaWindow | null, maxLength = 150): string {
+  const pct = remainingPercent(window)
+  if (pct === null) {
+    return `0 ${maxLength}`
+  }
+  const length = Math.max(8, Math.round((pct / 100) * maxLength))
+  return `${length} ${maxLength}`
+}
+
+function resetAtDisplay(window: QuotaWindow | null): string {
+  if (!window?.resetAt) {
+    return '--'
+  }
+
+  const date = new Date(window.resetAt)
+  if (Number.isNaN(date.getTime())) {
+    return '--'
+  }
+
+  return `${date.toLocaleDateString([], { month: '2-digit', day: '2-digit' })} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+}
+
+function remainingUntilReset(window: QuotaWindow | null): string {
+  if (!window?.resetAt) {
+    return '--'
+  }
+
+  const resetAt = new Date(window.resetAt).getTime()
+  if (Number.isNaN(resetAt)) {
+    return '--'
+  }
+
+  const diff = Math.max(0, resetAt - Date.now())
+  if (window.code === '7d') {
+    return `${Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)))} 天`
+  }
+
+  const totalMinutes = Math.ceil(diff / (1000 * 60))
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
 
 function resetCardExpiryText(card: ResetCard): string {
   const date = new Date(card.expiresAt)
@@ -186,6 +262,14 @@ onMounted(async () => {
   document.addEventListener('copy', handleCopy)
   removeCopyListener = () => document.removeEventListener('copy', handleCopy)
 
+  if (isWidgetView) {
+    document.addEventListener('pointerdown', handleWidgetPointer, true)
+    document.addEventListener('pointermove', handleWidgetPointer, true)
+    document.addEventListener('pointerup', handleWidgetPointer, true)
+    document.addEventListener('pointercancel', handleWidgetPointer, true)
+    window.addEventListener('resize', syncWidgetExpanded)
+  }
+
   unsubscribeQuota = window.codexMeter?.onQuotaUpdated((nextSnapshot) => {
     snapshot.value = nextSnapshot
     status.value = `已刷新 ${new Date(nextSnapshot.refreshedAt).toLocaleTimeString()}`
@@ -197,7 +281,9 @@ onMounted(async () => {
     hardwareLastPushedAt.value = pushedAt
     hardwareConnectionState.value = '推送成功'
   })
-
+  unsubscribeWidgetExpanded = window.codexMeter?.onWidgetExpandedChanged((expanded) => {
+    if (isWidgetView) widgetExpanded.value = expanded
+  })
   if (isWidgetView) {
     snapshot.value = window.codexMeter ? await window.codexMeter.getLatestQuota() : sampleQuotaSnapshot()
     return
@@ -226,6 +312,12 @@ onMounted(async () => {
 onUnmounted(() => {
   unsubscribeQuota?.()
   unsubscribeHardwarePush?.()
+  unsubscribeWidgetExpanded?.()
+  document.removeEventListener('pointerdown', handleWidgetPointer, true)
+  document.removeEventListener('pointermove', handleWidgetPointer, true)
+  document.removeEventListener('pointerup', handleWidgetPointer, true)
+  document.removeEventListener('pointercancel', handleWidgetPointer, true)
+  window.removeEventListener('resize', syncWidgetExpanded)
   removeCopyListener?.()
   clearAutoRefresh()
   clearNotice()
@@ -273,6 +365,15 @@ function openHardwareDialog(): void {
   hardwareDialogVisible.value = true
   hardwareConnectionState.value = hardwareConnected.value ? '已连接' : '未连接'
   hardwareStatusText.value = ''
+}
+
+function toggleHardwareConnection(): void {
+  if (hardwareConnected.value) {
+    void disconnectHardwareDisplay()
+    return
+  }
+
+  openHardwareDialog()
 }
 
 async function updateInterval(value: number): Promise<void> {
@@ -535,6 +636,56 @@ async function updateAlwaysOnTop(value: boolean): Promise<void> {
   alwaysOnTop.value = state.alwaysOnTop
 }
 
+async function setWidgetExpanded(expanded: boolean): Promise<void> {
+  if (widgetExpanded.value === expanded) {
+    return
+  }
+
+  widgetExpanded.value = expanded
+  await window.codexMeter?.setWidgetExpanded(expanded)
+}
+
+function widgetResetCopy(window: QuotaWindow | null): string {
+  if (!window?.resetAt) return '暂无重置时间'
+  const resetAt = new Date(window.resetAt)
+  if (Number.isNaN(resetAt.getTime())) return '暂无重置时间'
+  if (window.code === '5h') return `距重置 ${remainingUntilReset(window)}`
+  return `${resetAt.toLocaleDateString([], { month: '2-digit', day: '2-digit' })} ${resetAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 重置`
+}
+
+async function syncWidgetExpanded(): Promise<void> {
+  if (!isWidgetView || !window.codexMeter) return
+  const state = await window.codexMeter.getWidgetState()
+  widgetExpanded.value = state.expanded
+}
+
+function handleWidgetPointer(event: PointerEvent): void {
+  if (event.pointerType === 'mouse' && event.button !== 0 && event.type !== 'pointermove') return
+  const type = event.type === 'pointerdown'
+    ? 'down'
+    : event.type === 'pointermove'
+      ? 'move'
+      : event.type === 'pointerup'
+        ? 'up'
+        : 'cancel'
+  window.codexMeter?.sendWidgetPointer({
+    type,
+    x: event.screenX,
+    y: event.screenY,
+    localX: event.clientX,
+    localY: event.clientY,
+    at: Date.now()
+  })
+}
+
+function minimizeWindow(): void {
+  void window.codexMeter?.minimizeWindow()
+}
+
+function closeWindow(): void {
+  void window.codexMeter?.closeWindow()
+}
+
 function findWindow(code: '5h' | '7d'): QuotaWindow | null {
   return snapshot.value?.windows.find((window) => window.code === code) ?? null
 }
@@ -548,9 +699,9 @@ function formatPlanType(planType: string | undefined): string | undefined {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-function remainingPercent(window: QuotaWindow | null): number {
+function remainingPercent(window: QuotaWindow | null): number | null {
   if (!window) {
-    return 0
+    return null
   }
 
   return Math.max(0, Math.min(100, Math.round((100 - window.percentUsed) * 100) / 100))
@@ -567,14 +718,13 @@ function quotaState(window: QuotaWindow | null): QuotaState {
     return 'empty'
   }
 
-  const remaining = remainingPercent(window)
+  const remaining = remainingPercent(window) ?? 0
   if (remaining <= 0) {
     return 'exhausted'
   }
 
-  const thresholds = window.code === '5h'
-    ? [60, 30, 20, 10] // 5h: >60 abundant, 30-60 normal, 20-30 attention, 10-20 tight, 1-10 critical
-    : [60, 40, 25, 10] // 7d: >60 abundant, 40-60 normal, 25-40 attention, 10-25 tight, 1-10 critical
+
+  const thresholds = [60, 30, 20, 10]
 
   if (remaining > thresholds[0]) return 'abundant'
   if (remaining > thresholds[1]) return 'normal'
@@ -588,9 +738,9 @@ function quotaBadge(window: QuotaWindow | null): string {
     empty: '无数据',
     abundant: '充足',
     normal: '正常',
-    attention: '关注',
+    attention: '注意',
     tight: '紧张',
-    critical: '预警',
+    critical: '严重',
     exhausted: '已耗尽'
   }
   return labels[quotaState(window)]
@@ -785,353 +935,290 @@ function quotaPeriodDisplay(window: QuotaWindow | null): string {
       </div>
     </Transition>
 
-    <main v-if="isWidgetView" class="widget-shell">
-      <header class="widget-header">
-        <div class="widget-brand">
-          <img class="widget-mark" :src="appIcon" alt="" />
-          <div>
-            <strong>CodexMeter</strong>
-            <span>{{ refreshSummary }}</span>
+    <main
+      v-if="isWidgetView"
+      class="widget-shell"
+      :class="{ 'is-expanded': widgetExpanded }"
+    >
+      <div
+        class="widget-orb"
+        :class="{
+          'is-warning': widgetPrimaryPercent !== null && widgetPrimaryPercent < 20,
+          'is-disconnected': widgetPrimaryPercent === null
+        }"
+        :style="widgetRingStyle"
+      >
+        <span class="widget-orb-halo" />
+        <svg class="widget-orb-radial" viewBox="0 0 112 112" aria-hidden="true">
+          <circle class="widget-orb-track is-outer" cx="56" cy="56" r="45" pathLength="100" />
+          <circle
+            class="widget-orb-arc is-five"
+            cx="56"
+            cy="56"
+            r="45"
+            pathLength="100"
+            :stroke-dasharray="widgetArc(fiveHourWindow, 100)"
+          />
+          <circle class="widget-orb-track is-inner" cx="56" cy="56" r="37" pathLength="100" />
+          <circle
+            class="widget-orb-arc is-week"
+            cx="56"
+            cy="56"
+            r="37"
+            pathLength="100"
+            :stroke-dasharray="widgetArc(sevenDayWindow, 100)"
+          />
+        </svg>
+        <button
+          class="widget-orb-action"
+          type="button"
+          aria-label="展开额度悬浮面板"
+          @pointerdown.stop
+          @pointerup.stop
+          @pointercancel.stop
+        >
+          <strong>{{ widgetPrimaryPercent ?? '--' }}%</strong>
+          <em>5H</em>
+        </button>
+      </div>
+
+      <section class="widget-panel">
+        <div class="widget-flyout-card">
+          <div class="widget-target-layout">
+            <div class="widget-target-quotas">
+              <div
+                class="widget-quota-block is-five"
+                :class="{ 'is-low': remainingPercent(fiveHourWindow) !== null && remainingPercent(fiveHourWindow)! < 20, 'is-empty': remainingPercent(fiveHourWindow) === null }"
+              >
+                <div class="widget-quota-head">
+                  <span><Clock :size="13" :stroke-width="2" />5小时额度</span>
+                  <em>{{ quotaBadge(fiveHourWindow) }}</em>
+                  <strong>{{ remainingPercent(fiveHourWindow) ?? '--' }}%</strong>
+                </div>
+                <div class="widget-quota-progress" role="progressbar" aria-label="5小时剩余额度" :aria-valuenow="remainingPercent(fiveHourWindow) ?? 0" aria-valuemin="0" aria-valuemax="100">
+                  <span class="widget-quota-progress-fill" :style="{ width: `${remainingPercent(fiveHourWindow) ?? 0}%` }" />
+                </div>
+              </div>
+              <div
+                class="widget-quota-block is-seven"
+                :class="{ 'is-low': remainingPercent(sevenDayWindow) !== null && remainingPercent(sevenDayWindow)! < 20, 'is-empty': remainingPercent(sevenDayWindow) === null }"
+              >
+                <div class="widget-quota-head">
+                  <span><Calendar :size="13" :stroke-width="2" />7天额度</span>
+                  <em>{{ quotaBadge(sevenDayWindow) }}</em>
+                  <strong>{{ remainingPercent(sevenDayWindow) ?? '--' }}%</strong>
+                </div>
+                <div class="widget-quota-progress" role="progressbar" aria-label="7天剩余额度" :aria-valuenow="remainingPercent(sevenDayWindow) ?? 0" aria-valuemin="0" aria-valuemax="100">
+                  <span class="widget-quota-progress-fill" :style="{ width: `${remainingPercent(sevenDayWindow) ?? 0}%` }" />
+                </div>
+              </div>
+            </div>
+            <div class="widget-target-footer">
+              <small><Clock :size="12" :stroke-width="2" />重置时间：{{ resetAtDisplay(fiveHourWindow) }}</small>
+              <button class="widget-reset-card-button" type="button" @click.stop="cardDetailOpen = !cardDetailOpen">
+                <Ticket :size="12" :stroke-width="2" />重置卡：{{ resetCards.length }}张
+              </button>
+            </div>
           </div>
         </div>
-        <div class="widget-tools">
-          <span class="widget-source">{{ codexPlanLabel }}</span>
-          <button class="widget-refresh" :class="{ 'is-loading': loading }" type="button" @click="refreshQuota">
-            <RefreshCw :size="13" :stroke-width="2" />
-          </button>
-        </div>
-      </header>
-
-      <section class="widget-quota">
-        <article class="widget-quota-row" :class="fiveHourState">
-          <div class="widget-line">
-            <div>
-              <span>5 小时</span>
-            </div>
-            <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
-          </div>
-          <NProgress
-            type="line"
-            :percentage="remainingPercent(fiveHourWindow)"
-            :show-indicator="false"
-            :height="5"
-            :color="quotaColor(fiveHourWindow)"
-            rail-color="rgba(15, 23, 42, 0.12)"
-          />
-          <p>
-            <span>{{ fiveHourWindow ? `剩余 ${remainingPercent(fiveHourWindow)}% · 已用 ${usedPercent(fiveHourWindow)}%` : '暂无数据' }}</span>
-            <span class="widget-reset">
-              <Clock :size="10" :stroke-width="2" />
-              {{ fiveHourWindow ? resetLabel(fiveHourWindow).replace('重置 ', '') : '--' }}
-            </span>
-          </p>
-        </article>
-
-        <article class="widget-quota-row" :class="sevenDayState">
-          <div class="widget-line">
-            <div>
-              <span>1 周</span>
-            </div>
-            <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
-          </div>
-          <NProgress
-            type="line"
-            :percentage="remainingPercent(sevenDayWindow)"
-            :show-indicator="false"
-            :height="5"
-            :color="quotaColor(sevenDayWindow)"
-            rail-color="rgba(15, 23, 42, 0.12)"
-          />
-          <p>
-            <span>{{ sevenDayWindow ? `剩余 ${remainingPercent(sevenDayWindow)}% · 已用 ${usedPercent(sevenDayWindow)}%` : '暂无数据' }}</span>
-            <span class="widget-reset">
-              <Calendar :size="10" :stroke-width="2" />
-              {{ sevenDayWindow ? widgetResetDateTime(sevenDayWindow) : '--' }}
-            </span>
-          </p>
-        </article>
       </section>
     </main>
 
-    <main v-else class="desktop-shell">
-      <section class="desktop-hero">
-        <div class="hero-main">
-          <img class="hero-mark" :src="appIcon" alt="" />
-          <div>
-            <h1>CodexMeter</h1>
-            <p>Codex usage monitor · local secure refresh</p>
-            <div class="safe-copy">
-              <ShieldCheck :size="15" :stroke-width="2" />
-              <span>安全刷新：仅读取授权后的用量数据，不发起模型请求</span>
+    <header v-if="!isWidgetView" class="app-titlebar">
+      <div class="app-titlebar-brand">
+        <img :src="appIcon" alt="" />
+        <span>CodexMeter</span>
+      </div>
+      <div class="app-titlebar-actions">
+        <button type="button" aria-label="最小化" @pointerdown.stop @mousedown.stop @click.stop="minimizeWindow">
+          <Minus :size="18" :stroke-width="2" />
+        </button>
+        <button type="button" aria-label="关闭" @pointerdown.stop @mousedown.stop @click.stop="closeWindow">
+          <X :size="18" :stroke-width="2" />
+        </button>
+      </div>
+    </header>
+
+    <main v-if="!isWidgetView" class="desktop-shell">
+      <section class="software-dashboard">
+        <header class="dashboard-header">
+          <div class="dashboard-brand">
+            <img class="dashboard-logo" :src="appIcon" alt="" />
+            <div>
+              <strong>CodexMeter</strong>
+              <span>额度状态面板</span>
             </div>
           </div>
-        </div>
-
-        <div class="hero-ops">
-          <div class="hero-meta-row">
-            <div class="last-refresh">
-              <Clock :size="16" :stroke-width="2" />
-              <span>上次刷新：</span>
-              <strong>{{ refreshTime }}</strong>
-            </div>
-            <NTag
-              class="state-tag"
-              :type="systemState === 'error' ? 'error' : systemState === 'connected' ? 'success' : 'warning'"
-              round
-            >
-              <span class="state-tag-inner">
-                <CheckCircle2 v-if="systemState === 'connected'" :size="13" :stroke-width="2" />
-                <Plug v-else :size="13" :stroke-width="2" />
-                <span>{{ systemStateLabel }}</span>
-              </span>
-            </NTag>
-          </div>
-          <div class="hero-action-row">
-            <NButton class="refresh-button" type="primary" size="medium" :loading="loading" @click="refreshQuota">
-              <template #icon>
-                <RefreshCw :size="16" :stroke-width="2" />
-              </template>
-              刷新
-            </NButton>
-            <div class="reset-card-wrap">
-              <NButton
-                class="more-button"
-                :class="{ 'is-open': moreOpen }"
-                size="large"
-                @click="moreOpen = !moreOpen; cardDetailOpen = false"
-              >
-                <template #icon>
-                  <MoreHorizontal :size="20" :stroke-width="2" />
-                </template>
-              </NButton>
-              <div v-if="moreOpen" class="reset-card-panel">
-                <!-- 菜单：重置卡入口 -->
-                <div v-if="!cardDetailOpen" class="reset-card-menu-item" @click="cardDetailOpen = true">
-                  <Ticket :size="16" :stroke-width="2" />
-                  <span>重置卡</span>
-                  <span v-if="resetCards.length" class="reset-card-count">{{ resetCards.length }}</span>
-                </div>
-                <!-- 详情：重置卡列表 -->
-                <template v-else>
-                  <div class="reset-card-panel-head">
-                    <strong>重置卡 · {{ resetCards.length }} 张</strong>
-                    <span>可提前重置额度窗口</span>
-                  </div>
-                  <div v-if="resetCards.length" class="reset-card-list">
-                    <div v-for="(card, i) in resetCards" :key="card.id" class="reset-card-item">
-                      <Ticket :size="14" :stroke-width="2" />
-                      <span>第 {{ i + 1 }} 张</span>
-                      <strong>{{ resetCardExpiryText(card) }}</strong>
-                    </div>
-                  </div>
-                  <p v-else class="reset-card-empty">暂无可用重置卡</p>
-                </template>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="control-bar">
-          <label>
-            <span>固定小组件</span>
-            <NSwitch :value="widgetVisible" @update:value="updateWidgetVisible" />
-          </label>
-          <label>
-            <span>置顶显示</span>
-            <NSwitch :value="alwaysOnTop" :disabled="!widgetVisible" @update:value="updateAlwaysOnTop" />
-          </label>
-          <div class="interval-control">
-            <span>刷新策略</span>
-            <NSelect
-              class="interval-select"
-              :value="settings?.refreshIntervalMinutes ?? 5"
-              :options="intervalOptions"
-              @update:value="updateInterval"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section class="usage-section">
-        <div class="section-title">
-          <h2>使用额度</h2>
-          <NTag class="source-tag" type="success" round>
-            <span class="source-tag-inner">
-              <ShieldCheck :size="15" :stroke-width="2" />
-              <span>OAuth 授权数据</span>
+          <div class="dashboard-refresh">
+            <span class="plan-badge">
+              <Crown :size="13" :stroke-width="2" />
+              {{ codexPlanLabel }}
             </span>
-          </NTag>
-        </div>
-
-        <div class="quota-cards">
-          <article class="usage-card" :class="fiveHourState">
-            <div class="usage-head">
-              <div class="card-title">
-                <!-- <component :is="quotaIcon(fiveHourWindow)" class="quota-icon" :size="20" :stroke-width="2" /> -->
-                <h3>5 小时额度</h3>
-              </div>
-            </div>
-            <div class="usage-value-row">
-              <div class="usage-number">
-                <strong>{{ fiveHourWindow ? `${remainingPercent(fiveHourWindow)}%` : '--' }}</strong>
-                <span>剩余</span>
-              </div>
-              <NTag :type="quotaTagType(fiveHourWindow)" round>
-                {{ quotaBadge(fiveHourWindow) }}
-              </NTag>
-            </div>
-            <NProgress
-              type="line"
-              :percentage="remainingPercent(fiveHourWindow)"
-              :show-indicator="false"
-              :height="8"
-              :color="quotaColor(fiveHourWindow)"
-              rail-color="#e5e7eb"
-            />
-            <div class="quota-details">
-              <span>已用 {{ usedPercent(fiveHourWindow) }}%</span>
-              <span class="quota-reset-time">
-                <Clock :size="12" :stroke-width="2" />
-                {{ quotaPeriodDisplay(fiveHourWindow) }}
-              </span>
-            </div>
-          </article>
-
-          <article class="usage-card" :class="sevenDayState">
-            <div class="usage-head">
-              <div class="card-title">
-                <!-- <component :is="quotaIcon(sevenDayWindow, true)" class="quota-icon" :size="20" :stroke-width="2" /> -->
-                <h3>7 天额度</h3>
-              </div>
-            </div>
-            <div class="usage-value-row">
-              <div class="usage-number">
-                <strong>{{ sevenDayWindow ? `${remainingPercent(sevenDayWindow)}%` : '--' }}</strong>
-                <span>剩余</span>
-              </div>
-              <NTag :type="quotaTagType(sevenDayWindow)" round>
-                {{ quotaBadge(sevenDayWindow) }}
-              </NTag>
-            </div>
-            <NProgress
-              type="line"
-              :percentage="remainingPercent(sevenDayWindow)"
-              :show-indicator="false"
-              :height="8"
-              :color="quotaColor(sevenDayWindow)"
-              rail-color="#e5e7eb"
-            />
-            <div class="quota-details">
-              <span>已用 {{ usedPercent(sevenDayWindow) }}%</span>
-              <span class="quota-reset-time">
-                <Calendar :size="12" :stroke-width="2" />
-                {{ quotaPeriodDisplay(sevenDayWindow) }}
-              </span>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="lower-grid">
-        <div class="info-card">
-          <div class="card-heading">
-            <h2>Codex OAuth</h2>
-            <div class="oauth-header-ops">
-              <span class="oauth-status-badge" :class="oauthConnected ? 'connected' : 'disconnected'">
-                <span class="oauth-status-dot" />
-                {{ oauthConnected ? '已连接' : '未连接' }}
-              </span>
-              <NButton
-                class="oauth-action"
-                :type="oauthConnected ? 'default' : 'primary'"
-                :secondary="connecting"
-                @click="connecting ? cancelOAuth() : oauthConnected ? disconnectOAuth() : connectOAuth()"
-              >
-                {{ connecting ? '取消连接' : oauthConnected ? '断开连接' : '连接 Codex' }}
-              </NButton>
-            </div>
-          </div>
-
-          <div class="info-list soft">
-            <div>
-              <User :size="17" :stroke-width="2" />
-              <span>当前账户</span>
-              <strong>{{ oauthConnected ? oauthEmail ?? '已授权' : '未授权' }}</strong>
-            </div>
-            <div>
-              <Sparkles :size="17" :stroke-width="2" />
-              <span>当前套餐</span>
-              <strong>{{ oauthConnected && snapshot ? (formattedPlanType || '标准版') : '--' }}</strong>
-            </div>
-            <div>
-              <ShieldCheck :size="17" :stroke-width="2" />
-              <span>凭据状态</span>
-              <strong class="oauth-credential-status">
-                <template v-if="oauthConnected">
-                  已授权
-                </template>
-                <template v-else>未授权</template>
-              </strong>
-            </div>
-            <div>
-              <Lock :size="17" :stroke-width="2" />
-              <span>数据存储</span>
-              <strong>本地加密</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-card hardware-card">
-          <div class="card-heading">
-            <h2>硬件显示</h2>
-            <div class="oauth-header-ops">
-              <span class="oauth-status-badge" :class="hardwareConnected ? 'connected' : 'disconnected'">
-                <span class="oauth-status-dot" />
-                {{ hardwareConnected ? '已连接' : '未连接' }}
-              </span>
-              <NButton
-                class="oauth-action"
-                :type="hardwareConnected ? 'default' : 'primary'"
-                :loading="hardwareSaving"
-                @click="hardwareConnected ? disconnectHardwareDisplay() : openHardwareDialog()"
-              >
-                {{ hardwareConnected ? '断开全部' : '连接小屏' }}
-              </NButton>
-            </div>
-          </div>
-
-          <div class="hardware-list">
-            <div>
-              <Monitor :size="17" :stroke-width="2" />
-              <span>屏幕状态</span>
-              <strong class="hardware-endpoint">{{ hardwareConnectionSummary }}</strong>
-            </div>
-            <div>
-              <Bluetooth :size="17" :stroke-width="2" />
-              <span>蓝牙连接</span>
-              <strong :class="bleConnected ? 'is-success' : 'is-idle'">{{ bleDisplayName }}</strong>
-            </div>
-            <div>
-              <Plug :size="17" :stroke-width="2" />
-              <span>网络连接</span>
-              <strong :class="httpConnected ? 'is-success' : 'is-idle'">{{ httpDisplayAddress }}</strong>
-            </div>
-            <div>
+            <button class="icon-action" :class="{ 'is-loading': loading }" type="button" @click="refreshQuota">
               <RefreshCw :size="17" :stroke-width="2" />
-              <span>自动同步</span>
-              <strong>{{ hardwareAutoSyncLabel }}</strong>
+            </button>
+          </div>
+        </header>
+
+        <section class="dashboard-control-row">
+          <button class="widget-control" type="button" :class="{ active: widgetVisible }" @click="updateWidgetVisible(!widgetVisible)">
+            <CircleGauge :size="17" :stroke-width="2" />
+            <span>悬浮球</span>
+            <div class="control-status" :class="{ active: widgetVisible }">
+              <CheckCircle2 :size="14" :stroke-width="2" />
+              {{ widgetVisible ? '已开启' : '未开启' }}
+            </div>
+          </button>
+          <button type="button" :class="{ active: alwaysOnTop }" @click="updateWidgetVisible(true); updateAlwaysOnTop(!alwaysOnTop)">
+            <Pin :size="18" :stroke-width="2" />
+            <span>置顶</span>
+            <div class="control-status" :class="{ active: alwaysOnTop }">
+              <CheckCircle2 :size="14" :stroke-width="2" />
+              {{ alwaysOnTop ? '已置顶' : '未置顶' }}
+            </div>
+          </button>
+          <button type="button" :class="{ active: hardwareConnected }" @click="toggleHardwareConnection">
+            <Monitor :size="18" :stroke-width="2" />
+            <span>连接</span>
+            <div class="control-status" :class="{ active: hardwareConnected }">
+              <CheckCircle2 :size="14" :stroke-width="2" />
+              {{ hardwareConnected ? '断开' : '连接' }}
+            </div>
+          </button>
+        </section>
+
+        <section class="dashboard-quota-grid">
+          <article class="quota-glass-card" :class="fiveHourState">
+            <div class="quota-card-head">
+              <h3>5 小时额度</h3>
+              <span>{{ quotaBadge(fiveHourWindow) }}</span>
+            </div>
+            <div class="quota-card-body">
+              <div class="quota-donut" :style="quotaRingStyle(fiveHourWindow)">
+                <svg class="quota-donut-ring" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="quota-donut-center" cx="60" cy="60" r="43" />
+                  <circle class="quota-donut-track" cx="60" cy="60" r="48" pathLength="100" />
+                  <circle class="quota-donut-progress" cx="60" cy="60" r="48" pathLength="100" />
+                </svg>
+                <div class="quota-donut-text">
+                  <strong>{{ remainingPercent(fiveHourWindow) ?? '--' }}%</strong>
+                </div>
+              </div>
+              <dl>
+                <div>
+                  <dt><Clock :size="16" :stroke-width="2" />已用</dt>
+                  <dd>{{ usedPercent(fiveHourWindow) }}%</dd>
+                </div>
+                <div>
+                  <dt><Clock :size="16" :stroke-width="2" />剩余</dt>
+                  <dd>{{ remainingUntilReset(fiveHourWindow) }}</dd>
+                </div>
+                <div>
+                  <dt><RefreshCw :size="16" :stroke-width="2" />重置于</dt>
+                  <dd>{{ resetAtDisplay(fiveHourWindow) }}</dd>
+                </div>
+              </dl>
+            </div>
+            <div class="quota-card-footer">
+              <span class="quota-card-footer-label">5H 剩余</span>
+              <div class="quota-bar">
+                <div class="quota-bar-fill" :style="{ width: `${remainingPercent(fiveHourWindow) ?? 0}%`, background: quotaColor(fiveHourWindow) }"></div>
+              </div>
+              <strong class="quota-card-footer-value">{{ remainingPercent(fiveHourWindow) ?? '--' }}%</strong>
+            </div>
+          </article>
+
+          <article class="quota-glass-card" :class="sevenDayState">
+            <div class="quota-card-head">
+              <h3>7 天额度</h3>
+              <span>{{ quotaBadge(sevenDayWindow) }}</span>
+            </div>
+            <div class="quota-card-body">
+              <div class="quota-donut" :style="quotaRingStyle(sevenDayWindow)">
+                <svg class="quota-donut-ring" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="quota-donut-center" cx="60" cy="60" r="43" />
+                  <circle class="quota-donut-track" cx="60" cy="60" r="48" pathLength="100" />
+                  <circle class="quota-donut-progress" cx="60" cy="60" r="48" pathLength="100" />
+                </svg>
+                <div class="quota-donut-text">
+                  <strong>{{ remainingPercent(sevenDayWindow) ?? '--' }}%</strong>
+                </div>
+              </div>
+              <dl>
+                <div>
+                  <dt><Clock :size="16" :stroke-width="2" />已用</dt>
+                  <dd>{{ usedPercent(sevenDayWindow) }}%</dd>
+                </div>
+                <div>
+                  <dt><Clock :size="16" :stroke-width="2" />剩余</dt>
+                  <dd>{{ remainingUntilReset(sevenDayWindow) }}</dd>
+                </div>
+                <div>
+                  <dt><RefreshCw :size="16" :stroke-width="2" />重置于</dt>
+                  <dd>{{ resetAtDisplay(sevenDayWindow) }}</dd>
+                </div>
+              </dl>
+            </div>
+            <div class="quota-card-footer">
+              <span class="quota-card-footer-label">7D 剩余</span>
+              <div class="quota-bar">
+                <div class="quota-bar-fill" :style="{ width: `${remainingPercent(sevenDayWindow) ?? 0}%`, background: quotaColor(sevenDayWindow) }"></div>
+              </div>
+              <strong class="quota-card-footer-value">{{ remainingPercent(sevenDayWindow) ?? '--' }}%</strong>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-reset-card">
+          <div class="reset-card-summary">
+            <span class="reset-card-icon">
+              <Ticket :size="18" :stroke-width="2" />
+            </span>
+            <div>
+              <strong>额度重置卡</strong>
+              <span>{{ resetCards.length }} 张可用</span>
             </div>
           </div>
-        </div>
+          <div class="reset-card-decoration">
+            <div class="reset-card-deco-card">
+              <div class="reset-card-deco-star"></div>
+            </div>
+          </div>
+          <div class="reset-card-meta">
+            <div>
+              <Clock :size="13" :stroke-width="2" />
+              <span>最近到期</span>
+              <strong>{{ nearestResetCardDate || '--' }}</strong>
+            </div>
+            <div>
+              <span>剩余</span>
+              <strong>{{ resetCards[0] ? resetCardExpiryText(resetCards[0]).split(' · ')[0].replace('剩余 ', '') : '--' }}</strong>
+            </div>
+          </div>
+          <button class="reset-card-detail-link" type="button" @click="cardDetailOpen = !cardDetailOpen">
+            查看详情
+            <ChevronRight :size="16" :stroke-width="2" />
+          </button>
+          <div v-if="cardDetailOpen" class="reset-card-popover">
+            <div class="reset-card-popover-head">
+              <strong>重置卡详情 <em>{{ resetCards.length }} 张可用</em></strong>
+              <button type="button" aria-label="关闭" @click="cardDetailOpen = false">
+                <X :size="14" :stroke-width="2" />
+              </button>
+            </div>
+            <div v-if="resetCards.length" class="reset-card-popover-list">
+              <div v-for="card in resetCards" :key="card.id" class="reset-card-popover-item">
+                <span class="reset-card-popover-days">{{ resetCardExpiryText(card).split(' · ')[0].replace('剩余 ', '') }}</span>
+                <span class="reset-card-popover-copy">
+                  <span>额度重置卡</span>
+                  <strong>{{ resetCardExpiryText(card).split(' · ')[1] || resetCardExpiryText(card) }} 到期</strong>
+                </span>
+              </div>
+            </div>
+            <div v-else class="reset-card-popover-empty">暂无可用重置卡</div>
+          </div>
+        </section>
       </section>
-
-      <footer class="app-footer">
-        <div>本地安全运行 · 仅读取授权数据 · Codex 授权</div>
-        <div>
-          <span>版本：v1.0.0</span>
-          <button type="button" @click="showAbout">关于</button>
-        </div>
-      </footer>
     </main>
   </NConfigProvider>
 </template>
