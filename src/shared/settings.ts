@@ -1,4 +1,4 @@
-export type RefreshIntervalMinutes = 0 | 5 | 10
+export type RefreshIntervalMinutes = 0 | 1 | 5 | 10
 
 export interface AppSettings {
   refreshIntervalMinutes: RefreshIntervalMinutes
@@ -7,12 +7,12 @@ export interface AppSettings {
 }
 
 export const defaultSettings: AppSettings = {
-  refreshIntervalMinutes: 5,
+  refreshIntervalMinutes: 1,
   hardwareDisplayEnabled: true
 }
 
 export function isRefreshIntervalMinutes(value: number): value is RefreshIntervalMinutes {
-  return value === 0 || value === 5 || value === 10
+  return value === 0 || value === 1 || value === 5 || value === 10
 }
 
 export function normalizeHardwareEndpoint(input: string | undefined): string | undefined {

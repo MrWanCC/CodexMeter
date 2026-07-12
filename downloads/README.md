@@ -6,7 +6,7 @@
 
 | 版本 | 平台 | 说明 | 下载 |
 | --- | --- | --- | --- |
-| 软件版 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度 | [CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
+| 软件版 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度；当前 Windows 成品默认 1 分钟刷新，额度条右侧百分比已放大 | [CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) / [本仓库 Windows 便携版](CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe) |
 | 硬件版 | Windows | 支持蓝牙和 HTTP 连接 ESP32-C3 OLED 小屏 | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 ## 使用方式
@@ -18,6 +18,12 @@ macOS 下载 `.dmg` 后打开运行。当前未做 Apple 开发者签名和 nota
 如果只想看额度，下载软件版。需要外接小屏时，下载硬件版。
 
 如果 Windows 提示未知发布者，这是因为当前版本还没有代码签名证书。确认文件来自本仓库后再运行。
+
+## 软件版更新说明
+
+- 默认自动刷新间隔调整为 1 分钟。
+- 主页面额度进度条右侧百分比字号加大，方便快速查看。
+- 账号连接按钮用于连接或断开 Codex 账号授权，不连接硬件设备。
 
 ## 许可限制
 

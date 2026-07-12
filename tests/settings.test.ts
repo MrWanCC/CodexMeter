@@ -2,19 +2,19 @@ import { describe, expect, it } from 'vitest'
 import { defaultSettings, isRefreshIntervalMinutes, normalizeHardwareEndpoint } from '../src/shared/settings'
 
 describe('isRefreshIntervalMinutes', () => {
-  it('defaults to refreshing every 5 minutes', () => {
-    expect(defaultSettings.refreshIntervalMinutes).toBe(5)
+  it('defaults to refreshing every 1 minute', () => {
+    expect(defaultSettings.refreshIntervalMinutes).toBe(1)
   })
 
   it('enables hardware auto sync by default', () => {
     expect(defaultSettings.hardwareDisplayEnabled).toBe(true)
   })
 
-  it.each([0, 5, 10])('accepts %s minutes', (minutes) => {
+  it.each([0, 1, 5, 10])('accepts %s minutes', (minutes) => {
     expect(isRefreshIntervalMinutes(minutes)).toBe(true)
   })
 
-  it.each([1, 2, 3, 4])('rejects %s minutes', (minutes) => {
+  it.each([2, 3, 4])('rejects %s minutes', (minutes) => {
     expect(isRefreshIntervalMinutes(minutes)).toBe(false)
   })
 })

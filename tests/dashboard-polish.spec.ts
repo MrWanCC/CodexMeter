@@ -12,7 +12,7 @@ describe('dashboard information hierarchy', () => {
     expect(component).toContain('const thresholds = [60, 30, 20, 10]')
     expect(component).toContain("attention: '注意'")
     expect(component).toContain("critical: '严重'")
-    expect(footerValue).toContain('font-size: 9.5px')
+    expect(footerValue).toContain('font-size: 11px')
     expect(footerValue).toContain('font-weight: 650')
     expect(resetMeta).toContain('font-size: 11.5px')
     expect(css).toContain('font-weight: 700;')

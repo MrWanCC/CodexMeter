@@ -63,6 +63,7 @@ let unsubscribeWidgetExpanded: (() => void) | undefined
 
 const intervalOptions = [
   { label: '手动刷新', value: 0 },
+  { label: '1 分钟', value: 1 },
   { label: '5 分钟', value: 5 },
   { label: '10 分钟', value: 10 }
 ]
@@ -301,12 +302,12 @@ onMounted(async () => {
     widgetVisible.value = widgetState.visible
     alwaysOnTop.value = widgetState.visible ? widgetState.alwaysOnTop : false
   } else {
-    settings.value = { refreshIntervalMinutes: 5, hardwareDisplayEnabled: true }
+    settings.value = { refreshIntervalMinutes: 1, hardwareDisplayEnabled: true }
     hardwareAutoSync.value = true
   }
 
   await refreshQuota()
-  configureAutoRefresh(settings.value?.refreshIntervalMinutes ?? 5)
+  configureAutoRefresh(settings.value?.refreshIntervalMinutes ?? 1)
 })
 
 onUnmounted(() => {
@@ -394,7 +395,7 @@ async function saveHardwareDisplay(enabled = true): Promise<void> {
     settings.value = window.codexMeter
       ? await window.codexMeter.saveHardwareDisplay(enabled, hardwareEndpointInput.value)
       : {
-          refreshIntervalMinutes: settings.value?.refreshIntervalMinutes ?? 5,
+          refreshIntervalMinutes: settings.value?.refreshIntervalMinutes ?? 1,
           hardwareDisplayEnabled: Boolean(enabled && hardwareEndpointInput.value),
           hardwareEndpoint: hardwareEndpointInput.value
         }
