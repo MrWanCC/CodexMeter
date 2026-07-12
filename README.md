@@ -19,6 +19,10 @@
 
 不想研究源码？选择适合你的版本，下载后即可使用。
 
+**Windows 用户推荐下载：**[CodexMeter v0.1.0 Windows 便携版](downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe)
+
+如果你不确定该下哪个，优先下载上面这个 `.exe`。macOS 用户再进入软件版 Release 选择 `.dmg`。
+
 <table width="100%">
   <tr>
     <th width="50%">💻 软件版</th>
@@ -37,7 +41,7 @@
     <td><strong>支持：</strong>蓝牙 / HTTP 推送</td>
   </tr>
   <tr>
-    <td><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0">⬇️ 下载 CodexMeter v0.1.0 软件版</a></td>
+    <td><a href="downloads/CodexMeter-v0.1.0-win-x64/CodexMeter-v0.1.0-win-x64-portable.exe">⬇️ Windows 直接下载</a><br /><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0">macOS 下载入口</a></td>
     <td><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware">⬇️ 下载 CodexMeter v0.1.0 硬件版</a></td>
   </tr>
 </table>
