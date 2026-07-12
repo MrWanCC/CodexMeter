@@ -8,7 +8,7 @@ const tokenUrl = 'https://auth.openai.com/oauth/token'
 const clientId = 'app_EMoamEEZ73f0CkXaXp7hrann'
 const redirectUri = 'http://localhost:1455/auth/callback'
 const scopes = ['openid', 'email', 'profile', 'offline_access']
-const oauthCallbackTimeoutMs = 60 * 1000
+const oauthCallbackTimeoutMs = 5 * 60 * 1000
 
 type CallbackWaiter = {
   promise: Promise<string>
@@ -128,7 +128,9 @@ function waitForCallback(expectedState: string): CallbackWaiter {
     server.on('error', (error) => {
       cleanup(() => reject(error))
     })
-    server.listen(1455, '127.0.0.1')
+    // Keep the redirect URI as localhost, and accept whichever loopback address
+    // the browser resolves it to on Windows.
+    server.listen(1455)
   })
 
   return { promise, cancel }
