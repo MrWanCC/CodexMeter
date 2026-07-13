@@ -1,11 +1,12 @@
-import { getCodexOAuth } from './store.js'
+import { net } from 'electron'
+import { getUsableCodexOAuth } from './oauth.js'
 import { parseQuotaPayload, parseResetCreditsPayload, unavailableQuotaSnapshot, type QuotaSnapshot } from '../shared/quota.js'
 
 const usageEndpoint = 'https://chatgpt.com/backend-api/wham/usage'
 const resetCreditsEndpoint = 'https://chatgpt.com/backend-api/wham/rate-limit-reset-credits'
 
 export async function fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
-  const token = getCodexOAuth()
+  const token = await getUsableCodexOAuth()
   if (!token?.accessToken) {
     return unavailableQuotaSnapshot()
   }
@@ -21,7 +22,7 @@ export async function fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
   }
 
   return await fetchWithRetry(async () => {
-    const response = await fetch(usageEndpoint, {
+    const response = await net.fetch(usageEndpoint, {
       method: 'GET',
       headers: sharedHeaders,
       signal: AbortSignal.timeout(15_000)
@@ -49,7 +50,7 @@ export async function fetchQuotaSnapshot(): Promise<QuotaSnapshot> {
 
 async function fetchResetCards(headers: Record<string, string>): Promise<QuotaSnapshot['resetCards'] | undefined> {
   try {
-    const response = await fetch(resetCreditsEndpoint, {
+    const response = await net.fetch(resetCreditsEndpoint, {
       method: 'GET',
       headers,
       signal: AbortSignal.timeout(10_000)

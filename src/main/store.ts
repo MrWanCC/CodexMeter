@@ -2,7 +2,7 @@ import { safeStorage } from 'electron'
 import Store from 'electron-store'
 import { defaultSettings, type AppSettings } from '../shared/settings.js'
 
-type CodexOAuthToken = {
+export type CodexOAuthToken = {
   accessToken: string
   refreshToken: string
   idToken?: string

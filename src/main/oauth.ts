@@ -1,7 +1,7 @@
-import { shell } from 'electron'
+import { net, shell } from 'electron'
 import crypto from 'node:crypto'
 import http from 'node:http'
-import { saveCodexOAuth } from './store.js'
+import { getCodexOAuth, saveCodexOAuth, type CodexOAuthToken } from './store.js'
 
 const authorizationUrl = 'https://auth.openai.com/oauth/authorize'
 const tokenUrl = 'https://auth.openai.com/oauth/token'
@@ -9,6 +9,7 @@ const clientId = 'app_EMoamEEZ73f0CkXaXp7hrann'
 const redirectUri = 'http://localhost:1455/auth/callback'
 const scopes = ['openid', 'email', 'profile', 'offline_access']
 const oauthCallbackTimeoutMs = 5 * 60 * 1000
+const tokenRefreshSkewMs = 60 * 1000
 
 type CallbackWaiter = {
   promise: Promise<string>
@@ -71,6 +72,30 @@ export function cancelCodexOAuth(): OAuthConnectionResult {
   return { connected: false, error: 'cancelled' }
 }
 
+export async function getUsableCodexOAuth(): Promise<CodexOAuthToken | undefined> {
+  const token = getCodexOAuth()
+  if (!token?.accessToken) {
+    return undefined
+  }
+
+  const expiresAt = Date.parse(token.expiresAt)
+  const hasKnownExpiry = Number.isFinite(expiresAt)
+  if (hasKnownExpiry && Date.now() + tokenRefreshSkewMs < expiresAt) {
+    return token
+  }
+
+  if (!token.refreshToken) {
+    return hasKnownExpiry && Date.now() >= expiresAt ? undefined : token
+  }
+
+  try {
+    return await refreshCodexOAuth(token)
+  } catch (error) {
+    console.warn('[oauth] refresh failed:', (error as Error).message)
+    return hasKnownExpiry && Date.now() >= expiresAt ? undefined : token
+  }
+}
+
 function waitForCallback(expectedState: string): CallbackWaiter {
   let cancel = () => {}
   const promise = new Promise<string>((resolve, reject) => {
@@ -125,8 +150,11 @@ function waitForCallback(expectedState: string): CallbackWaiter {
       }
     }
 
-    server.on('error', (error) => {
-      cleanup(() => reject(error))
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      const message = error.code === 'EADDRINUSE'
+        ? 'OAuth callback port 1455 is already in use.'
+        : error.message
+      cleanup(() => reject(new Error(message)))
     })
     // Keep the redirect URI as localhost, and accept whichever loopback address
     // the browser resolves it to on Windows.
@@ -134,6 +162,39 @@ function waitForCallback(expectedState: string): CallbackWaiter {
   })
 
   return { promise, cancel }
+}
+
+async function refreshCodexOAuth(token: CodexOAuthToken): Promise<CodexOAuthToken> {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    client_id: clientId,
+    refresh_token: token.refreshToken
+  })
+
+  const response = await net.fetch(tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body
+  })
+
+  if (!response.ok) {
+    throw new Error(`Token refresh failed: ${response.status}`)
+  }
+
+  const refreshed = (await response.json()) as {
+    access_token: string
+    refresh_token?: string
+    id_token?: string
+    expires_in: number
+  }
+
+  return saveCodexOAuth({
+    accessToken: refreshed.access_token,
+    refreshToken: refreshed.refresh_token ?? token.refreshToken,
+    idToken: refreshed.id_token ?? token.idToken,
+    expiresAt: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
+    email: readJwtClaim(refreshed.id_token ?? token.idToken, 'https://api.openai.com/profile', 'email') ?? token.email
+  })
 }
 
 function finish(
@@ -156,7 +217,7 @@ async function exchangeCodeForToken(code: string, verifier: string) {
     code_verifier: verifier
   })
 
-  const response = await fetch(tokenUrl, {
+  const response = await net.fetch(tokenUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body

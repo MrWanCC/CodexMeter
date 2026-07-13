@@ -578,11 +578,31 @@ async function connectOAuth(forceLogin = false): Promise<void> {
     if (error instanceof Error && error.message.includes('cancelled')) {
       status.value = '已取消连接'
     } else {
-      status.value = error instanceof Error && error.message.includes('timed out') ? '连接超时，可重试' : '连接失败'
+      status.value = getOAuthErrorText(error)
     }
   } finally {
     connecting.value = false
   }
+}
+
+function getOAuthErrorText(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return '连接失败'
+  }
+
+  if (error.message.includes('timed out')) {
+    return '连接超时，可重试'
+  }
+
+  if (error.message.includes('port 1455')) {
+    return '1455端口被占用'
+  }
+
+  if (error.message.includes('Token exchange failed')) {
+    return '授权交换失败'
+  }
+
+  return '连接失败'
 }
 
 async function cancelOAuth(): Promise<void> {
