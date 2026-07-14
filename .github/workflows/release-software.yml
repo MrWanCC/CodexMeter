@@ -9,9 +9,15 @@ on:
       tag:
         description: "Existing software release tag, for example v0.1.2"
         required: true
+  workflow_call:
+    inputs:
+      tag:
+        description: "Existing software release tag"
+        required: true
+        type: string
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   CSC_IDENTITY_AUTO_DISCOVERY: false
@@ -20,19 +26,24 @@ jobs:
   validate-source:
     name: Validate software release source
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.ref_name, '-') }}
+    if: ${{ github.event_name != 'push' || !contains(github.ref_name, '-') }}
     outputs:
       release-tag: ${{ steps.release.outputs.tag }}
+      commit: ${{ steps.source.outputs.commit }}
 
     steps:
       - name: Resolve release tag
         id: release
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REQUESTED_TAG: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            tag="${{ inputs.tag }}"
+          if [ "$EVENT_NAME" = "push" ]; then
+            tag="$REF_NAME"
           else
-            tag="${{ github.ref_name }}"
+            tag="$REQUESTED_TAG"
           fi
 
           if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -45,17 +56,27 @@ jobs:
       - name: Checkout selected tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.release.outputs.tag }}
+          ref: refs/tags/${{ steps.release.outputs.tag }}
           fetch-depth: 0
 
       - name: Validate software release source
+        id: source
         shell: bash
         run: |
+          tag_ref="refs/tags/${RELEASE_TAG}"
+          if ! git show-ref --verify --quiet "$tag_ref"; then
+            echo "Tag ${RELEASE_TAG} does not exist." >&2
+            exit 1
+          fi
+
+          commit="$(git rev-parse "${tag_ref}^{commit}")"
           git fetch origin software-edition:refs/remotes/origin/software-edition
-          if ! git merge-base --is-ancestor "$(git rev-parse HEAD)" origin/software-edition; then
+          if ! git merge-base --is-ancestor "$commit" origin/software-edition; then
             echo "Tag ${RELEASE_TAG} is not contained in software-edition." >&2
             exit 1
           fi
+
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
 
@@ -70,7 +91,8 @@ jobs:
       - name: Checkout selected tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.validate-source.outputs.release-tag }}
+          ref: ${{ needs.validate-source.outputs.commit }}
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -118,7 +140,8 @@ jobs:
       - name: Checkout selected tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.validate-source.outputs.release-tag }}
+          ref: ${{ needs.validate-source.outputs.commit }}
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -165,6 +188,8 @@ jobs:
   publish:
     name: Publish GitHub Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs:
       - validate-source
       - build-windows
@@ -176,7 +201,8 @@ jobs:
       - name: Checkout selected tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.validate-source.outputs.release-tag }}
+          ref: ${{ needs.validate-source.outputs.commit }}
+          persist-credentials: false
 
       - name: Download release assets
         uses: actions/download-artifact@v4
