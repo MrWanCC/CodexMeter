@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, for example v0.1.1"
+        description: "Existing software release tag, for example v0.1.2"
         required: true
 
 permissions:
@@ -17,25 +17,60 @@ env:
   CSC_IDENTITY_AUTO_DISCOVERY: false
 
 jobs:
-  build-windows:
-    name: Build Windows portable
-    runs-on: windows-latest
+  validate-source:
+    name: Validate software release source
+    runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.ref_name, '-') }}
+    outputs:
+      release-tag: ${{ steps.release.outputs.tag }}
 
     steps:
       - name: Resolve release tag
-        shell: pwsh
+        id: release
+        shell: bash
         run: |
-          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            "RELEASE_TAG=${{ inputs.tag }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          } else {
-            "RELEASE_TAG=${{ github.ref_name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          }
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${{ github.ref_name }}"
+          fi
 
-      - name: Checkout
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid software release tag: $tag" >&2
+            exit 1
+          fi
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout selected tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: ${{ steps.release.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Validate software release source
+        shell: bash
+        run: |
+          git fetch origin software-edition:refs/remotes/origin/software-edition
+          if ! git merge-base --is-ancestor "$(git rev-parse HEAD)" origin/software-edition; then
+            echo "Tag ${RELEASE_TAG} is not contained in software-edition." >&2
+            exit 1
+          fi
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+
+  build-windows:
+    name: Build Windows portable
+    runs-on: windows-latest
+    needs: validate-source
+    env:
+      RELEASE_TAG: ${{ needs.validate-source.outputs.release-tag }}
+
+    steps:
+      - name: Checkout selected tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-source.outputs.release-tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -69,7 +104,9 @@ jobs:
   build-macos:
     name: Build macOS ${{ matrix.arch }} DMG
     runs-on: macos-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.ref_name, '-') }}
+    needs: validate-source
+    env:
+      RELEASE_TAG: ${{ needs.validate-source.outputs.release-tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -78,18 +115,10 @@ jobs:
           - x64
 
     steps:
-      - name: Resolve release tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "RELEASE_TAG=${{ inputs.tag }}" >> "$GITHUB_ENV"
-          else
-            echo "RELEASE_TAG=${{ github.ref_name }}" >> "$GITHUB_ENV"
-          fi
-
-      - name: Checkout
+      - name: Checkout selected tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: ${{ needs.validate-source.outputs.release-tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -136,19 +165,18 @@ jobs:
   publish:
     name: Publish GitHub Release
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.ref_name, '-') }}
     needs:
+      - validate-source
       - build-windows
       - build-macos
+    env:
+      RELEASE_TAG: ${{ needs.validate-source.outputs.release-tag }}
 
     steps:
-      - name: Resolve release tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "RELEASE_TAG=${{ inputs.tag }}" >> "$GITHUB_ENV"
-          else
-            echo "RELEASE_TAG=${{ github.ref_name }}" >> "$GITHUB_ENV"
-          fi
+      - name: Checkout selected tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-source.outputs.release-tag }}
 
       - name: Download release assets
         uses: actions/download-artifact@v4
@@ -156,35 +184,10 @@ jobs:
           path: release-assets
           merge-multiple: true
 
-      - name: Write release notes
+      - name: Render release notes
+        shell: bash
         run: |
-          cat > release-notes.md <<EOF
-          ## 推荐下载
-
-          ### Windows 用户
-
-          下载 \`CodexMeter-${RELEASE_TAG}-win-x64-portable.exe\`。
-
-          双击即可运行，不需要安装。
-
-          ### macOS 用户
-
-          - Apple 芯片：下载 \`CodexMeter-${RELEASE_TAG}-software-mac-arm64.dmg\`
-          - Intel 芯片：下载 \`CodexMeter-${RELEASE_TAG}-software-mac-x64.dmg\`
-
-          ### 不要下载这些
-
-          - \`Source code (zip)\`
-          - \`Source code (tar.gz)\`
-
-          这两个是源码包，不是普通用户运行的软件。
-
-          ## 本版说明
-
-          - 软件版默认 1 分钟刷新一次额度。
-          - 主页面额度条右侧百分比已放大。
-          - 连接按钮表示连接或断开 Codex 账号授权，不是连接硬件设备。
-          EOF
+          sed "s/__RELEASE_TAG__/${RELEASE_TAG}/g" .github/release-notes/software.md > release-notes.md
 
       - name: Publish release
         env:
