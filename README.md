@@ -37,7 +37,7 @@
     <td><strong>支持：</strong>蓝牙 / HTTP 推送</td>
   </tr>
   <tr>
-    <td><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.1">⬇️ 下载 CodexMeter v0.1.1 软件版</a></td>
+    <td><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.2">⬇️ 下载 CodexMeter v0.1.2 软件版</a></td>
     <td><a href="https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware">⬇️ 下载 CodexMeter v0.1.0 硬件版</a></td>
   </tr>
 </table>

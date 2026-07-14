@@ -6,7 +6,7 @@
 
 | 版本 | 平台 | 说明 | 下载 |
 | --- | --- | --- | --- |
-| 软件版 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度 | [CodexMeter v0.1.0 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0) |
+| 软件版 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度，支持系统代理登录 | [CodexMeter v0.1.2 软件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.2) |
 | 硬件版 | Windows | 支持蓝牙和 HTTP 连接 ESP32-C3 OLED 小屏 | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 ## 使用方式
