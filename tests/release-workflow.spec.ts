@@ -25,6 +25,9 @@ describe('software release workflow', () => {
     expect(workflow).toContain('permissions:\n  contents: read')
     expect(workflow).toContain('permissions:\n      contents: write')
     expect(workflow).toContain('persist-credentials: false')
+    expect(workflow).toContain('Verify release tag is unchanged')
+    expect(workflow).toContain('actual_commit')
+    expect(workflow).toContain('EXPECTED_COMMIT')
   })
 
   it('uses consistent release asset names', () => {
@@ -52,8 +55,9 @@ describe('software release workflow', () => {
 
     expect(dispatcher).toContain('workflow_dispatch:')
     expect(dispatcher).toContain(
-      'MrWanCC/CodexMeter/.github/workflows/release-software.yml@software-edition',
+      'MrWanCC/CodexMeter/.github/workflows/release-software.yml@0760e80440315df4c657a31d2d82d5995f9cb317',
     )
     expect(dispatcher).toContain('tag: ${{ inputs.tag }}')
+    expect(dispatcher).not.toContain('secrets: inherit')
   })
 })

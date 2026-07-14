@@ -215,6 +215,18 @@ jobs:
         run: |
           sed "s/__RELEASE_TAG__/${RELEASE_TAG}/g" .github/release-notes/software.md > release-notes.md
 
+      - name: Verify release tag is unchanged
+        shell: bash
+        env:
+          EXPECTED_COMMIT: ${{ needs.validate-source.outputs.commit }}
+        run: |
+          git fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          actual_commit="$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")"
+          if [ "$actual_commit" != "$EXPECTED_COMMIT" ]; then
+            echo "Tag ${RELEASE_TAG} moved after validation." >&2
+            exit 1
+          fi
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
