@@ -6,6 +6,7 @@ release/
 .tools/
 .audit/
 .superpowers/
+.worktrees/
 .dotnet/
 .dotnet-install.ps1
 build/firmware/
