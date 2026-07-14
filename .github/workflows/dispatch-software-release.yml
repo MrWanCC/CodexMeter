@@ -14,7 +14,6 @@ permissions:
 jobs:
   release:
     name: Release validated software tag
-    uses: MrWanCC/CodexMeter/.github/workflows/release-software.yml@software-edition
+    uses: MrWanCC/CodexMeter/.github/workflows/release-software.yml@50dd1a5c01301bea3cce9ec8a105d9771c10999d
     with:
       tag: ${{ inputs.tag }}
-    secrets: inherit

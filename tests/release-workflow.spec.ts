@@ -55,7 +55,7 @@ describe('software release workflow', () => {
 
     expect(dispatcher).toContain('workflow_dispatch:')
     expect(dispatcher).toContain(
-      'MrWanCC/CodexMeter/.github/workflows/release-software.yml@0760e80440315df4c657a31d2d82d5995f9cb317',
+      'MrWanCC/CodexMeter/.github/workflows/release-software.yml@50dd1a5c01301bea3cce9ec8a105d9771c10999d',
     )
     expect(dispatcher).toContain('tag: ${{ inputs.tag }}')
     expect(dispatcher).not.toContain('secrets: inherit')
