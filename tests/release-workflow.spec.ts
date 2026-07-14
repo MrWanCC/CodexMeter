@@ -6,7 +6,7 @@ describe('software release workflow', () => {
   const workflow = readFileSync(
     resolve(process.cwd(), '.github/workflows/release-software.yml'),
     'utf8',
-  )
+  ).replace(/\r\n/g, '\n')
 
   it('publishes only tags contained in software-edition', () => {
     expect(workflow).toContain('Validate software release source')
