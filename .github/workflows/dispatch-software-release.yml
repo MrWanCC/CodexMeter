@@ -1,0 +1,19 @@
+name: Dispatch Software Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing software release tag, for example v0.1.2"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release validated software tag
+    uses: MrWanCC/CodexMeter/.github/workflows/release-software.yml@50dd1a5c01301bea3cce9ec8a105d9771c10999d
+    with:
+      tag: ${{ inputs.tag }}
