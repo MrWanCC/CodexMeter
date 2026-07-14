@@ -16,18 +16,18 @@ CodexMeter 是一个本地运行的 Codex 额度状态面板，支持查看 5 �
 
 如果只是想使用软件，不需要下载源码。
 
-**Windows 用户推荐下载：**[CodexMeter v0.1.1 Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.1/CodexMeter-v0.1.1-win-x64-portable.exe)
+**Windows 用户推荐下载：**[CodexMeter v0.1.2 Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.2/CodexMeter-v0.1.2-win-x64-portable.exe)
 
-macOS 用户进入 [v0.1.1 软件版 Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.1) 下载 `.dmg`：
+macOS 用户进入 [v0.1.2 软件版 Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.2) 下载 `.dmg`：
 
-- Apple 芯片：`CodexMeter-v0.1.1-software-mac-arm64.dmg`
-- Intel 芯片：`CodexMeter-v0.1.1-software-mac-x64.dmg`
+- Apple 芯片：`CodexMeter-v0.1.2-software-mac-arm64.dmg`
+- Intel 芯片：`CodexMeter-v0.1.2-software-mac-x64.dmg`
 
 > GitHub Release 页面里的 `Source code (zip)` 和 `Source code (tar.gz)` 是源码包，不是普通用户运行的软件。
 
 | 版本 | 适合用户 | 平台 | 下载 |
 | --- | --- | --- | --- |
-| 软件版 | 只想在电脑本地查看 Codex 额度 | Windows / macOS | [Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.1/CodexMeter-v0.1.1-win-x64-portable.exe) / [macOS Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.1) |
+| 软件版 | 只想在电脑本地查看 Codex 额度 | Windows / macOS | [Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.2/CodexMeter-v0.1.2-win-x64-portable.exe) / [macOS Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.2) |
 | 硬件版 | 需要连接 ESP32-C3 OLED 小屏 | Windows | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 更多下载说明见 [downloads/README.md](downloads/README.md)。

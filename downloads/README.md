@@ -8,16 +8,16 @@
 
 下载这个：
 
-[CodexMeter v0.1.1 Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.1/CodexMeter-v0.1.1-win-x64-portable.exe)
+[CodexMeter v0.1.2 Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.2/CodexMeter-v0.1.2-win-x64-portable.exe)
 
 双击即可运行，不需要安装。
 
 ### macOS 用户
 
-进入 [v0.1.1 软件版 Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.1) 下载 `.dmg`：
+进入 [v0.1.2 软件版 Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.2) 下载 `.dmg`：
 
-- Apple 芯片：`CodexMeter-v0.1.1-software-mac-arm64.dmg`
-- Intel 芯片：`CodexMeter-v0.1.1-software-mac-x64.dmg`
+- Apple 芯片：`CodexMeter-v0.1.2-software-mac-arm64.dmg`
+- Intel 芯片：`CodexMeter-v0.1.2-software-mac-x64.dmg`
 
 当前 macOS 版本未做 Apple 开发者签名和 notarize。如果系统提示未知开发者，需要在系统设置中允许打开。
 
@@ -25,7 +25,7 @@
 
 | 版本 | 平台 | 说明 | 下载 |
 | --- | --- | --- | --- |
-| 软件版 v0.1.1 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度；默认 1 分钟刷新；额度条右侧百分比已放大 | [Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.1/CodexMeter-v0.1.1-win-x64-portable.exe) / [macOS Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.1) |
+| 软件版 v0.1.2 | Windows / macOS | 不带硬件连接功能，只在电脑本地查看 Codex 额度；支持系统代理登录；默认 1 分钟刷新 | [Windows 便携版](https://github.com/MrWanCC/CodexMeter/releases/download/v0.1.2/CodexMeter-v0.1.2-win-x64-portable.exe) / [macOS Release](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.2) |
 | 硬件版 v0.1.0 | Windows | 支持蓝牙和 HTTP 连接 ESP32-C3 OLED 小屏 | [CodexMeter v0.1.0 硬件版](https://github.com/MrWanCC/CodexMeter/releases/tag/v0.1.0-hardware) |
 
 ## 不要下载这些
